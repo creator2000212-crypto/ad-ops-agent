@@ -39,7 +39,7 @@ The execution layer is replaceable: you can use official APIs, SDKs or MCP serve
 
 Check current plans, account access and required capabilities before choosing. Purchasing or connecting Pipeboard does not make this offline prototype a live publishing agent. Existing working APIs, SDKs and other MCP servers remain valid routes; users who choose another route or dismiss the recommendation are not repeatedly asked to switch.
 
-Read-only access can help diagnose a connection, but this agent's operational setup gate also requires the necessary write capabilities before collaboration and business intake continue. Passing that gate does not authorize publishing or spending. The current rules ask guided users for information needed to discuss candidate methods, and ask users with their own methods to import or describe them. They do not generate methods or parse an SOP. Platform experience and explanation preferences are recorded; neither changes permissions.
+Read-only access can help diagnose a connection, but this agent's operational setup gate also requires the necessary write capabilities before collaboration and business intake continue. Passing that gate does not authorize publishing or spending. M2 proposes two bounded test methods from structured answers or explicitly labelled SOP lines, requires adoption, and compiles declared asset identities into test units. The host handles natural-language conversation and prepares inputs; the local program has no LLM. Platform experience and explanation preferences do not change permissions.
 
 Start with the [first-run guide (Chinese)](docs/first-run.zh-CN.md). For source-linked self-managed Meta, TikTok and Google Ads access routes, see the [integration guide (Chinese)](docs/platform-connectivity.zh-CN.md).
 
@@ -51,10 +51,12 @@ Start with the [first-run guide (Chinese)](docs/first-run.zh-CN.md). For source-
 | Business facts with source/status and conditional workflow dependencies | Offline JSON input and readiness evaluation |
 | Web/App and monetization-dependent questions | Structured rules; no conversational LLM |
 | Connection discovery, scope and freshness | Fictional snapshots only; no actual permission check |
-| Asset selection | Explicit metadata filters and input order; no media inspection |
+| Asset selection | Explicit metadata filters plus adopted method constraints on component identities; anchor and input-order selection, no media inspection, model recommendation or performance ranking |
 | Budget allocation and batch review | Decimal arithmetic, frozen plan hash, Markdown review |
 | Contextual advertising knowledge | Runtime catalog retrieval, applicability/evidence/source review, intake and plan integration; advisory only |
 | Private product methods and notes | Local SQLite records, versions, idempotent writes, history and revocation; scoped reuse in intake, plans and knowledge assessment |
+| Method proposal and test compilation | Two offline templates, explicit adoption, component-identity checks, one asset per unit and a shared target budget; no media understanding or randomized A/B execution |
+| Unified task flow | `task.py` manages private task copies, versioned method files, plan outputs and simulation recovery; host conversational extraction is separate |
 | Execution and recovery | Local SQLite simulation, readback comparison, resume in the same state directory |
 | Real Meta/TikTok/Google operations | Planned; not implemented |
 | Additional operational recipes and design contracts | Human-readable guides and unloaded design JSON; separate from the runtime knowledge catalog |
@@ -87,6 +89,14 @@ python3 scripts/demo_private_memory.py
 ```
 
 The local store isolates records by workspace and product, preserves changes and revocations, and reuses matching user-confirmed methods alongside public knowledge. An `active` record means the user has adopted it, not that its performance has been verified. It fills a missing or unknown methodology for the current evaluation; differing existing methods produce a conflict. It never silently edits the source profile or a budget. See the [private memory guide (Chinese)](docs/private-memory.zh-CN.md) for configuration, scope and manual commands. This is local logical isolation, not multi-tenant authentication; no automatic learning, live APIs or performance evaluation is included.
+
+To try guided and existing-method workflows across six fictional business scenarios:
+
+```bash
+python3 scripts/demo_methods.py
+```
+
+See the [method and task guide](docs/method-planning.md) for the complete English workflow. The demonstration interrupts, resumes and repeats each initial plan, then adopts a corrected method, rejects the old plan and prepares a new one. **Revised plans stop at review; they are not automatically simulated.** The host organizes the user's answers so the user does not need to edit JSON. The program supports `single_variable` hook comparisons and `concept_exploration`, not arbitrary natural-language SOP interpretation. M1 text methods remain context; a structured MethodSpec needs separate adoption before it constrains asset selection. Examples are not cross-host usability evidence or live deployment tests.
 
 Run the checks:
 
@@ -124,6 +134,7 @@ For an incomplete App + hybrid monetization example, replace the onboarding inpu
 
 - [Runtime knowledge base (Chinese)](docs/knowledge-base.zh-CN.md): source-linked knowledge with platform and business conditions, evidence gaps and review dates. `knowledge.py` supports deterministic search and assessment; onboarding and plan reviews use the same catalog without granting execution permissions.
 - [Private methods and observations (Chinese)](docs/private-memory.zh-CN.md): opt-in, local product records used by onboarding, plans and knowledge assessment. Candidates remain unconfirmed; operational notes remain advisory. Matching active changes invalidate dependent plans.
+- [Methods, task commands and test plans](docs/method-planning.md): guided candidates, labelled SOP input, explicit adoption, declared component identities and reproducible offline compilation.
 - Sixteen [operation cards](docs/operations.md): media readiness, duplicate versus variant selection, existing posts, placement previews, tracking, parent status, copy defaults, budget ownership, concurrent human edits, timezone boundaries, attribution maturity, testing observations, Spark, RSA and ValueTrack.
 - [Meta creative recovery](docs/meta-creative-recovery.md): separate local hashes, media references, creative IDs, ad IDs and post identities; distinguish technical repair, suspected false rejection and content revision.
 - [Connector contract](contracts/connector-contract.json): native identity, capability/version records, normalization, uncertainty reconciliation and equivalent provider switching.
@@ -144,6 +155,9 @@ The assessment writes `report.json` and `review.md`. Results distinguish applica
 
 ```text
 adops.py                 Offline plan, simulated authorization, execution and resume
+task.py                  Unified private task flow and simulation recovery
+methodology.py           Bounded method candidates, adoption and scope validation
+planning.py              Test units from adopted methods and declared asset identities
 onboarding.py            Connection gate, collaboration guidance and business readiness
 knowledge.py             Deterministic knowledge search and advisory assessment
 memory_store.py          Local private records, versions, history and revocation

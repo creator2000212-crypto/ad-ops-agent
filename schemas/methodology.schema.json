@@ -1,0 +1,486 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "method_id",
+    "revision",
+    "product_id",
+    "status",
+    "approach",
+    "template",
+    "question",
+    "anchor_asset_id",
+    "variable",
+    "fixed_components",
+    "scope",
+    "measurement",
+    "source",
+    "unresolved",
+    "unsupported",
+    "confirmation"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "method_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "product_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "status": {
+      "enum": [
+        "candidate",
+        "adopted"
+      ]
+    },
+    "approach": {
+      "enum": [
+        "guided",
+        "bring_own"
+      ]
+    },
+    "template": {
+      "enum": [
+        "single_variable",
+        "concept_exploration"
+      ]
+    },
+    "question": {
+      "type": "string"
+    },
+    "anchor_asset_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "variable": {
+      "enum": [
+        "hook",
+        "concept"
+      ]
+    },
+    "fixed_components": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "hook",
+          "body",
+          "cta",
+          "destination"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platforms",
+        "countries",
+        "surface",
+        "monetization"
+      ],
+      "properties": {
+        "platforms": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "meta",
+              "tiktok",
+              "google"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "countries": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "surface": {
+          "enum": [
+            "web",
+            "app",
+            null
+          ]
+        },
+        "monetization": {
+          "enum": [
+            "iaa",
+            "iap",
+            "hybrid",
+            "subscription",
+            "ecommerce",
+            "leadgen",
+            null
+          ]
+        }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric",
+        "source",
+        "window"
+      ],
+      "properties": {
+        "metric": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "window": {
+          "type": "string"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "text"
+      ],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S"
+      },
+      "uniqueItems": true
+    },
+    "unsupported": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S"
+      }
+    },
+    "confirmation": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reference",
+            "candidate_hash"
+          ],
+          "properties": {
+            "reference": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "candidate_hash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ad Ops Agent MethodSpec v1",
+  "$comment": "Executable constraints are implemented by methodology.validate. JSON Schema checks structure, template consistency and adoption completeness. The full candidate-content SHA-256 binding must additionally be checked by methodology.validate; a JSON Schema validator cannot verify a cryptographic digest or user authorization.",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "template": {
+            "const": "single_variable"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "variable": {
+            "const": "hook"
+          },
+          "fixed_components": {
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "enum": [
+                "body",
+                "cta",
+                "destination"
+              ]
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "variable": {
+            "const": "concept"
+          },
+          "fixed_components": {
+            "contains": {
+              "const": "destination"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "candidate"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "confirmation": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "confirmation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reference",
+              "candidate_hash"
+            ],
+            "properties": {
+              "reference": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "candidate_hash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "anchor_asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "unresolved": {
+            "maxItems": 0
+          },
+          "unsupported": {
+            "maxItems": 0
+          },
+          "scope": {
+            "properties": {
+              "platforms": {
+                "minItems": 1
+              },
+              "countries": {
+                "minItems": 1
+              },
+              "surface": {
+                "type": "string"
+              },
+              "monetization": {
+                "type": "string"
+              }
+            }
+          },
+          "measurement": {
+            "properties": {
+              "metric": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "window": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "adopted"
+          },
+          "approach": {
+            "const": "bring_own"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "ProposalRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approach",
+        "source",
+        "answers"
+      ],
+      "description": "Guided source text is retained as provenance, not parsed semantically. The host can explicitly preserve unresolved and unsupported requirements in these optional lists; they block adoption.",
+      "properties": {
+        "approach": {
+          "enum": [
+            "guided",
+            "bring_own"
+          ]
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reference",
+            "text"
+          ],
+          "properties": {
+            "reference": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        "answers": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "question": {
+              "type": "string"
+            },
+            "anchor_asset_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "template": {
+              "enum": [
+                "single_variable",
+                "concept_exploration"
+              ]
+            },
+            "measurement": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "metric",
+                "source",
+                "window"
+              ],
+              "properties": {
+                "metric": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "window": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "unresolved": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "unsupported": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        }
+      }
+    }
+  }
+}

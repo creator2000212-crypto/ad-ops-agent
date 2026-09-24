@@ -8,6 +8,7 @@ Contributions are welcome in Chinese or English. Start with the [architecture](d
 python3 -m unittest discover -s tests -v
 python3 scripts/demo.py
 python3 scripts/demo_private_memory.py
+python3 scripts/demo_methods.py
 python3 scripts/check_repository.py
 ```
 
@@ -34,6 +35,14 @@ The runtime catalog lives in `knowledge/catalog.json` and is loaded by `knowledg
 - Add meaningful tests for applicability, missing evidence and an incompatible context. Source freshness and catalog drift must preserve the existing plan-review boundary.
 
 Keep private observations outside Git. Review and anonymize them before proposing public knowledge; feedback does not automatically promote itself into a rule. A catalog update changes the basis of frozen plans, so users must regenerate and review affected plans and their simulation authorization.
+
+## Method and task contributions
+
+Read the [method and task guide](docs/method-planning.md) before changing `task.py`, `methodology.py` or `planning.py`. Keep candidates separate from adopted methods and preserve the confirmation's content binding. Unsupported SOP lines and conflicting answers must remain visible; do not weaken validation to accommodate an unimplemented method.
+
+Current test compilation relies on explicit, sourced component identities, not media analysis or performance ranking. Test meaningful exclusions, missing anchors, scope mismatch, changed-method invalidation and recovery. Units under a target share its existing budget; do not claim equal exposure, randomized A/B allocation or live execution. Keep source profiles unchanged and M1 text records separate from executable MethodSpecs.
+
+The host may translate natural-language answers into structured inputs, but local fixture tests do not demonstrate cross-host conversational usability. Claims about successful user onboarding or a new host integration require separate evidence. Keep English and Chinese method guides aligned while preserving each document's language.
 
 ## Pull requests
 

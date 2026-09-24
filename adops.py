@@ -13,6 +13,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import onboarding
 import knowledge
 import personalization
+import methodology
+import planning
 
 PLATFORMS = {'meta', 'tiktok', 'google'}
 ACTIONS = {'create_simulated_draft', 'readback_simulated_draft'}
@@ -68,13 +70,28 @@ def string_list(value):
     return isinstance(value, list) and all(text_present(x) for x in value)
 
 
-def build_plan(brief, candidates, context_path=None):
+def build_plan(brief, candidates, context_path=None, method_path=None):
     if not isinstance(brief, dict) or not isinstance(candidates, dict):
         raise ContractError('brief 和 candidates 必须是 JSON 对象。')
     issues = []
 
     def issue(code, path, message):
         issues.append({'code': code, 'path': path, 'message': message})
+
+    # A task-bound structured method cannot be silently dropped by omitting a CLI flag.
+    bound_method = None
+    if context_path is not None:
+        try:
+            source_profile = load(load(context_path)['source_ref'])
+            bound_method = source_profile.get('methodology_ref')
+            if bound_method is not None:
+                if not text_present(bound_method) or not Path(bound_method).is_absolute():
+                    raise ValueError('methodology_ref must be an explicit absolute path')
+                if method_path is not None and Path(method_path).resolve() != Path(bound_method).resolve():
+                    raise ValueError('the selected method differs from the current profile binding')
+                method_path = bound_method
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            issue('needs_input', 'context', str(exc))
 
     known_brief = {'task_id', 'mode', 'business_type', 'objective', 'target_event', 'currency', 'timezone', 'budget', 'targets', 'asset_requirements'}
     for key in sorted(set(brief) - known_brief):
@@ -173,7 +190,7 @@ def build_plan(brief, candidates, context_path=None):
     if not isinstance(assets, list):
         issue('needs_input', 'candidates.assets', '必须提供素材元数据数组。')
         assets = []
-    selected, decisions, asset_ids = [], [], set()
+    selected, decisions, asset_ids, eligible_assets = [], [], set(), []
     for i, asset in enumerate(assets):
         reasons = []
         if not isinstance(asset, dict):
@@ -208,6 +225,8 @@ def build_plan(brief, candidates, context_path=None):
                         reasons.append(field + ' below minimum')
         else:
             reasons.append('selection blocked by invalid requirements')
+        if not reasons:
+            eligible_assets.append(asset)
         if reasons:
             status = 'excluded'
         elif len(selected) < count:
@@ -231,6 +250,30 @@ def build_plan(brief, candidates, context_path=None):
                                                   currency=brief.get('currency'))
         except (onboarding.OnboardingError, OSError, ValueError, TypeError, KeyError) as exc:
             issue('needs_input', 'context', str(exc))
+    test_plan, method_reference = None, None
+    if method_path is not None:
+        try:
+            method_source = Path(method_path).resolve()
+            method = methodology.validate(load(method_source), require_adopted=True)
+            method_reference = {'path': str(method_source), 'hash': methodology.digest(method)}
+            if context:
+                raw_profile = onboarding.read(onboarding.read(context['reference'])['source_ref'])
+                effective_profile, _ = personalization.resolve(raw_profile, account_scope=valid_targets)
+                issues.extend(methodology.applicability(method, effective_profile, valid_targets))
+                if effective_profile['facts'].get('methodology', {}).get('value') != methodology.summary(method):
+                    issue('needs_input', 'methodology', '结构化方法与当前已确认的方法摘要不同；请先明确采用的版本。')
+                method_evidence = effective_profile['facts'].get('methodology', {}).get('source')
+                if not isinstance(method_evidence, dict) or method_evidence.get('method_hash') != methodology.digest(method):
+                    issue('needs_input', 'methodology.source.method_hash', '方法完整内容与档案中的采用凭据不同；请重新核对并采用当前版本。')
+            test_plan = planning.compile_test_plan(method, eligible_assets, brief)
+            issues.extend(test_plan['issues'])
+            selected = test_plan['selected_assets']
+            method_decisions = {item['asset_id']: item for item in test_plan['asset_decisions']}
+            for decision in decisions:
+                if decision['status'] != 'excluded' and decision.get('asset_id') in method_decisions:
+                    decision.update(method_decisions[decision['asset_id']])
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            issue('needs_input', 'methodology', str(exc))
     operations = []
     if not issues:
         for target in valid_targets:
@@ -239,6 +282,11 @@ def build_plan(brief, candidates, context_path=None):
                     'target_event_label': brief['target_event'], 'timezone': brief['timezone'],
                     'budget': {'amount': target['budget_amount'], 'currency': brief['currency'], 'period': 'total'},
                     'assets': selected, 'native_payload': None}
+            if test_plan is not None:
+                spec['test_design'] = {'method_hash': test_plan['method_hash'],
+                                       'units': test_plan['units'], 'allocation': test_plan['allocation'],
+                                       'measurement': method['measurement'],
+                                       'evidence_basis': test_plan['evidence_basis']}
             operations.append({'operation_id': digest({'task_id': brief['task_id'], 'spec': spec})[:24],
                                'action': 'create_simulated_draft', 'adapter': 'simulation',
                                'desired': spec})
@@ -264,6 +312,9 @@ def build_plan(brief, candidates, context_path=None):
             'selection_basis': 'metadata_only_input_order; no file inspection, visual understanding or performance prediction',
             'asset_decisions': decisions, 'issues': issues, 'operations': operations,
             'workflow': ['validate_inputs', 'select_metadata', 'create_simulated_draft', 'readback_simulated_draft']}
+    if method_path is not None:
+        plan.update(method_reference=method_reference, test_plan=test_plan, candidates_snapshot=candidates,
+                    selection_basis='metadata_and_declared_method_constraints; no independent media or performance verification')
     plan['plan_hash'] = digest(plan)
     return plan
 
@@ -300,7 +351,8 @@ def verify_plan(plan):
                 review.get('private_memory', {}).get('active_hash') != current_private for review in reviews):
             raise ContractError('私有知识已改版或撤回；请重新生成计划并审阅。')
         source_ref = onboarding.read(context['reference'])['source_ref']
-        _, current_snapshot = personalization.resolve(onboarding.read(source_ref), account_scope=brief['targets'])
+        source_profile = onboarding.read(source_ref)
+        _, current_snapshot = personalization.resolve(source_profile, account_scope=brief['targets'])
         if current_snapshot['active_hash'] != current_private:
             raise ContractError('私有知识在验证期间变化；请重新评估。')
         for review in reviews:
@@ -309,6 +361,23 @@ def verify_plan(plan):
                 raise ContractError('私有知识快照内容不一致；请重新生成计划并审阅。')
             if frozen is None and current_snapshot['enabled']:
                 raise ContractError('计划缺少当前私有知识快照。')
+        has_method = (source_profile.get('methodology_ref') is not None
+                      or any(key in plan for key in ('method_reference', 'test_plan', 'candidates_snapshot'))
+                      or any('test_design' in op.get('desired', {}) for op in plan['operations']))
+        if has_method:
+            ref = plan.get('method_reference')
+            if not isinstance(ref, dict) or set(ref) != {'path', 'hash'} or not isinstance(plan.get('test_plan'), dict):
+                raise ContractError('结构化方法或测试计划缺失。')
+            current_method = methodology.validate(load(ref['path']), require_adopted=True)
+            if methodology.digest(current_method) != ref['hash']:
+                raise ContractError('结构化方法已改版；请重新准备计划。')
+            assets = plan.get('candidates_snapshot')
+            if digest(assets) != plan['candidates_metadata_hash']:
+                raise ContractError('素材证据快照不一致。')
+            rebuilt = build_plan(brief, assets, context_path=context['reference'], method_path=ref['path'])
+            keys = ('operations', 'asset_decisions', 'test_plan', 'method_reference', 'selection_basis')
+            if rebuilt['status'] != 'ready' or any(rebuilt.get(key) != plan.get(key) for key in keys):
+                raise ContractError('方法约束、测试单元或执行配置不一致；请重新准备计划。')
     except (onboarding.OnboardingError, OSError, ValueError, TypeError, KeyError) as exc:
         raise ContractError('业务上下文检查失败：' + str(exc)) from exc
     for operation in plan['operations']:
@@ -377,6 +446,12 @@ def write_review(plan, path):
     lines += ['', '## 素材选择依据', '']
     for item in plan['asset_decisions']:
         lines.append(f"- {item.get('asset_id', 'unknown')}：{item['status']} — {'; '.join(item['reasons'])}")
+    if plan.get('test_plan'):
+        test_plan = plan['test_plan']
+        lines += ['', '## 方法与测试单元', '', methodology.summary(test_plan['method_snapshot']), '',
+                  '固定项依据是带来源的组件身份声明，不是自动视频理解。每账户仅保留一份总预算，不承诺等量曝光或随机 A/B。', '']
+        for unit in test_plan['units']:
+            lines.append(f"- {unit['unit_id']}：{', '.join(unit['asset_ids'])}；变量={unit['variable_value']}")
     lines += ['', '## 阻断项', '']
     lines += [f"- {i['code']} / {i['path']}：{i['message']}" for i in plan['issues']] or ['无本地契约阻断项；这不表示真实广告平台已验证。']
     lines += ['', '本文件用于整批方案审阅。authorize-simulation 只创建测试用授权文件，不记录或推断用户对真实发布的批准。', '']
@@ -470,6 +545,52 @@ def execute(plan, authorization, state_dir, interrupt_after_write=0):
         db.close()
 
 
+def verify_completed_simulation(plan, state_dir, result):
+    """Read-only verification of a saved receipt and all local simulated objects.
+
+    This is an integrity check for offline artifacts, not authentication or a
+    statement about objects on an advertising platform. Missing DBs stay missing.
+    """
+    expected = {op['operation_id']: op['desired'] for op in plan['operations']}
+    receipts = result.get('receipts')
+    if (result.get('mode') != 'simulation' or result.get('status') != 'completed_simulation'
+            or result.get('plan_hash') != plan['plan_hash'] or not isinstance(receipts, list)
+            or len(receipts) != len(expected) or result.get('simulated_object_count') != len(expected)):
+        raise ContractError('Saved simulation completion is incomplete or belongs to another plan.')
+    receipt_ids = [item.get('operation_id') for item in receipts if isinstance(item, dict)]
+    if len(receipt_ids) != len(receipts) or set(receipt_ids) != set(expected):
+        raise ContractError('Saved simulation receipts do not cover exactly the expected operations.')
+    database = (Path(state_dir) / 'simulation.sqlite3').resolve()
+    try:
+        db = sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)
+        db.row_factory = sqlite3.Row
+        try:
+            binding = db.execute("SELECT value FROM metadata WHERE key='plan_hash'").fetchone()
+            if not binding or binding['value'] != plan['plan_hash']:
+                raise ContractError('The simulation database binding does not match the plan.')
+            if any(db.execute('SELECT COUNT(*) FROM ' + table).fetchone()[0] != len(expected)
+                   for table in ('operations', 'simulated_objects')):
+                raise ContractError('The simulation database does not cover exactly the expected operations.')
+            for receipt in receipts:
+                op_id = receipt['operation_id']
+                desired = expected[op_id]
+                operation = db.execute('SELECT * FROM operations WHERE id=?', (op_id,)).fetchone()
+                remote = db.execute('SELECT * FROM simulated_objects WHERE operation_id=?', (op_id,)).fetchone()
+                if (receipt.get('state') != 'verified' or receipt.get('readback_matches') is not True
+                        or receipt.get('platform_status') != 'simulated_draft_only'
+                        or receipt.get('readback') != desired or not operation or not remote
+                        or operation['state'] != 'verified' or operation['desired'] != canonical(desired)
+                        or remote['payload'] != canonical(desired)
+                        or receipt.get('object_id') != remote['object_id']
+                        or operation['object_id'] != remote['object_id']):
+                    raise ContractError('A saved receipt or current simulated object differs from the plan.')
+        finally:
+            db.close()
+    except sqlite3.Error as exc:
+        raise ContractError('The local simulation database is missing or cannot be verified.') from exc
+    return True
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=NOTICE)
     commands = parser.add_subparsers(dest='command', required=True)
@@ -477,6 +598,7 @@ def main(argv=None):
     p.add_argument('--brief', required=True)
     p.add_argument('--candidates', required=True)
     p.add_argument('--context', required=True, help='Current onboarding context.json; source is re-evaluated')
+    p.add_argument('--method', help='Adopted MethodSpec; a profile-bound method is loaded automatically')
     p.add_argument('--out', required=True)
     p.add_argument('--mode', default='simulation')
     a = commands.add_parser('authorize-simulation', help='Generate a simulation-only scope token; never a real approval')
@@ -494,7 +616,7 @@ def main(argv=None):
         if getattr(args, 'mode', 'simulation') != 'simulation':
             raise ContractError('live 已明确拒绝：此程序没有任何真实 API 或发布实现。')
         if args.command == 'plan':
-            plan = build_plan(load(args.brief), load(args.candidates), context_path=args.context)
+            plan = build_plan(load(args.brief), load(args.candidates), context_path=args.context, method_path=args.method)
             out = Path(args.out)
             save(out / 'plan.json', plan)
             write_review(plan, out / 'review.md')

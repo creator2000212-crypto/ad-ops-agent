@@ -27,5 +27,7 @@ jobs:
         run: python scripts/demo.py
       - name: Demonstrate scoped private methods and corrections
         run: python scripts/demo_private_memory.py
+      - name: Demonstrate six business and method workflows
+        run: python scripts/demo_methods.py
       - name: Check public repository contents
         run: python scripts/check_repository.py
