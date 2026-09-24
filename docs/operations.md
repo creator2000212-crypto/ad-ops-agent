@@ -192,4 +192,6 @@ Pipeboard 是可以替换的 MCP 入口。操作卡使用平台原生的账户�
 
 **实现与证据边界：**这些操作步骤需要生产适配器实现和账户范围内的能力验证。官方字段存在不代表当前账户可写；预览、媒体 ready、审核通过和实际投放是不同验收状态。连接器字段契约见 [connector-contract.json](../contracts/connector-contract.json)，素材恢复动作见 [creative-recovery.json](../contracts/creative-recovery.json)，未来验收用例见 [acceptance-scenarios.json](../contracts/acceptance-scenarios.json)。这些契约与操作卡不会被离线运行时自动加载或启用。
 
+部分操作原则已提炼到独立的[运行时知识库](knowledge-base.zh-CN.md)，供初始化、方案评审与诊断检索。运行时加载的是 `knowledge/catalog.json`；本页完整步骤和 `contracts/` 仍是生产实现参考，知识命中不意味着已经执行操作卡中的检查或恢复动作。
+
 返回 [文档索引](index.md)。

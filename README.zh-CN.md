@@ -47,9 +47,10 @@ flowchart LR
 | 账户范围、能力、权限与新鲜度 | 只检查虚构连接快照，未实际连接账户 |
 | 素材筛选 | 只按显式元数据筛选并按输入顺序选取，未读取图片视频 |
 | 预算分配、整批审阅与计划绑定 | 已实现 Decimal、计划 hash、Markdown 审阅单 |
+| 按业务背景使用投放知识 | 已实现知识检索、适用条件与证据检查，接入初始化和计划审阅；仅提供建议 |
 | 执行、读回与中断续跑 | 已实现同一计划和本地 SQLite 状态目录中的模拟闭环 |
 | 真实平台适配、素材上传和广告发布 | 尚未实现 |
-| 16 张实操卡、经验库与恢复流程 | 已整理设计；尚未接入运行时 |
+| 其他实操卡、设计契约与恢复流程 | 保留阅读说明及尚未加载的设计 JSON，与运行时知识库分别维护 |
 
 模拟授权文件没有认证签名，不代表真实用户批准；本地续跑也不是跨状态目录、跨进程或跨供应商的全局防重保证。
 
@@ -93,6 +94,7 @@ python3 adops.py resume --plan runs/manual/plan/plan.json --authorization runs/m
 
 ## 方案中包含哪些实操能力
 
+- [运行时投放知识库](docs/knowledge-base.zh-CN.md)：按平台、业务和工作阶段检索知识，说明适用条件、证据缺口与来源；用于初始化提问、方案审阅和诊断建议。
 - [业务初始化](docs/onboarding.md)：先掌握背景、记录来源与未知，再开展相关工作。
 - [架构与接入](docs/architecture.md)：平台适配器、可替换连接器、对象身份、计划与证据。
 - [Google Ads API 新申请](docs/google-ads-api-application.zh-CN.md)：按当前 Google Cloud 项目流程，从 Test 升级到 Explorer / Basic / Standard，配置 OAuth 并验收生产账户访问。
@@ -102,11 +104,22 @@ python3 adops.py resume --plan runs/manual/plan/plan.json --authorization runs/m
 
 通用底座提供流程、工具契约与可选方法。具体产品、广告结构、受众、竞价和扩量策略由项目选择；不把某个业务的一次成功写成三平台统一规则。
 
+直接试用知识检索与虚构观察评估：
+
+```bash
+python3 knowledge.py search --query '归因' --stage measurement --platform meta
+python3 knowledge.py assess --profile examples/onboarding-learning.json --observations examples/knowledge-observations.json --stage diagnosis --out runs/knowledge-review
+```
+
+评估输出 `report.json` 和 `review.md`，区分适用、缺背景、缺证据和来源待复核。建议不会自行改变投放设置，程序也不会拉取真实数据或证明因果关系。计划冻结所用知识库的 hash；知识改版后需要重新生成、审阅计划和模拟授权。更多输入规范、私有知识用法与经验入库流程见[知识库说明](docs/knowledge-base.zh-CN.md)。
+
 ## 目录
 
 ```text
 adops.py                 离线计划、模拟授权、执行与续跑
 onboarding.py            业务资料与就绪检查
+knowledge.py             确定性知识检索与建议评估
+knowledge/               带来源和适用条件的运行时知识库
 examples/                虚构输入
 tests/                   可执行的离线契约测试
 scripts/                 演示和仓库检查

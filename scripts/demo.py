@@ -32,6 +32,11 @@ def run(output):
     cli('onboarding.py', '--input', ROOT / 'examples/onboarding-learning.json',
         '--out', profile, '--refresh-simulation-fixture')
     cli('onboarding.py', '--input', profile, '--out', context)
+    knowledge_report = cli('knowledge.py', 'assess', '--profile', profile,
+                           '--observations', ROOT / 'examples/knowledge-observations.json',
+                           '--stage', 'diagnosis', '--out', output / 'knowledge')
+    require(knowledge_report['advisory_only'] is True and knowledge_report['items'], 'Missing knowledge advice')
+    require(any(item['missing_facts'] for item in knowledge_report['items']), 'Unknown evidence was silently filled')
     planned = cli('adops.py', 'plan', '--brief', ROOT / 'examples/brief.json',
                   '--candidates', ROOT / 'examples/candidates.json',
                   '--context', context / 'context.json', '--out', plan)
@@ -57,6 +62,8 @@ def run(output):
         'output': str(output), 'review': str(plan / 'review.md'),
         'initial_created': 3, 'resume_created': 0,
         'recovery_created': 2, 'recovery_total': 3,
+        'knowledge_review': str(output / 'knowledge' / 'review.md'),
+        'knowledge_items': len(knowledge_report['items']),
         'native_platform_calls': 0
     }
     (output / 'demo-summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

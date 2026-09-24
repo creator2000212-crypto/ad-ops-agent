@@ -8,6 +8,7 @@ import json
 import math
 from pathlib import Path
 import sys
+import knowledge
 
 STATES = {'confirmed', 'observed', 'hypothesis', 'unknown', 'conflict', 'stale'}
 PLATFORMS = {'meta', 'tiktok', 'google'}
@@ -281,11 +282,24 @@ def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, work
     ordered = sorted(human_gaps, key=lambda gap: (0 if gap['status'] in {'conflict', 'stale'} else 1, list(gaps).index(gap['key'])))
     next_questions = [{'key': gap['key'], 'question': QUESTIONS.get(gap['key'], '请补充或核对 ' + gap['key'] + ' 的信息、来源和当前状态。'),
                        'reason': gap['reason'], 'status': gap['status']} for gap in ordered if gap['key'] not in asked][:3]
+    knowledge_stage = {'discovery': 'discovery', 'material_selection': 'creative',
+                       'test_planning': 'planning', 'publish': 'launch'}[workflow]
+    knowledge_profile = data
+    if account_scope is not None:
+        knowledge_profile = {**data, 'facts': {**facts, 'platforms': {
+            'value': sorted({platform for platform, _ in selected_keys}),
+            'status': 'confirmed', 'source': 'validated_selected_account_scope'}}}
+    knowledge_review = knowledge.assess(knowledge_profile, knowledge_stage, as_of=current)
+    for question in next_questions:
+        supporting = [item for item in knowledge_review['items'] if question['key'] in item['required_facts']]
+        question['knowledge_refs'] = [item['id'] for item in supporting]
+        question['why_it_matters'] = [item['summary'] for item in supporting]
     return {'schema_version': 1, 'kind': 'offline_onboarding_context', 'mode': 'simulation',
             'notice': '仅模拟连接 snapshot；没有真实 API/MCP/auth/provider 检查或变更。',
             'profile_id': data['profile_id'], 'profile_version': data['profile_version'],
             'profile_hash': digest(data), 'profile_snapshot': data, 'readiness': readiness,
             'current_workflow': workflow,
+            'knowledge_review': knowledge_review,
             'connection_results': connection_results, 'gaps': list(gaps.values()), 'next_questions': next_questions,
             'machine_actions': [{'key': gap['key'], 'status': gap['status'], 'reason': gap['reason'],
                                  'action': 'resolve_selected_accounts' if gap['key'] == 'selected_accounts' else 'refresh_connection_snapshot',
@@ -304,6 +318,7 @@ def build_context(input_path, output_dir, as_of=None, workflow='test_planning'):
     result = evaluate(profile, asked_questions=asked, as_of=as_of, workflow=workflow)
     result['source_ref'] = str(source)
     write(output / 'context.json', result)
+    write(output / 'knowledge-review.json', result['knowledge_review'])
     write(output / 'gaps.json', {'profile_hash': result['profile_hash'], 'readiness': result['readiness'], 'gaps': result['gaps']})
     write(output / 'questions.json', {'workflow': workflow, 'next_questions': result['next_questions'], 'unresolved': result['question_progress']['unresolved'], 'machine_actions': result['machine_actions']})
     write(progress_path, result['question_progress'])
@@ -319,6 +334,7 @@ def build_context(input_path, output_dir, as_of=None, workflow='test_planning'):
     lines += ['', '## 连接检查待办（机器动作，不是访谈问题）', '']
     lines += [f"- {action['key']}：{action['action']}；{action['reason']}" for action in result['machine_actions']] or ['当前工作流没有连接检查待办。']
     lines += ['', '收入/LTV 等信息只阻断依赖它们的目标；discovery 可以先整理资料。', '']
+    lines += [knowledge.markdown(result['knowledge_review'])]
     (output / 'summary.md').write_text('\n'.join(lines), encoding='utf-8')
     return result
 

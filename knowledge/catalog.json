@@ -1,0 +1,2438 @@
+{
+  "schema_version": 1,
+  "version": "2026-09-24.1",
+  "sources": [
+    {
+      "id": "PRJ-ONBOARD",
+      "title": "项目业务初始化契约",
+      "url": "https://github.com/creator2000212-crypto/ad-ops-agent/blob/main/docs/onboarding.md",
+      "kind": "project",
+      "checked_on": "2026-09-24",
+      "review_after_days": 365,
+      "note": "本项目对业务事实与缺口的工程定义，不代表平台强制要求或行业最佳策略。"
+    },
+    {
+      "id": "PRJ-OPS",
+      "title": "项目投放实操手册",
+      "url": "https://github.com/creator2000212-crypto/ad-ops-agent/blob/main/docs/operations.md",
+      "kind": "project",
+      "checked_on": "2026-09-24",
+      "review_after_days": 365,
+      "note": "操作卡中的工程归纳与验收建议；平台事实须同时读取对应官方来源。"
+    },
+    {
+      "id": "PRJ-EXPERIENCE",
+      "title": "经验设计目录",
+      "url": "https://github.com/creator2000212-crypto/ad-ops-agent/blob/main/contracts/experience-catalog.json",
+      "kind": "project",
+      "checked_on": "2026-09-24",
+      "review_after_days": 365,
+      "note": "经验抽象用于组织待核证据；此原始契约仍为 design_only，本知识库仅手工提炼方法与问题，不启用其中的动作。"
+    },
+    {
+      "id": "PRJ-RECOVERY",
+      "title": "项目 Meta 素材恢复边界",
+      "url": "https://github.com/creator2000212-crypto/ad-ops-agent/blob/main/docs/meta-creative-recovery.md",
+      "kind": "project",
+      "checked_on": "2026-09-24",
+      "review_after_days": 365,
+      "note": "恢复案例的工程边界；不支持绕过实质政策问题，也不保证重传改变审核结果。"
+    },
+    {
+      "id": "META-VIDEO",
+      "title": "Meta 官方 SDK：视频编码就绪检查",
+      "url": "https://raw.githubusercontent.com/facebook/facebook-python-business-sdk/5286888addfe3ba3718db65fbf132bd66de3ddfe/facebook_business/video_uploader.py",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "固定官方提交 5286888addfe3ba3718db65fbf132bd66de3ddfe；只证明所列字段或方法存在，不证明任意账户可写、可用或具备相同能力。检查与动作是项目工程建议。"
+    },
+    {
+      "id": "META-AD",
+      "title": "Meta 官方 SDK：广告状态、预览与复制",
+      "url": "https://raw.githubusercontent.com/facebook/facebook-python-business-sdk/5286888addfe3ba3718db65fbf132bd66de3ddfe/facebook_business/adobjects/ad.py",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "固定官方提交 5286888addfe3ba3718db65fbf132bd66de3ddfe；只证明所列字段或方法存在，不证明任意账户可写、可用或具备相同能力。检查与动作是项目工程建议。"
+    },
+    {
+      "id": "META-CREATIVE",
+      "title": "Meta 官方 SDK：创意与帖子媒体引用",
+      "url": "https://raw.githubusercontent.com/facebook/facebook-python-business-sdk/5286888addfe3ba3718db65fbf132bd66de3ddfe/facebook_business/adobjects/adcreative.py",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "固定官方提交 5286888addfe3ba3718db65fbf132bd66de3ddfe；只证明所列字段或方法存在，不证明任意账户可写、可用或具备相同能力。检查与动作是项目工程建议。"
+    },
+    {
+      "id": "META-IMAGE",
+      "title": "Meta 官方 SDK：图片身份与属性",
+      "url": "https://raw.githubusercontent.com/facebook/facebook-python-business-sdk/5286888addfe3ba3718db65fbf132bd66de3ddfe/facebook_business/adobjects/adimage.py",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "固定官方提交 5286888addfe3ba3718db65fbf132bd66de3ddfe；只证明所列字段或方法存在，不证明任意账户可写、可用或具备相同能力。检查与动作是项目工程建议。"
+    },
+    {
+      "id": "META-CAMPAIGN",
+      "title": "Meta 官方 SDK：系列预算字段",
+      "url": "https://raw.githubusercontent.com/facebook/facebook-python-business-sdk/5286888addfe3ba3718db65fbf132bd66de3ddfe/facebook_business/adobjects/campaign.py",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "固定官方提交 5286888addfe3ba3718db65fbf132bd66de3ddfe；只证明所列字段或方法存在，不证明任意账户可写、可用或具备相同能力。检查与动作是项目工程建议。"
+    },
+    {
+      "id": "META-ADSET",
+      "title": "Meta 官方 SDK：广告组配置字段",
+      "url": "https://raw.githubusercontent.com/facebook/facebook-python-business-sdk/5286888addfe3ba3718db65fbf132bd66de3ddfe/facebook_business/adobjects/adset.py",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "固定官方提交 5286888addfe3ba3718db65fbf132bd66de3ddfe；只证明所列字段或方法存在，不证明任意账户可写、可用或具备相同能力。检查与动作是项目工程建议。"
+    },
+    {
+      "id": "TK-SPARK",
+      "title": "TikTok：Spark Ads",
+      "url": "https://ads.tiktok.com/resources/help/article/spark-ads?lang=en",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "核验原帖互动归属、身份与授权。正文同时出现无规格限制及 10 分钟表述；与 In-Feed Pull 无时长限制存在冲突，不从该页生成通用时长硬规则。"
+    },
+    {
+      "id": "TK-SPECS",
+      "title": "TikTok：Auction In-Feed Ads 规格",
+      "url": "https://ads.tiktok.com/resources/help/article/tiktok-auction-in-feed-ads?lang=en",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "核验 Non-Spark 规格与安全区；Pull 部分不可泛化到所有 Spark 产品。固定数值应由目标产品适配器另行校验。"
+    },
+    {
+      "id": "TK-DEDUP",
+      "title": "TikTok：事件去重",
+      "url": "https://ads.tiktok.com/help/article/event-deduplication?lang=en",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "已核验官方正文；检查与建议动作由本项目归纳，仍须验证当前账户与产品能力。"
+    },
+    {
+      "id": "GG-RSA",
+      "title": "Google Ads：响应式搜索广告",
+      "url": "https://support.google.com/google-ads/answer/7684791?hl=en",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "已核验官方正文；检查与建议动作由本项目归纳，仍须验证当前账户与产品能力。"
+    },
+    {
+      "id": "GG-TRACKING",
+      "title": "Google Ads：追踪配置与层级",
+      "url": "https://support.google.com/google-ads/answer/6076199?hl=en",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "已核验官方正文；检查与建议动作由本项目归纳，仍须验证当前账户与产品能力。"
+    },
+    {
+      "id": "GG-PARALLEL",
+      "title": "Google Ads：并行追踪",
+      "url": "https://support.google.com/google-ads/answer/7544674?hl=en",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "已核验官方正文；检查与建议动作由本项目归纳，仍须验证当前账户与产品能力。"
+    },
+    {
+      "id": "GG-LAG",
+      "title": "Google Ads：转化延迟报告",
+      "url": "https://support.google.com/google-ads/answer/9347141?hl=en",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "已核验官方正文；检查与建议动作由本项目归纳，仍须验证当前账户与产品能力。"
+    },
+    {
+      "id": "GG-GOALS",
+      "title": "Google Ads：转化目标",
+      "url": "https://support.google.com/google-ads/answer/10995103?hl=en",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "仅用于系列选择目标影响出价和转化列的事实；不把页面中的学习期描述转换为本项目通用阈值。"
+    },
+    {
+      "id": "FIREBASE-REVENUE",
+      "title": "Firebase：App 广告收入测量",
+      "url": "https://firebase.google.com/docs/analytics/measure-ad-revenue",
+      "kind": "official",
+      "checked_on": "2026-09-24",
+      "review_after_days": 90,
+      "note": "仅说明采用 Firebase Analytics 时的 ad_impression 与金额/币种记录；Firebase 是可选测量栈，不是所有 App 必须选择的供应商。"
+    }
+  ],
+  "entries": [
+    {
+      "id": "KB-CONTEXT-01",
+      "title": "先把产品、转化路径与本轮问题说清楚",
+      "kind": "operational_principle",
+      "stages": [
+        "discovery",
+        "planning"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "产品",
+        "业务初始化",
+        "深度交流",
+        "投放目标"
+      ],
+      "summary": "初始化应形成可回读的业务档案：产品、国家、平台、Web/App、变现方式和本轮决策问题；尚未确认的信息保留未知。",
+      "required_facts": [
+        "product_name",
+        "surface",
+        "monetization",
+        "goal_type"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "product_name",
+          "question": "用户实际获得什么产品或服务，广告后要完成哪几个步骤？"
+        },
+        {
+          "key": "goal_type",
+          "question": "本轮要回答创意方向、获客成本还是回收价值问题？"
+        }
+      ],
+      "checks": [
+        "产品承诺、目标行为和收入来源是否分开描述。",
+        "每项关键事实是否有来源、状态与时间。"
+      ],
+      "actions": [
+        "把回答整理为已确认事实、待验证假设和缺口。",
+        "按当前工作流需要补齐信息；研究阶段不要求预先掌握所有收入数据。"
+      ],
+      "avoid": [
+        "不要替用户发明产品价格、资格、期限或目标值。"
+      ],
+      "source_ids": [
+        "PRJ-ONBOARD"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-CONTEXT-02",
+      "title": "国家、人群与语言不能只填一个标签",
+      "kind": "strategy_template",
+      "stages": [
+        "discovery",
+        "planning",
+        "creative"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "国家",
+        "地区",
+        "人群",
+        "语言",
+        "本地化"
+      ],
+      "summary": "国家与人群信息用于形成有边界的创意和落地页假设；人口属性或历史经验不能自动成为定向结论。",
+      "required_facts": [
+        "countries",
+        "audience",
+        "creative_direction"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "audience",
+          "question": "哪些人群认识来自用户或订单数据，哪些只是猜测？"
+        },
+        {
+          "key": "creative_direction",
+          "question": "素材语言、表达方式及落地页是否适合这些国家？"
+        }
+      ],
+      "checks": [
+        "国家、语言、币种、产品可提供范围是否相容。",
+        "创意主张是否对应实际使用场景。"
+      ],
+      "actions": [
+        "为每个国家保留语言、需求与承诺差异。",
+        "先提出可以验证的人群假设，再由业务策略选择测试。"
+      ],
+      "avoid": [
+        "不要直接套用其他产品的人群排除或固定年龄范围。"
+      ],
+      "source_ids": [
+        "PRJ-ONBOARD"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-CONTEXT-03",
+      "title": "把投放方法论变成可审查的测试约束",
+      "kind": "strategy_template",
+      "stages": [
+        "discovery",
+        "planning"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "方法论",
+        "测试框架",
+        "预算",
+        "决策"
+      ],
+      "summary": "方法论需写明本轮变化的变量、固定条件、观察窗口、预算和做决定的方法；框架名称本身不足以生成计划。",
+      "required_facts": [
+        "methodology",
+        "success_metric",
+        "learning_budget"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "methodology",
+          "question": "这一轮究竟改变什么，什么保持相同，为什么？"
+        },
+        {
+          "key": "success_metric",
+          "question": "用什么指标、窗口和证据决定继续、修改或停止？"
+        }
+      ],
+      "checks": [
+        "测试单元、分配方式、主要指标和反证条件是否明确。",
+        "预算属于学习承诺还是生产扩量承诺。"
+      ],
+      "actions": [
+        "输出实验假设、对照条件、样本限制和决策选项。",
+        "把用户自定阈值放入当前业务档案，不写成所有账户的默认规则。"
+      ],
+      "avoid": [
+        "不默认每条素材花固定金额或跑固定天数就能判输赢。"
+      ],
+      "source_ids": [
+        "PRJ-ONBOARD",
+        "PRJ-OPS"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-APP-01",
+      "title": "App 先核对系统、商店与测量链路",
+      "kind": "operational_principle",
+      "stages": [
+        "discovery",
+        "planning",
+        "measurement"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "app"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "App",
+        "系统",
+        "商店",
+        "MMP",
+        "Firebase",
+        "深链"
+      ],
+      "summary": "App 路径应明确操作系统、商店目标和实际测量栈，再把安装、激活、购买或广告收入事件映射到本轮目标。",
+      "required_facts": [
+        "os",
+        "store",
+        "measurement_stack"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "measurement_stack",
+          "question": "使用 Firebase、MMP、自建还是组合方案，各自负责哪些事件？"
+        }
+      ],
+      "checks": [
+        "商店页面、包标识和目标国家对应同一产品。",
+        "深链、未安装回退与已安装用户路径已分别说明。"
+      ],
+      "actions": [
+        "保存测量方案和事件映射的证据引用。",
+        "对尚未验证的安装归因与收入链路分别列出验证任务。"
+      ],
+      "avoid": [
+        "不要把 App 测量栈默认等同于某一家 MMP。",
+        "安装事件可用不证明付费与广告收入数据可靠。"
+      ],
+      "source_ids": [
+        "PRJ-ONBOARD"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-WEB-01",
+      "title": "Web 要看完整漏斗和实际目的地",
+      "kind": "operational_principle",
+      "stages": [
+        "discovery",
+        "planning",
+        "launch"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "web"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Web",
+        "落地页",
+        "转化路径",
+        "链接",
+        "追踪"
+      ],
+      "summary": "Web 工作流需要从广告承诺追到落地页、关键操作与最终转化，区分页面打开和转化链路已验证。",
+      "required_facts": [
+        "product_name",
+        "tracking_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "tracking_verified",
+          "question": "是否有经过授权的测试记录证明目的地、必需参数和目标事件一致？"
+        }
+      ],
+      "checks": [
+        "页面语言、Offer、金额与资格条件匹配素材。",
+        "多次跳转保留所需标识且不会落到错误产品。"
+      ],
+      "actions": [
+        "先核对模板与不产生转化的浏览路径。",
+        "需要事件验证时使用专门测试模式和明确测试记录。"
+      ],
+      "avoid": [
+        "不重放真实生产回调来测试。",
+        "同域名不等于同一产品或同一 Offer。"
+      ],
+      "source_ids": [
+        "PRJ-OPS",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-IAA-01",
+      "title": "IAA 按广告收入来源与成熟窗口读价值",
+      "kind": "operational_principle",
+      "stages": [
+        "discovery",
+        "measurement"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "app"
+      ],
+      "monetization": [
+        "iaa",
+        "hybrid"
+      ],
+      "keywords": [
+        "IAA",
+        "广告变现",
+        "ad_impression",
+        "回收"
+      ],
+      "summary": "IAA 必须说明广告收入事件、金额币种和回收窗口。若采用 Firebase，官方使用 ad_impression 记录收入，仍须核对实际集成与返回数据。",
+      "required_facts": [
+        "ad_revenue_event",
+        "ad_revenue_window"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "ad_revenue_event",
+          "question": "广告收入来自哪个事件、聚合平台或结算数据源？"
+        },
+        {
+          "key": "ad_revenue_window",
+          "question": "按安装 cohort 观察到第几天，收入是否仍会补齐？"
+        }
+      ],
+      "checks": [
+        "金额是逐展示收入、估算收入还是已结算收入。",
+        "币种和广告收入覆盖一致，无重复来源相加。"
+      ],
+      "actions": [
+        "按统一 cohort 与成熟窗口呈现收入和成本。",
+        "采用 Firebase 时用其调试和导出证据核对参数。"
+      ],
+      "avoid": [
+        "不能仅凭安装成本推断 IAA 盈利。",
+        "不能把估算广告收入直接当最终结算。"
+      ],
+      "source_ids": [
+        "PRJ-ONBOARD",
+        "FIREBASE-REVENUE"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-IAP-01",
+      "title": "IAP 先定义交易成功与退款后的收入",
+      "kind": "operational_principle",
+      "stages": [
+        "discovery",
+        "measurement"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "app"
+      ],
+      "monetization": [
+        "iap",
+        "hybrid"
+      ],
+      "keywords": [
+        "IAP",
+        "内购",
+        "付费",
+        "退款"
+      ],
+      "summary": "付费次数、支付金额和净收入是不同口径；IAP 应把实际交易、撤销、退款及观察窗口连起来。",
+      "required_facts": [
+        "purchase_revenue_event",
+        "refund_policy"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "purchase_revenue_event",
+          "question": "哪个事件代表支付成功，金额是否含税、渠道费或重复上报？"
+        },
+        {
+          "key": "refund_policy",
+          "question": "退款与撤销如何回写，什么时间口径可用于决策？"
+        }
+      ],
+      "checks": [
+        "订单或交易引用能够去重。",
+        "首购、复购、毛收入和净收入有明确区分。"
+      ],
+      "actions": [
+        "保留事件价值和已确认业务收入两栏。",
+        "按当前目标选择有效指标，不要求在首次测试前预测 LTV。"
+      ],
+      "avoid": [
+        "不将支付按钮点击当实际付费。",
+        "不因金额恒定就判定数据造假。"
+      ],
+      "source_ids": [
+        "PRJ-ONBOARD",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-HYBRID-01",
+      "title": "混合变现分别验证 IAA 与 IAP 再合并",
+      "kind": "operational_principle",
+      "stages": [
+        "discovery",
+        "measurement"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "app"
+      ],
+      "monetization": [
+        "hybrid"
+      ],
+      "keywords": [
+        "混合变现",
+        "hybrid",
+        "IAA",
+        "IAP",
+        "总收入"
+      ],
+      "summary": "混合变现需要同时掌握广告收入与付费收入；只在用户群、时间、币种和净额口径一致时组合价值。",
+      "required_facts": [
+        "ad_revenue_event",
+        "ad_revenue_window",
+        "purchase_revenue_event",
+        "refund_policy"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "value_basis",
+          "question": "混合收入的两部分是否覆盖同一 cohort，如何避免重复？"
+        }
+      ],
+      "checks": [
+        "两类收入来源和成熟度分别记录。",
+        "合并时币种与窗口一致，退款处理明确。"
+      ],
+      "actions": [
+        "分别展示 IAA、IAP 和可比总价值。",
+        "一支缺数据时交付可靠子集与缺口，不补成零。"
+      ],
+      "avoid": [
+        "不能用已知一支收入替代完整回收率。"
+      ],
+      "source_ids": [
+        "PRJ-ONBOARD",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-SUB-01",
+      "title": "订阅区分试用、首付与续订",
+      "kind": "operational_principle",
+      "stages": [
+        "discovery",
+        "measurement"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "subscription"
+      ],
+      "keywords": [
+        "订阅",
+        "试用",
+        "首付",
+        "续订",
+        "取消"
+      ],
+      "summary": "订阅业务应明确转化事件代表试用、首次扣款还是续订，以及取消、退款与收入确认规则。",
+      "required_facts": [
+        "subscription_revenue_event",
+        "refund_policy"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "subscription_revenue_event",
+          "question": "本轮优化试用、首次付费还是续订价值，分别如何记录？"
+        }
+      ],
+      "checks": [
+        "试用开始不被计成已经支付。",
+        "续订窗口、取消与退款范围可解释。"
+      ],
+      "actions": [
+        "分开呈现前端获客指标和后续付费/留存价值。",
+        "对尚未成熟的续订 cohort 保留观察状态。"
+      ],
+      "avoid": [
+        "不能用首日试用量保证后续收入。"
+      ],
+      "source_ids": [
+        "PRJ-ONBOARD",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-ECOM-01",
+      "title": "电商先对齐订单口径和可经营利润",
+      "kind": "operational_principle",
+      "stages": [
+        "discovery",
+        "measurement"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "ecommerce"
+      ],
+      "keywords": [
+        "电商",
+        "订单",
+        "ROAS",
+        "利润",
+        "退款"
+      ],
+      "summary": "电商的下单、支付、发货、退款与净利润属于不同业务阶段；广告平台转化价值不自动等于利润。",
+      "required_facts": [
+        "purchase_revenue_event",
+        "refund_policy",
+        "value_basis"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "value_basis",
+          "question": "当前决策看订单收入、扣退款收入还是扣商品履约成本后的贡献？"
+        }
+      ],
+      "checks": [
+        "订单去重、币种、优惠与退款一致。",
+        "成本包含哪些项目，缺失哪些项目。"
+      ],
+      "actions": [
+        "用可靠口径计算本轮价值并标出未计成本。",
+        "把商品、价格档位与实际落地页做稳定映射。"
+      ],
+      "avoid": [
+        "不把平台 ROAS 直接称作净 ROI 或利润率。"
+      ],
+      "source_ids": [
+        "PRJ-ONBOARD",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-LEAD-01",
+      "title": "线索量与合格线索价值分别判断",
+      "kind": "operational_principle",
+      "stages": [
+        "discovery",
+        "measurement"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "leadgen"
+      ],
+      "keywords": [
+        "线索",
+        "CPL",
+        "合格线索",
+        "有效率",
+        "结算"
+      ],
+      "summary": "线索业务先定义有效提交、资格确认和可结算事件，避免只优化便宜但无效的表单。",
+      "required_facts": [
+        "lead_event",
+        "lead_qualification"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "lead_qualification",
+          "question": "什么条件让线索被接受或结算，反馈多久回传？"
+        }
+      ],
+      "checks": [
+        "表单提交、去重、资格通过、销售反馈各有定义。",
+        "拒绝或无效线索是否回写且窗口成熟。"
+      ],
+      "actions": [
+        "同时报告 CPL 与适用的合格线索成本。",
+        "把暂未确认与明确无效分开。"
+      ],
+      "avoid": [
+        "不按未经确认的固定结算单价反推收入。"
+      ],
+      "source_ids": [
+        "PRJ-ONBOARD",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-VALUE-01",
+      "title": "价值判断需要可比窗口，不强制先有 LTV",
+      "kind": "operational_principle",
+      "stages": [
+        "planning",
+        "measurement"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "价值",
+        "LTV",
+        "cohort",
+        "观察窗",
+        "回收"
+      ],
+      "summary": "可以基于已观测的可靠收入做本轮价值分析；长期预测需要额外假设、验证与适用范围。",
+      "required_facts": [
+        "value_basis",
+        "value_window"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "value_window",
+          "question": "本轮价值按哪段获取用户和哪段收入观察时间计算？"
+        }
+      ],
+      "checks": [
+        "实际收入、预测 LTV 和平台估算分列。",
+        "成本与价值来自可比范围。"
+      ],
+      "actions": [
+        "先回答可靠窗口中的问题，再说明长期价值仍未知。",
+        "使用预测时展示训练/观察范围与误差。"
+      ],
+      "avoid": [
+        "缺 LTV 不应阻断所有创意学习。",
+        "不同成熟度 cohort 不直接排胜负。"
+      ],
+      "source_ids": [
+        "PRJ-ONBOARD",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-CREATIVE-01",
+      "title": "把创意概念、变体与版位文件分层",
+      "kind": "operational_principle",
+      "stages": [
+        "creative",
+        "planning",
+        "measurement"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "素材",
+        "选材",
+        "去重",
+        "概念",
+        "变体",
+        "哈希"
+      ],
+      "summary": "素材数量应同时说明独立概念、明确变体和文件适配数量；文件新哈希不代表新测试假设。",
+      "required_facts": [
+        "creative_direction",
+        "asset_identity_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "asset_identity_verified",
+          "question": "这些文件哪些是完全重复、同概念适配或真正不同的变体？"
+        }
+      ],
+      "checks": [
+        "每项有 concept、variant、rendition 与平台媒体引用的关系。",
+        "去重证据来自文件或实际内容，不仅文件名。"
+      ],
+      "actions": [
+        "保留原件与派生关系。",
+        "按当前目标展示概念覆盖，避免重复文件占满名额。"
+      ],
+      "avoid": [
+        "感知相似只是候选聚类依据，不自动删除不同内容。"
+      ],
+      "source_ids": [
+        "PRJ-OPS",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-CREATIVE-02",
+      "title": "广告承诺要与完整转化体验相符",
+      "kind": "operational_principle",
+      "stages": [
+        "creative",
+        "launch"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "创意",
+        "承诺",
+        "素材样式",
+        "内容验证",
+        "转化"
+      ],
+      "summary": "选材需同时核对画面、文案、音频、产品事实和最终用户体验；元数据命中不证明内容已被理解。",
+      "required_facts": [
+        "product_name",
+        "creative_direction",
+        "creative_content_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "creative_content_verified",
+          "question": "是否实际看过媒体和落地页，关键金额、条件与使用权依据是什么？"
+        }
+      ],
+      "checks": [
+        "金额、品类、语言、奖励或限制在整个路径一致。",
+        "已阅读内容与仅匹配标签的部分明确分开。"
+      ],
+      "actions": [
+        "输出可解释的选材原因与待核项。",
+        "不能验证时请求原件或已有授权观察证据。"
+      ],
+      "avoid": [
+        "不因历史表现好而忽略当前产品不匹配。",
+        "不自行编造素材使用权或产品主张。"
+      ],
+      "source_ids": [
+        "PRJ-OPS",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-TEST-01",
+      "title": "测素材前定义变量与公平比较条件",
+      "kind": "strategy_template",
+      "stages": [
+        "planning",
+        "creative",
+        "measurement"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "测素材",
+        "A/B",
+        "实验",
+        "单变量",
+        "样本"
+      ],
+      "summary": "创意实验应说明测的是开头、叙事、主张还是完整组合；平台分配造成的样本差异必须纳入解释。",
+      "required_facts": [
+        "methodology",
+        "success_metric",
+        "learning_budget"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "methodology",
+          "question": "若投放系统自动分配流量，怎样判断结果与样本限制？"
+        }
+      ],
+      "checks": [
+        "产品、事件、受众、版位和落地页是否在计划中保持一致。",
+        "同一概念裁切或增强是否被当成独立实验。"
+      ],
+      "actions": [
+        "记录实验单元、变量、对照和开始时间。",
+        "给出下一轮可验证的问题及预算选项，交由授权策略决定。"
+      ],
+      "avoid": [
+        "不能只按消耗最高或点击率最高宣布素材胜出。",
+        "不承诺固定样本量保证显著性。"
+      ],
+      "source_ids": [
+        "PRJ-OPS",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-TEST-02",
+      "title": "给观察窗口、样本与重大编辑留记录",
+      "kind": "strategy_template",
+      "stages": [
+        "planning",
+        "measurement",
+        "diagnosis"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "观察窗",
+        "样本",
+        "学习",
+        "波动",
+        "编辑"
+      ],
+      "summary": "短期波动需要结合可比样本、转化成熟度、账户编辑和环境变化解释；每次大改都是新的分析条件。",
+      "required_facts": [
+        "success_metric",
+        "conversion_data_mature",
+        "change_log_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "change_log_verified",
+          "question": "最近哪些预算、出价、事件、创意或落地页发生变化？"
+        }
+      ],
+      "checks": [
+        "比较期长度与成熟度一致。",
+        "对象组成、节假日或外部变化已列为潜在混淆。"
+      ],
+      "actions": [
+        "保留修改前后窗口与原始指标。",
+        "把描述性差异、原因假设和决策条件分开。"
+      ],
+      "avoid": [
+        "不能把一次前后对比当作因果实验。",
+        "不把学习状态名称转成统一停止阈值。"
+      ],
+      "source_ids": [
+        "PRJ-OPS",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-META-01",
+      "title": "Meta 视频上传后还需核验编码就绪",
+      "kind": "platform_fact",
+      "stages": [
+        "creative",
+        "launch"
+      ],
+      "platforms": [
+        "meta"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Meta",
+        "FB",
+        "视频",
+        "编码",
+        "上传",
+        "ready"
+      ],
+      "summary": "Meta 官方 SDK 分开处理上传和编码等待，编码检查读取 video_status；拿到视频 ID 不等于 ready 或审核通过。",
+      "required_facts": [
+        "media_ready"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "media_ready",
+          "question": "视频当前是否已编码 ready，目标账户能否引用正确版本？"
+        }
+      ],
+      "checks": [
+        "媒体 ID、处理状态与内容版本一致。",
+        "时长、缩略图和实际预览可用。"
+      ],
+      "actions": [
+        "保留 processing 状态和回执，继续处理其他已就绪素材。",
+        "超时先查已有对象再判断是否需要修复或重传。"
+      ],
+      "avoid": [
+        "不要因上传请求超时就立即重传。",
+        "ready 不代表审核通过。"
+      ],
+      "source_ids": [
+        "META-VIDEO",
+        "PRJ-OPS"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-META-02",
+      "title": "Meta 原文件、媒体、创意与广告身份分开",
+      "kind": "platform_fact",
+      "stages": [
+        "creative",
+        "launch",
+        "measurement"
+      ],
+      "platforms": [
+        "meta"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Meta",
+        "FB",
+        "hash",
+        "素材ID",
+        "creative_id",
+        "ad_id"
+      ],
+      "summary": "Meta 图片模型的 hash 与创意引用的 image_hash/video_id 属于平台对象标识，不等于本地文件哈希，也不等于 ad_id。",
+      "required_facts": [
+        "asset_identity_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "asset_identity_verified",
+          "question": "本地文件到平台媒体、creative 和 ad 的对应关系是否读回确认？"
+        }
+      ],
+      "checks": [
+        "账户作用域、媒体引用与广告父对象正确。",
+        "新旧版本和复用关系可追溯。"
+      ],
+      "actions": [
+        "使用明确命名空间保存各类 ID。",
+        "比较真实返回引用，不能从文件变化推断广告对象变化。"
+      ],
+      "avoid": [
+        "换本地哈希不能证明广告 ID 已刷新。"
+      ],
+      "source_ids": [
+        "META-IMAGE",
+        "META-CREATIVE",
+        "PRJ-OPS"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-META-03",
+      "title": "Meta 复用帖子时核对真实 post 与身份",
+      "kind": "platform_fact",
+      "stages": [
+        "creative",
+        "launch"
+      ],
+      "platforms": [
+        "meta"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Meta",
+        "FB",
+        "帖子",
+        "social proof",
+        "评论",
+        "点赞"
+      ],
+      "summary": "Meta 创意模型区分 object_story_id、effective_object_story_id 与媒体引用；复用关系需要按实际对象读回。",
+      "required_facts": [
+        "post_identity_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "post_identity_verified",
+          "question": "希望保留的原帖、Page/IG 身份和新广告实际引用是否一致？"
+        }
+      ],
+      "checks": [
+        "原帖与目标用途兼容且具备引用权限。",
+        "预览正文与品牌身份正确。"
+      ],
+      "actions": [
+        "记录新 ad/creative 与原 post 的对应。",
+        "互动无法从当前预览验证时明确保留未知。"
+      ],
+      "avoid": [
+        "重传同视频不等于复用同帖。",
+        "新广告不能据此宣称继承旧学习或报表。"
+      ],
+      "source_ids": [
+        "META-CREATIVE",
+        "PRJ-OPS"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-META-04",
+      "title": "Meta 版位预览与自动增强应显式审阅",
+      "kind": "platform_fact",
+      "stages": [
+        "creative",
+        "launch"
+      ],
+      "platforms": [
+        "meta"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Meta",
+        "FB",
+        "版位",
+        "预览",
+        "增强",
+        "Advantage"
+      ],
+      "summary": "Meta SDK 有预览方法与 degrees_of_freedom_spec 字段；具体版位及增强子项仍取决于目标入口和账户。",
+      "required_facts": [
+        "placement_preview_verified",
+        "native_config_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "placement_preview_verified",
+          "question": "目标版位是否已检查裁切、字幕、安全区与关键条件？"
+        }
+      ],
+      "checks": [
+        "只核验接口实际支持的预览与增强项。",
+        "所测核心变量不会被未记录的增强改变。"
+      ],
+      "actions": [
+        "生成代表版位检查清单并记录不支持项。",
+        "把适配版本和增强选择纳入批次差异。"
+      ],
+      "avoid": [
+        "预览不穷尽所有个性化展示。",
+        "字段存在不证明所有增强子项可配置。"
+      ],
+      "source_ids": [
+        "META-AD",
+        "META-CREATIVE",
+        "PRJ-OPS"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-META-05",
+      "title": "Meta 广告开启与有效投放状态分列",
+      "kind": "platform_fact",
+      "stages": [
+        "launch",
+        "diagnosis"
+      ],
+      "platforms": [
+        "meta"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Meta",
+        "FB",
+        "不消耗",
+        "状态",
+        "父级",
+        "ACTIVE"
+      ],
+      "summary": "Meta 区分 configured_status 和 effective_status，后者可反映父级暂停、待审核或账单问题。",
+      "required_facts": [
+        "native_status_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "native_status_verified",
+          "question": "广告、广告组和系列的实际状态、排期及审核信息是什么？"
+        }
+      ],
+      "checks": [
+        "父链与子对象状态均已读取。",
+        "广告创建、启用、具备投放条件和已观察展示分别记录。"
+      ],
+      "actions": [
+        "按实际阻塞对象提出下一步核验。",
+        "任何父级启用方案先列出会受影响的子级。"
+      ],
+      "avoid": [
+        "ACTIVE 不等于已经消耗。",
+        "不能为救一条广告而擅自启用其他旧广告。"
+      ],
+      "source_ids": [
+        "META-AD",
+        "PRJ-OPS"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-META-06",
+      "title": "Meta 预算按真实归属去重计算",
+      "kind": "platform_fact",
+      "stages": [
+        "planning",
+        "launch"
+      ],
+      "platforms": [
+        "meta"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Meta",
+        "FB",
+        "预算",
+        "ABO",
+        "CBO",
+        "共享"
+      ],
+      "summary": "Meta 系列和广告组分别暴露预算字段，系列还暴露预算共享标志；预算归属与可用组合需读回验证。",
+      "required_facts": [
+        "budget_owner_verified",
+        "native_config_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "budget_owner_verified",
+          "question": "预算属于系列还是广告组，金额单位、币种和共享关系是否确认？"
+        }
+      ],
+      "checks": [
+        "同一预算 owner 不重复相加。",
+        "新旧结构重叠运行的新增承诺已计入。"
+      ],
+      "actions": [
+        "列出现有、本批新增与切换后的预算承诺。",
+        "核对排期、总预算或日预算语义。"
+      ],
+      "avoid": [
+        "共享预算不保证每组均分。",
+        "日预算不能当作绝对逐日消耗保证。"
+      ],
+      "source_ids": [
+        "META-CAMPAIGN",
+        "META-ADSET",
+        "PRJ-OPS"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-META-07",
+      "title": "Meta 复制应重验原生字段和默认值",
+      "kind": "platform_fact",
+      "stages": [
+        "planning",
+        "launch"
+      ],
+      "platforms": [
+        "meta"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Meta",
+        "FB",
+        "复制",
+        "默认值",
+        "优化事件",
+        "配置"
+      ],
+      "summary": "Meta copy 方法可指定目标广告组与状态选项；广告组配置又有独立的优化和目标字段，复制成功不足以证明目标语义相同。",
+      "required_facts": [
+        "native_config_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "native_config_verified",
+          "question": "新对象的事件、身份、预算、归因、链接及状态是否与批准方案一致？"
+        }
+      ],
+      "checks": [
+        "继承、替换与重新验证字段分列。",
+        "缺省、null、false 与清除值被明确处理。"
+      ],
+      "actions": [
+        "只编译可写且受支持字段，创建后读回。",
+        "把原生默认覆盖变为明确差异供修正。"
+      ],
+      "avoid": [
+        "不全量回传只读对象。",
+        "不静默沿用源 ACTIVE 或替换不受支持的目标。"
+      ],
+      "source_ids": [
+        "META-AD",
+        "META-ADSET",
+        "PRJ-OPS"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-META-08",
+      "title": "Meta 拒审先建立证据再选择恢复路线",
+      "kind": "diagnostic_hypothesis",
+      "stages": [
+        "diagnosis",
+        "creative"
+      ],
+      "platforms": [
+        "meta"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Meta",
+        "FB",
+        "拒审",
+        "被拒",
+        "恢复",
+        "哈希"
+      ],
+      "summary": "广告拒审可能涉及内容、目的地、身份、处理或引用问题；SDK 的审核反馈和 issues_info 能提供部分证据，不能从重复拒审次数推断原因。",
+      "required_facts": [
+        "review_reason_verified",
+        "creative_content_verified",
+        "tracking_verified"
+      ],
+      "triggers": [
+        {
+          "key": "creative_rejected",
+          "equals": true
+        }
+      ],
+      "questions": [
+        {
+          "key": "review_reason_verified",
+          "question": "原生审核理由是什么，支持误拒或技术故障的证据有哪些？"
+        }
+      ],
+      "checks": [
+        "内容、链接与实际用户体验是否存在需要修正的问题。",
+        "历史尝试跨媒体、创意、广告 ID 连续计数。"
+      ],
+      "actions": [
+        "实质问题先改内容或目的地；存在误拒证据时整理复核材料。",
+        "确认编码或引用故障后，提出有次数与成本边界的技术修复方案。"
+      ],
+      "avoid": [
+        "不把改哈希或新 ad_id 当作过审方法或保证。",
+        "不通过不断换对象绕过实质政策问题。"
+      ],
+      "source_ids": [
+        "META-AD",
+        "PRJ-RECOVERY"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-TK-01",
+      "title": "TikTok Spark 核对原帖、身份和授权时段",
+      "kind": "platform_fact",
+      "stages": [
+        "creative",
+        "launch"
+      ],
+      "platforms": [
+        "tiktok"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "TikTok",
+        "TK",
+        "Spark",
+        "原帖",
+        "授权"
+      ],
+      "summary": "Spark Ads 使用自然帖子，推广互动归原帖；复用别人内容需要授权，现有帖展示身份与文本来自所选帖子。",
+      "required_facts": [
+        "spark_authorized",
+        "post_identity_verified"
+      ],
+      "triggers": [
+        {
+          "key": "uses_spark",
+          "equals": true
+        }
+      ],
+      "questions": [
+        {
+          "key": "uses_spark",
+          "question": "本轮是否使用 Spark 原帖广告？"
+        },
+        {
+          "key": "spark_authorized",
+          "question": "原帖授权是否覆盖当前账户、用途与计划排期？"
+        }
+      ],
+      "checks": [
+        "选择的账号、帖子和媒体确为所需原件。",
+        "Pull 复用与 Push 新建路径分别处理。"
+      ],
+      "actions": [
+        "保留授权引用和有效期元数据，不保存明文授权凭据。",
+        "授权不足时列出延长授权或调整排期的选项。"
+      ],
+      "avoid": [
+        "不把新广告 ID 当新原帖。",
+        "原帖互动不代表继承旧广告学习或转化历史。"
+      ],
+      "source_ids": [
+        "TK-SPARK",
+        "PRJ-OPS"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-TK-02",
+      "title": "TikTok 规格要先确定广告产品",
+      "kind": "platform_fact",
+      "stages": [
+        "creative",
+        "launch"
+      ],
+      "platforms": [
+        "tiktok"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "TikTok",
+        "TK",
+        "视频规格",
+        "Non-Spark",
+        "Spark",
+        "尺寸"
+      ],
+      "summary": "TikTok In-Feed 文档区分 Non-Spark 与 Spark Pull，其他产品规格可能不同；官方 Spark 时长表述有冲突，应以目标产品当前验证为准。",
+      "required_facts": [
+        "ad_product",
+        "media_spec_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "ad_product",
+          "question": "目标是 In-Feed Non-Spark、Spark 还是其他广告产品？"
+        },
+        {
+          "key": "media_spec_verified",
+          "question": "目标产品的当前规格和本地媒体检查结果是否对应？"
+        }
+      ],
+      "checks": [
+        "尺寸、比例、封装、码率、时长与文件大小符合该产品。",
+        "文档冲突没有被静默变成通用上限。"
+      ],
+      "actions": [
+        "保留原件并生成明确适配版本。",
+        "核验素材库详情、播放结果与目标广告预览。"
+      ],
+      "avoid": [
+        "不把所有 TikTok 视频统一截成固定时长。",
+        "Non-Spark 参数不能硬套 Spark。"
+      ],
+      "source_ids": [
+        "TK-SPECS",
+        "TK-SPARK",
+        "PRJ-OPS"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-TK-03",
+      "title": "TikTok 安全区随方向、文案与样式变化",
+      "kind": "platform_fact",
+      "stages": [
+        "creative",
+        "launch"
+      ],
+      "platforms": [
+        "tiktok"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "TikTok",
+        "TK",
+        "安全区",
+        "字幕",
+        "裁切",
+        "RTL"
+      ],
+      "summary": "TikTok 官方说明安全区取决于方向、文案长度及附加样式，预览与真实设备显示可能略有差异。",
+      "required_facts": [
+        "placement_preview_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "placement_preview_verified",
+          "question": "字幕、CTA 与必要条件在目标语言和样式下是否仍完整可读？"
+        }
+      ],
+      "checks": [
+        "字幕与品牌没有被互动按钮或文案遮挡。",
+        "需要 RTL 语言或 anchor 时使用对应安全区。"
+      ],
+      "actions": [
+        "保留适用样式的代表预览和待核设备差异。",
+        "调整字幕、裁切或封面后重新核对版本。"
+      ],
+      "avoid": [
+        "一张通用安全区模板不能覆盖所有产品与语言。"
+      ],
+      "source_ids": [
+        "TK-SPECS",
+        "PRJ-OPS"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-TK-04",
+      "title": "TikTok Pixel 与 Events API 重复事件需要去重",
+      "kind": "platform_fact",
+      "stages": [
+        "launch",
+        "measurement",
+        "diagnosis"
+      ],
+      "platforms": [
+        "tiktok"
+      ],
+      "surfaces": [
+        "web"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "TikTok",
+        "TK",
+        "Pixel",
+        "Events API",
+        "去重",
+        "event_id"
+      ],
+      "summary": "对同一网站转化同时使用 Pixel 和 Events API 时，TikTok 要求对应事件共享 event_id 以支持去重；完全不同的事件不能机械合并。",
+      "required_facts": [
+        "event_dedup_verified"
+      ],
+      "triggers": [
+        {
+          "key": "pixel_events_api_overlap",
+          "equals": true
+        }
+      ],
+      "questions": [
+        {
+          "key": "pixel_events_api_overlap",
+          "question": "Pixel 与 Events API 是否会发送同一笔网站转化？"
+        },
+        {
+          "key": "event_dedup_verified",
+          "question": "浏览器和服务端同一转化是否使用相同业务事件和 event_id？"
+        }
+      ],
+      "checks": [
+        "重试保留同一转化身份，不同订单不复用 ID。",
+        "去重记录与原始事件可追溯。"
+      ],
+      "actions": [
+        "使用授权测试模式核对事件与去重结果。",
+        "把重复上报与真实复购分别解释。"
+      ],
+      "avoid": [
+        "不把所有来源的转化数直接相加。",
+        "不得重放生产转化回调作为诊断。"
+      ],
+      "source_ids": [
+        "TK-DEDUP",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-GG-01",
+      "title": "Google RSA 检查组合语义与必显文案",
+      "kind": "platform_fact",
+      "stages": [
+        "creative",
+        "launch"
+      ],
+      "platforms": [
+        "google"
+      ],
+      "surfaces": [
+        "web"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Google",
+        "GG",
+        "RSA",
+        "搜索广告",
+        "标题",
+        "组合"
+      ],
+      "summary": "响应式搜索广告会组合标题和描述，预览不展示全部排列；双宽字符计数不同，必要说明应使用合适的固定位置。",
+      "required_facts": [
+        "ad_product",
+        "rsa_assets_verified"
+      ],
+      "triggers": [
+        {
+          "key": "uses_responsive_search_ads",
+          "equals": true
+        }
+      ],
+      "questions": [
+        {
+          "key": "uses_responsive_search_ads",
+          "question": "本轮是否使用响应式搜索广告 RSA？"
+        },
+        {
+          "key": "rsa_assets_verified",
+          "question": "标题和描述独立及组合后是否仍指向同一产品、价格与承诺？"
+        }
+      ],
+      "checks": [
+        "按 RSA 规格验证数量、字符和固定位置。",
+        "适用同组资产共享时检查其他活跃 RSA 及目的地。"
+      ],
+      "actions": [
+        "生成代表组合，并检查必要说明是否可能缺失。",
+        "明确组合自由与固定说明之间的取舍。"
+      ],
+      "avoid": [
+        "不依赖第三标题或第二描述一定显示。",
+        "不把广告强度评分当作效果保证。"
+      ],
+      "source_ids": [
+        "GG-RSA",
+        "PRJ-OPS"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-GG-02",
+      "title": "Google 追踪模板先看生效层级和并行路径",
+      "kind": "platform_fact",
+      "stages": [
+        "launch",
+        "measurement",
+        "diagnosis"
+      ],
+      "platforms": [
+        "google"
+      ],
+      "surfaces": [
+        "web"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Google",
+        "GG",
+        "ValueTrack",
+        "并行追踪",
+        "模板",
+        "URL"
+      ],
+      "summary": "Google Ads 使用更具体层级的追踪模板；并行追踪可让用户直达落地页，测量请求在后台加载。",
+      "required_facts": [
+        "tracking_verified",
+        "tracking_template_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "tracking_template_verified",
+          "question": "关键词、广告、组、系列与账户哪个模板实际生效，tracker 是否兼容并行追踪？"
+        }
+      ],
+      "checks": [
+        "最终 URL、suffix、自定义参数和模板职责清晰。",
+        "HTTPS、服务端跳转与测量端回执符合实际要求。"
+      ],
+      "actions": [
+        "在目标层级用平台测试，再核对授权测试记录中的参数和回执。",
+        "修正后读回，不因地址栏未经过 tracker 就判定失败。"
+      ],
+      "avoid": [
+        "平台 Test 通过不证明所有真实测量路径都已验证。",
+        "不为修追踪自动重建整套广告。"
+      ],
+      "source_ids": [
+        "GG-TRACKING",
+        "GG-PARALLEL",
+        "PRJ-OPS"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-GG-03",
+      "title": "Google 转化延迟会改变近期 CPA 与 ROAS",
+      "kind": "platform_fact",
+      "stages": [
+        "measurement",
+        "diagnosis"
+      ],
+      "platforms": [
+        "google"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Google",
+        "GG",
+        "转化延迟",
+        "CPA",
+        "ROAS",
+        "成熟度"
+      ],
+      "summary": "Google 官方转化延迟报告说明，近期仍待发生或报告的转化可令当前 CPA 偏高、ROAS 偏低；适用范围取决于广告类型。",
+      "required_facts": [
+        "conversion_data_mature",
+        "value_window"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "conversion_data_mature",
+          "question": "选定窗口还有多少转化可能补齐，是否有延迟分布或历史成熟窗口？"
+        }
+      ],
+      "checks": [
+        "报告日期基准与比较期一致。",
+        "估计补齐与已观测转化分开呈现。"
+      ],
+      "actions": [
+        "将未成熟窗口标记为暂定。",
+        "在可用报告中检查转化延迟，再比较成熟数据。"
+      ],
+      "avoid": [
+        "不对所有账户套同一个等待天数。",
+        "预测补齐量不能当已到账收入。"
+      ],
+      "source_ids": [
+        "GG-LAG",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-GG-04",
+      "title": "Google 出价目标需读回当前系列所选转化目标",
+      "kind": "platform_fact",
+      "stages": [
+        "planning",
+        "launch",
+        "measurement"
+      ],
+      "platforms": [
+        "google"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "Google",
+        "GG",
+        "转化目标",
+        "出价",
+        "目标事件"
+      ],
+      "summary": "Google 系列选择的转化目标会影响出价所追求的行为及相关转化列；账户中存在某事件不代表本系列按它优化。",
+      "required_facts": [
+        "native_config_verified",
+        "goal_type"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "native_config_verified",
+          "question": "本系列当前采用哪些转化目标，和业务所需目标是否一致？"
+        }
+      ],
+      "checks": [
+        "转化动作定义、目标选择与当前系列设置相符。",
+        "测试指标与报表所列事件没有混淆。"
+      ],
+      "actions": [
+        "把业务目标映射到读回的系列转化设置。",
+        "未知配置先保留缺口，再制定可审查的调整方案。"
+      ],
+      "avoid": [
+        "不把记录到的所有事件都视为出价目标。",
+        "不因接口创建成功就认为目标已生效。"
+      ],
+      "source_ids": [
+        "GG-GOALS",
+        "PRJ-OPS"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-DATA-01",
+      "title": "覆盖、分页、时间与真实零属于报告结果",
+      "kind": "operational_principle",
+      "stages": [
+        "measurement",
+        "diagnosis"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "数据完整性",
+        "分页",
+        "时区",
+        "报告",
+        "真实零"
+      ],
+      "summary": "数据表只有在账户、对象、分页、日期、时区和粒度清楚时才可用于判断；未返回不等于真实零。",
+      "required_facts": [
+        "report_coverage_verified",
+        "report_time_basis_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "report_coverage_verified",
+          "question": "请求的账户与对象是否都可访问，分页和状态过滤是否完整？"
+        },
+        {
+          "key": "report_time_basis_verified",
+          "question": "返回的是哪个时区、哪个日期基准和实际粒度？"
+        }
+      ],
+      "checks": [
+        "重复键、缺天与漏账户有明确解释。",
+        "unknown、null、permission_denied 与 observed zero 分开。"
+      ],
+      "actions": [
+        "交付可靠子集并列出覆盖缺口。",
+        "同口径汇总分子分母后重新计算比率。"
+      ],
+      "avoid": [
+        "不能用总额碰巧相等证明完整。",
+        "不能拿多日累计数据填单日日报。"
+      ],
+      "source_ids": [
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-DATA-02",
+      "title": "成本不完整时暂不下盈利结论",
+      "kind": "diagnostic_hypothesis",
+      "stages": [
+        "measurement",
+        "diagnosis"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "成本缺失",
+        "盈利",
+        "ROI",
+        "ROAS",
+        "收入"
+      ],
+      "summary": "已见收入或转化但成本覆盖不完整，只能说明部分产出，不能据此确认盈利、ROI 或完整获客成本。",
+      "required_facts": [
+        "cost_complete",
+        "report_coverage_verified"
+      ],
+      "triggers": [
+        {
+          "key": "cost_complete",
+          "equals": false
+        }
+      ],
+      "questions": [
+        {
+          "key": "cost_complete",
+          "question": "成本覆盖哪些账户、日期和费用项，缺口来自权限、接口还是上报？"
+        }
+      ],
+      "checks": [
+        "收入与消耗来自相同业务范围。",
+        "缺失成本没有被补成零或从旧报表猜测。"
+      ],
+      "actions": [
+        "先列已知收入/转化与未覆盖消耗。",
+        "补齐覆盖或明确限定到可靠子集后再计算。"
+      ],
+      "avoid": [
+        "不因看见收入就推荐扩量。"
+      ],
+      "source_ids": [
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-DATA-03",
+      "title": "平台与 tracker 不一致先对齐口径",
+      "kind": "diagnostic_hypothesis",
+      "stages": [
+        "measurement",
+        "diagnosis"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "归因",
+        "tracker",
+        "报表差异",
+        "对账",
+        "口径"
+      ],
+      "summary": "跨源差异可能来自覆盖、事件定义、归因窗口、时区、日期基准和延迟；差异本身不能证明任一来源出错。",
+      "required_facts": [
+        "attribution_comparable",
+        "report_coverage_verified",
+        "report_time_basis_verified"
+      ],
+      "triggers": [
+        {
+          "key": "attribution_comparable",
+          "equals": false
+        }
+      ],
+      "questions": [
+        {
+          "key": "attribution_comparable",
+          "question": "双方实际生效的归因、目标事件和统计基准分别是什么？"
+        }
+      ],
+      "checks": [
+        "请求参数与实际生效口径均有证据。",
+        "业务映射依赖稳定 ID/链接，不仅广告名称。"
+      ],
+      "actions": [
+        "建立差异拆解表，先对齐可比范围。",
+        "无法对齐时分别呈现并解释用途。"
+      ],
+      "avoid": [
+        "不把未知归因默认成常见窗口。",
+        "不先把全部差异归因于时区。"
+      ],
+      "source_ids": [
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-DIAG-01",
+      "title": "点击到转化下滑按漏斗逐段核验",
+      "kind": "diagnostic_hypothesis",
+      "stages": [
+        "diagnosis"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "漏斗",
+        "CVR",
+        "点击",
+        "转化下降",
+        "落地页"
+      ],
+      "summary": "点击有量而转化下降可能来自流量质量、页面、参数、事件或后续业务流程；需要逐段证据再定位。",
+      "required_facts": [
+        "tracking_verified",
+        "funnel_data_verified",
+        "conversion_data_mature"
+      ],
+      "triggers": [
+        {
+          "key": "conversion_drop",
+          "equals": true
+        }
+      ],
+      "questions": [
+        {
+          "key": "funnel_data_verified",
+          "question": "点击、实际到达、关键交互、目标事件及有效结果分别下降在哪一段？"
+        }
+      ],
+      "checks": [
+        "漏斗分母、事件和观察窗可比。",
+        "近期页面/追踪/产品变更已核对。"
+      ],
+      "actions": [
+        "列出各段事实与待验证原因。",
+        "选择最能区分原因的一项低成本检查。"
+      ],
+      "avoid": [
+        "不能仅凭 CTR 好、CVR 差就宣布素材吸错人。",
+        "不通过真实购买或生产回调模拟完整转化。"
+      ],
+      "source_ids": [
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-DIAG-02",
+      "title": "疲劳只是一个需要反证的假设",
+      "kind": "diagnostic_hypothesis",
+      "stages": [
+        "diagnosis",
+        "creative"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "疲劳",
+        "频次",
+        "衰退",
+        "素材生命周期"
+      ],
+      "summary": "频次升高、点击或转化变化可提示检查创意疲劳，但也可能伴随人群、竞价、分配和测量变化。",
+      "required_facts": [
+        "conversion_data_mature",
+        "change_log_verified",
+        "creative_history_verified"
+      ],
+      "triggers": [
+        {
+          "key": "creative_performance_decline",
+          "equals": true
+        }
+      ],
+      "questions": [
+        {
+          "key": "creative_history_verified",
+          "question": "同概念的曝光历史、频次、触达与表现变化是否在可比窗口？"
+        }
+      ],
+      "checks": [
+        "账户组成和事件口径未被隐藏变化影响。",
+        "同概念的多个文件没有被误当全新创意。"
+      ],
+      "actions": [
+        "同时列出疲劳与其他原因的支持/反对证据。",
+        "把替换开头、主张或人群的测试作为待决选项。"
+      ],
+      "avoid": [
+        "不以单一频次或天数自动暂停素材。"
+      ],
+      "source_ids": [
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "KB-DIAG-03",
+      "title": "无消耗或骤降先查可投放性与覆盖",
+      "kind": "diagnostic_hypothesis",
+      "stages": [
+        "diagnosis"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "不消耗",
+        "掉量",
+        "零展示",
+        "账户",
+        "投放状态"
+      ],
+      "summary": "无量首先需要排除数据覆盖、状态、审核、排期、预算和账户可用性问题，再讨论出价、结构与素材。",
+      "required_facts": [
+        "native_status_verified",
+        "report_coverage_verified",
+        "account_capacity_verified"
+      ],
+      "triggers": [
+        {
+          "key": "delivery_drop",
+          "equals": true
+        }
+      ],
+      "questions": [
+        {
+          "key": "account_capacity_verified",
+          "question": "是否已有可读证据说明账户、付款、容量和必要权限可用？"
+        }
+      ],
+      "checks": [
+        "实际父子对象与当前窗口一致。",
+        "多个广告共同异常是否共享同一依赖。"
+      ],
+      "actions": [
+        "按依赖逐层定位并保留未知项。",
+        "把结构或出价调整写成待验证假设与授权方案。"
+      ],
+      "avoid": [
+        "零消耗不证明素材差。",
+        "不默认加预算能修复技术或权限问题。"
+      ],
+      "source_ids": [
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-EXEC-01",
+      "title": "写入结果未知时先核对，重试前检查并发变化",
+      "kind": "operational_principle",
+      "stages": [
+        "launch",
+        "diagnosis"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "重试",
+        "超时",
+        "幂等",
+        "并发",
+        "读回",
+        "MCP"
+      ],
+      "summary": "超时可能发生在平台已处理请求之后；恢复应使用操作标识、回执和原生对象核对，同时保护人工最新修改。",
+      "required_facts": [
+        "write_result_reconciled",
+        "native_config_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "write_result_reconciled",
+          "question": "上一次动作到底已发生、明确失败还是结果仍未知，有哪些回执？"
+        }
+      ],
+      "checks": [
+        "计划哈希、对象范围和当前值仍一致。",
+        "同一操作跨连接器保持同一身份。"
+      ],
+      "actions": [
+        "先查目标对象与已知回执，再制定缺失部分的续跑。",
+        "发现实质并发冲突时只隔离受影响部分。"
+      ],
+      "avoid": [
+        "不因 HTTP 错误全批重新创建。",
+        "切换 MCP 不能清零尝试或扩大授权。"
+      ],
+      "source_ids": [
+        "PRJ-OPS",
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "KB-LEARN-01",
+      "title": "把案例沉淀为有证据和适用条件的经验",
+      "kind": "operational_principle",
+      "stages": [
+        "measurement",
+        "diagnosis"
+      ],
+      "platforms": [
+        "all"
+      ],
+      "surfaces": [
+        "all"
+      ],
+      "monetization": [
+        "all"
+      ],
+      "keywords": [
+        "复盘",
+        "经验",
+        "知识库",
+        "学习",
+        "证据"
+      ],
+      "summary": "案例需要保留背景、动作、实际结果、反例和未解决问题；相关性发现先成为假设，验证后才进入可复用方法。",
+      "required_facts": [
+        "experiment_outcome_verified"
+      ],
+      "triggers": [],
+      "questions": [
+        {
+          "key": "experiment_outcome_verified",
+          "question": "执行和结果是否都有独立证据，是否存在相反案例或混淆因素？"
+        }
+      ],
+      "checks": [
+        "观察结果与原因解释分开。",
+        "私有账户、素材权利、标识和凭据不进入公开知识。"
+      ],
+      "actions": [
+        "将经验写为有适用条件、来源与复核日期的候选条目。",
+        "通过审阅和验证后再合入共享目录，记录版本变化。"
+      ],
+      "avoid": [
+        "一次成功不能自动升级为通用平台规则。",
+        "经验积累不自动改变投放或创建调度。"
+      ],
+      "source_ids": [
+        "PRJ-EXPERIENCE"
+      ],
+      "priority": 2
+    }
+  ]
+}

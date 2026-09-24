@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "note": "Fictional observations only. Use one consistent product, account scope and time window per assessment. No platform was queried.",
+  "facts": {
+    "delivery_drop": {"value": true, "status": "observed", "source": "fictional_daily_delivery_comparison"},
+    "account_capacity_verified": {"value": null, "status": "unknown", "source": "fictional_unchecked_capacity"},
+    "attribution_comparable": {"value": false, "status": "observed", "source": "fictional_report_contract_mismatch"},
+    "cost_complete": {"value": false, "status": "observed", "source": "fictional_cost_coverage_gap"},
+    "conversion_data_mature": {"value": null, "status": "unknown", "source": "fictional_unknown_conversion_lag"},
+    "creative_rejected": {"value": true, "status": "observed", "source": "fictional_policy_status"},
+    "tracking_verified": {"value": null, "status": "unknown", "source": "fictional_tracking_not_checked"}
+  }
+}

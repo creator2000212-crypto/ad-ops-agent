@@ -40,9 +40,10 @@ For a detailed, source-linked route through self-managed Meta, TikTok and Google
 | Connection discovery, scope and freshness | Fictional snapshots only; no actual permission check |
 | Asset selection | Explicit metadata filters and input order; no media inspection |
 | Budget allocation and batch review | Decimal arithmetic, frozen plan hash, Markdown review |
+| Contextual advertising knowledge | Runtime catalog retrieval, applicability/evidence/source review, intake and plan integration; advisory only |
 | Execution and recovery | Local SQLite simulation, readback comparison, resume in the same state directory |
 | Real Meta/TikTok/Google operations | Planned; not implemented |
-| Operational recipes and experience catalog | Design-only documents and JSON; not executable rules |
+| Additional operational recipes and design contracts | Human-readable guides and unloaded design JSON; separate from the runtime knowledge catalog |
 
 The simulation authorization file is an unsigned test artifact, not authentication or a user's real publishing approval. Recovery is scoped to the same frozen plan and local state directory; it is not a distributed or cross-provider exactly-once guarantee.
 
@@ -91,6 +92,7 @@ For an incomplete App + hybrid monetization example, replace the onboarding inpu
 
 ## Operational knowledge included
 
+- [Runtime knowledge base (Chinese)](docs/knowledge-base.zh-CN.md): source-linked knowledge with platform and business conditions, evidence gaps and review dates. `knowledge.py` supports deterministic search and assessment; onboarding and plan reviews use the same catalog without granting execution permissions.
 - Sixteen [operation cards](docs/operations.md): media readiness, duplicate versus variant selection, existing posts, placement previews, tracking, parent status, copy defaults, budget ownership, concurrent human edits, timezone boundaries, attribution maturity, testing observations, Spark, RSA and ValueTrack.
 - [Meta creative recovery](docs/meta-creative-recovery.md): separate local hashes, media references, creative IDs, ad IDs and post identities; distinguish technical repair, suspected false rejection and content revision.
 - [Connector contract](contracts/connector-contract.json): native identity, capability/version records, normalization, uncertainty reconciliation and equivalent provider switching.
@@ -98,11 +100,22 @@ For an incomplete App + hybrid monetization example, replace the onboarding inpu
 - [Experience catalog](contracts/experience-catalog.json) and [onboarding extensions](contracts/onboarding-extensions.json): reusable candidates with scope and evidence boundaries.
 - [Acceptance scenarios](contracts/acceptance-scenarios.json): specifications for future implementation, separate from executable tests.
 
+Try a knowledge lookup or an assessment using fictional observations:
+
+```bash
+python3 knowledge.py search --query '归因' --stage measurement --platform meta
+python3 knowledge.py assess --profile examples/onboarding-learning.json --observations examples/knowledge-observations.json --stage diagnosis --out runs/knowledge-review
+```
+
+The assessment writes `report.json` and `review.md`. Results distinguish applicable knowledge from missing context, missing evidence and sources requiring review. They remain advisory: the engine does not fetch ad data, prove causes or execute recommendations. Catalog changes invalidate frozen plans, requiring a new plan review and simulation authorization.
+
 ## Repository map
 
 ```text
 adops.py                 Offline plan, simulated authorization, execution and resume
 onboarding.py            Structured business intake and readiness
+knowledge.py             Deterministic knowledge search and advisory assessment
+knowledge/               Runtime knowledge catalog with sources and conditions
 examples/                Fictional JSON inputs
 tests/                   Executable offline contract tests
 scripts/                 Demonstration and repository checks

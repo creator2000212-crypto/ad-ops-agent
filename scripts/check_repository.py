@@ -11,7 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SKIP = {'.git', '__pycache__', '.venv', 'venv', 'runs', '.direct-work'}
 REQUIRED = [
     'README.md', 'README.zh-CN.md', 'LICENSE', 'NOTICE.md', 'CONTRIBUTING.md', 'SECURITY.md',
-    'adops.py', 'onboarding.py', 'scripts/demo.py', 'tests/test_adops.py', 'tests/test_onboarding.py',
+    'adops.py', 'onboarding.py', 'knowledge.py', 'knowledge/catalog.json',
+    'docs/knowledge-base.zh-CN.md', 'tests/test_knowledge.py',
+    'scripts/demo.py', 'tests/test_adops.py', 'tests/test_onboarding.py',
     'docs/index.md', 'docs/product.md', 'docs/architecture.md', 'docs/onboarding.md',
     'docs/operations.md', 'docs/meta-creative-recovery.md', 'docs/roadmap.md',
     'contracts/README.md', 'contracts/connector-contract.json', 'contracts/creative-recovery.json',
@@ -29,6 +31,12 @@ SENSITIVE = [
 
 def main():
     errors, files = [], []
+    sys.path.insert(0, str(ROOT))
+    try:
+        import knowledge
+        knowledge.load_catalog()
+    except (OSError, ValueError, TypeError) as exc:
+        errors.append('runtime knowledge catalog invalid: ' + str(exc))
     for name in REQUIRED:
         if not (ROOT / name).is_file():
             errors.append(f'missing required file: {name}')
@@ -73,7 +81,7 @@ def main():
                 if not destination.is_relative_to(ROOT) or not destination.exists():
                     errors.append(f'broken local link: {relative} -> {target}')
     result = {'status': 'failed' if errors else 'passed', 'public_text_files': len(files),
-              'checks': ['required files', 'Python syntax', 'JSON contracts', 'local Markdown links', 'common disclosure patterns'],
+              'checks': ['required files', 'Python syntax', 'JSON contracts', 'runtime knowledge catalog', 'local Markdown links', 'common disclosure patterns'],
               'limitations': 'Heuristic source check; not a comprehensive secret scanner or runtime/platform validation.',
               'errors': errors}
     print(json.dumps(result, ensure_ascii=False, indent=2))

@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import onboarding
+import knowledge
 
 PLATFORMS = {'meta', 'tiktok', 'google'}
 ACTIONS = {'create_simulated_draft', 'readback_simulated_draft'}
@@ -241,9 +242,20 @@ def build_plan(brief, candidates, context_path=None):
                                'action': 'create_simulated_draft', 'adapter': 'simulation',
                                'desired': spec})
     status = 'unsupported' if any(i['code'] == 'unsupported' for i in issues) else ('needs_input' if issues else 'ready')
+    knowledge_reviews = []
+    if context:
+        saved_context = onboarding.read(context['reference'])
+        profile = onboarding.read(saved_context['source_ref'])
+        scoped_profile = {**profile, 'facts': {**profile['facts'], 'platforms': {
+            'value': sorted({target['platform'] for target in valid_targets}),
+            'status': 'confirmed', 'source': 'validated_plan_targets'}}}
+        catalog = knowledge.load_catalog()
+        knowledge_reviews = [knowledge.assess(scoped_profile, stage, catalog=catalog)
+                             for stage in ('planning', 'creative', 'launch')]
     plan = {'schema_version': 1, 'kind': 'offline_simulation_plan', 'notice': NOTICE,
             'task_id': brief.get('task_id'), 'mode': 'simulation', 'status': status,
             'business_context': context,
+            'knowledge_reviews': knowledge_reviews,
             'brief_snapshot': brief, 'candidates_metadata_hash': digest(candidates),
             'selection_basis': 'metadata_only_input_order; no file inspection, visual understanding or performance prediction',
             'asset_decisions': decisions, 'issues': issues, 'operations': operations,
@@ -265,6 +277,12 @@ def verify_plan(plan):
         raise ContractError('计划尚未 ready；缺字段或 unsupported 必须先解决。')
     if not isinstance(plan.get('operations'), list) or not plan['operations']:
         raise ContractError('没有可执行的模拟操作。')
+    reviews = plan.get('knowledge_reviews')
+    catalog_hash = knowledge.digest(knowledge.load_catalog())
+    if not isinstance(reviews, list) or len(reviews) != 3 or any(
+            not isinstance(review, dict) or review.get('catalog_hash') != catalog_hash
+            for review in reviews):
+        raise ContractError('知识库已改版或缺少知识评审；请重新生成计划和模拟授权。')
     context = plan.get('business_context')
     if not isinstance(context, dict) or not context.get('reference') or not context.get('profile_hash'):
         raise ContractError('缺少 onboarding context；旧格式计划必须重新评估。')
@@ -344,6 +362,8 @@ def write_review(plan, path):
     lines += ['', '## 阻断项', '']
     lines += [f"- {i['code']} / {i['path']}：{i['message']}" for i in plan['issues']] or ['无本地契约阻断项；这不表示真实广告平台已验证。']
     lines += ['', '本文件用于整批方案审阅。authorize-simulation 只创建测试用授权文件，不记录或推断用户对真实发布的批准。', '']
+    for review in plan.get('knowledge_reviews', []):
+        lines += [knowledge.markdown(review)]
     Path(path).write_text('\n'.join(lines), encoding='utf-8')
 
 
