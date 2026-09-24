@@ -1,0 +1,24 @@
+{
+  "task_id": "offline-demo-001",
+  "mode": "simulation",
+  "business_type": "not_decided",
+  "objective": "example_test_direction_from_human",
+  "target_event": "example_business_event_not_platform_validated",
+  "currency": "USD",
+  "timezone": "Asia/Shanghai",
+  "budget": {"amount": "90.00", "period": "total"},
+  "targets": [
+    {"platform": "meta", "account_id": "fictional_meta_account", "profile": "generic_draft", "budget_amount": "30.00"},
+    {"platform": "tiktok", "account_id": "fictional_tiktok_account", "profile": "generic_draft", "budget_amount": "30.00"},
+    {"platform": "google", "account_id": "fictional_google_account", "profile": "generic_draft", "budget_amount": "30.00"}
+  ],
+  "asset_requirements": {
+    "required_tags": ["example_approved", "generic_test"],
+    "excluded_tags": ["restricted"],
+    "allowed_types": ["image"],
+    "language": "en",
+    "min_width": 1080,
+    "min_height": 1080,
+    "count": 2
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "notice": "Fictional metadata only. No real media files are provided or inspected.",
+  "assets": [
+    {"asset_id": "fictional_image_a", "source_ref": "virtual://example-a", "type": "image", "language": "en", "width": 1080, "height": 1080, "tags": ["example_approved", "generic_test"]},
+    {"asset_id": "fictional_unknown_size", "source_ref": "virtual://unknown-size", "type": "image", "language": "en", "tags": ["example_approved", "generic_test"]},
+    {"asset_id": "fictional_image_b", "source_ref": "virtual://example-b", "type": "image", "language": "en", "width": 1200, "height": 1200, "tags": ["example_approved", "generic_test"]},
+    {"asset_id": "fictional_excluded", "source_ref": "virtual://excluded", "type": "image", "language": "en", "width": 1080, "height": 1080, "tags": ["example_approved", "generic_test", "restricted"]}
+  ]
+}

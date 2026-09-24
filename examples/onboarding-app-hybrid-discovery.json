@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "mode": "simulation",
+  "profile_id": "fictional-app-hybrid-discovery",
+  "profile_version": "1",
+  "facts": {
+    "product_name": {
+      "value": "Fictional product for contract demonstration",
+      "status": "confirmed",
+      "source": "fictional_fixture_only"
+    },
+    "surface": {
+      "value": "app",
+      "status": "confirmed",
+      "source": "fictional_fixture_only"
+    },
+    "monetization": {
+      "value": "hybrid",
+      "status": "confirmed",
+      "source": "fictional_fixture_only"
+    },
+    "countries": {
+      "value": [
+        "US"
+      ],
+      "status": "confirmed",
+      "source": "fictional_fixture_only"
+    },
+    "platforms": {
+      "value": [
+        "meta",
+        "tiktok",
+        "google"
+      ],
+      "status": "confirmed",
+      "source": "fictional_fixture_only"
+    },
+    "methodology": {
+      "value": "Keep metadata requirements fixed; compare the same two fictional assets",
+      "status": "confirmed",
+      "source": "fictional_fixture_only"
+    },
+    "audience": {
+      "value": "Two conflicting descriptions are still unresolved",
+      "status": "conflict",
+      "source": "fictional_fixture_only"
+    },
+    "creative_direction": {
+      "value": "generic_test approved metadata only",
+      "status": "confirmed",
+      "source": "fictional_fixture_only"
+    },
+    "goal_type": {
+      "value": "revenue",
+      "status": "confirmed",
+      "source": "fictional_fixture_only"
+    },
+    "success_metric": {
+      "value": "Complete the offline preparation and readback contract",
+      "status": "confirmed",
+      "source": "fictional_fixture_only"
+    },
+    "learning_budget": {
+      "value": {
+        "amount": "90.00",
+        "currency": "USD"
+      },
+      "status": "confirmed",
+      "source": "fictional_fixture_only"
+    },
+    "ltv": {
+      "value": null,
+      "status": "unknown",
+      "source": "fictional_fixture_only"
+    },
+    "payback_window": {
+      "value": null,
+      "status": "unknown",
+      "source": "fictional_fixture_only"
+    },
+    "os": {
+      "value": null,
+      "status": "unknown",
+      "source": "fictional_fixture_only"
+    },
+    "store": {
+      "value": null,
+      "status": "unknown",
+      "source": "fictional_fixture_only"
+    },
+    "measurement_stack": {
+      "value": null,
+      "status": "unknown",
+      "source": "fictional_fixture_only"
+    },
+    "ad_revenue_event": {
+      "value": null,
+      "status": "unknown",
+      "source": "fictional_fixture_only"
+    },
+    "ad_revenue_window": {
+      "value": null,
+      "status": "unknown",
+      "source": "fictional_fixture_only"
+    },
+    "purchase_revenue_event": {
+      "value": null,
+      "status": "unknown",
+      "source": "fictional_fixture_only"
+    },
+    "refund_policy": {
+      "value": null,
+      "status": "unknown",
+      "source": "fictional_fixture_only"
+    }
+  },
+  "selected_accounts": [
+    {
+      "platform": "meta",
+      "account_id": "fictional_meta_account"
+    },
+    {
+      "platform": "tiktok",
+      "account_id": "fictional_tiktok_account"
+    },
+    {
+      "platform": "google",
+      "account_id": "fictional_google_account"
+    }
+  ],
+  "connections": {
+    "mode": "simulation",
+    "max_age_hours": 24,
+    "checks": [
+      {
+        "platform": "meta",
+        "account_id": "fictional_meta_account",
+        "discovered": true,
+        "read": {
+          "status": "verified",
+          "checked_at": "2026-09-24T09:12:41.042254+00:00",
+          "scopes": [
+            "read_objects"
+          ],
+          "evidence": "offline fixture, no real check"
+        },
+        "write": {
+          "status": "unknown",
+          "scopes": []
+        }
+      },
+      {
+        "platform": "tiktok",
+        "account_id": "fictional_tiktok_account",
+        "discovered": true,
+        "read": {
+          "status": "verified",
+          "checked_at": "2026-09-24T09:12:41.042254+00:00",
+          "scopes": [
+            "read_objects"
+          ],
+          "evidence": "offline fixture, no real check"
+        },
+        "write": {
+          "status": "unknown",
+          "scopes": []
+        }
+      },
+      {
+        "platform": "google",
+        "account_id": "fictional_google_account",
+        "discovered": true,
+        "read": {
+          "status": "verified",
+          "checked_at": "2026-09-24T09:12:41.042254+00:00",
+          "scopes": [
+            "read_objects"
+          ],
+          "evidence": "offline fixture, no real check"
+        },
+        "write": {
+          "status": "unknown",
+          "scopes": []
+        }
+      }
+    ]
+  },
+  "fixture_only": true
+}
