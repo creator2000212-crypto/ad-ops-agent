@@ -281,11 +281,12 @@ def apply_gate(ledger, gate_document, at):
                            'object_key': verdict['object_key'],
                            'reason': '冲突隔离：现值既非基线也非目标，交给人确认，不覆盖。', 'at': at})
         elif verdict['gate'] == rules.UNKNOWN:
-            # Recorded, not forgotten: an unread state is an open item that must
-            # come back next round, not a row that quietly disappears.
+            # Preserve the specific evidence gap. A fresh current-state read
+            # cannot establish a missing baseline from the original plan.
             events.append({'type': 'skipped', 'id': row_id, 'code': verdict['code'],
                            'object_key': verdict['object_key'],
-                           'reason': '未知：没读到写前状态或字段缺失，先复拉再判。', 'at': at})
+                           'reason': '未知：写前状态或原方案基线证据不足，按具体缺项补证后重新核对。',
+                           'detail': verdict['gate_detail'], 'at': at})
     append_events(ledger, events)
     return {
         'schema_version': 1,

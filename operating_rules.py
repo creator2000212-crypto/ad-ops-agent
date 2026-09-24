@@ -509,7 +509,8 @@ def decide_account(account, methodology):
             proposals.append(proposal(account, adset, 'LINK_OR_TRACKING_BAD', methodology,
                                       evidence=['声明的链接有效性或回传完整性未通过。'],
                                       target={'status': 'PAUSED'},
-                                      baseline={'status': adset.get('configured_status')}))
+                                      baseline=({'status': adset['configured_status']}
+                                                if 'configured_status' in adset else {})))
             continue
 
         # A metric we could not read is missing evidence, not a passing result.
@@ -600,7 +601,8 @@ def _write_intent(code, adset, values, methodology):
         return ({'daily_budget': num2(new_budget)},
                 {'daily_budget': num2(budget)})
     if code in ('TEST_STOP_NOCONV', 'TEST_STOP_OVERCOST', 'TEST_EARLY_STOP'):
-        return ({'status': 'PAUSED'}, {'status': adset.get('configured_status')})
+        return ({'status': 'PAUSED'},
+                {'status': adset['configured_status']} if 'configured_status' in adset else {})
     return (None, None)
 
 
@@ -636,12 +638,16 @@ def gate(proposals, writeback):
                    Isolate this row and check the source of the difference;
                    the values alone do not identify who or what changed it.
                    Do not overwrite or restart the whole batch.
-    ``unknown``    the current state was not read, or the field is absent from
-                   the read. Absent is not the same as equal — never pass it.
+    ``unknown``    the current state was not read, a target field is absent from
+                   the read, or a differing field has no concrete baseline.
+                   Missing and explicit null baselines have distinct reasons;
+                   neither establishes a safe comparison for a change.
     ``advisory``   the finding declares no field change, so there is nothing to
                    gate. Reported separately: counting these as "unknown" would
                    inflate the number of rows that actually need attention.
 
+    An already satisfied field needs no baseline because it will not be changed.
+    Any unknown field holds the whole proposal; other proposals remain independent.
     Only ``ready`` rows may proceed, and only for their differing fields.
     """
     objects = (writeback or {}).get('objects') or {}
@@ -664,20 +670,31 @@ def gate(proposals, writeback):
                                      for field in absent]))
             continue
         baseline = item.get('baseline') or {}
-        detail, conflicts, writes, done = [], [], [], []
+        detail, conflicts, unknown, writes, done = [], [], [], [], []
         for field, wanted in target.items():
             present = current.get(field)
             held = baseline.get(field)
             if same_number(present, wanted):
                 detail.append(f'{field}：已是目标值（{wanted}）⇒ 跳过不写。')
                 done.append(field)
-            elif held is None or same_number(present, held):
+            elif field not in baseline:
+                detail.append(f'{field}：基线未记录该字段，无法核对当前值 {present} 与原方案是否一致 '
+                              '⇒ 暂缓修改，补充原方案基线证据；必要时重新生成并审阅计划。')
+                unknown.append(field)
+            elif held is None:
+                detail.append(f'{field}：基线明确为 null，尚无可用于本次修改的基线值 '
+                              '⇒ 暂缓修改，核实空值含义与原方案基线；必要时重新生成并审阅计划。')
+                unknown.append(field)
+            elif same_number(present, held):
                 detail.append(f'{field}：{present} -> {wanted}（与基线一致，只发这个字段）。')
                 writes.append(field)
             else:
                 detail.append(f'{field}：当前值 {present} 与基线 {held}、目标 {wanted} 均不一致 ⇒ 隔离该行，暂缓修改并核对变更来源。')
                 conflicts.append(field)
-        if conflicts:
+        if unknown:
+            results.append(_verdict(item, UNKNOWN, detail, conflict_fields=conflicts,
+                                    satisfied_fields=done))
+        elif conflicts:
             results.append(_verdict(item, CONFLICT, detail, conflict_fields=conflicts))
         elif not writes:
             results.append(_verdict(item, SATISFIED, detail, satisfied_fields=done))

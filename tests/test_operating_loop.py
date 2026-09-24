@@ -276,6 +276,105 @@ class GateTests(unittest.TestCase):
                                writeback={'objects': {'obj': {'daily_budget': '10.00'}}})
         self.assertEqual(verdict['gate'], rules.UNKNOWN)
 
+    def test_absent_baseline_field_is_unknown_not_ready(self):
+        verdict = self.verdict(baseline={}, target={'daily_budget': '20.00'},
+                               writeback={'objects': {'obj': {'daily_budget': '30.00'}}})
+        self.assertEqual(verdict['gate'], rules.UNKNOWN)
+        self.assertEqual(verdict['writable_fields'], [])
+        self.assertEqual(rules.writable_rows([verdict]), [])
+        self.assertIn('基线未记录', ' '.join(verdict['gate_detail']))
+
+    def test_omitted_baseline_document_is_unknown(self):
+        verdict = rules.gate(
+            [{'object_key': 'obj', 'target': {'daily_budget': '20.00'}}],
+            {'objects': {'obj': {'daily_budget': '30.00'}}})[0]
+        self.assertEqual(verdict['gate'], rules.UNKNOWN)
+        self.assertEqual(rules.writable_rows([verdict]), [])
+
+    def test_null_baseline_is_unknown_even_when_current_is_null(self):
+        for present in ('30.00', None):
+            with self.subTest(present=present):
+                verdict = self.verdict(
+                    baseline={'daily_budget': None}, target={'daily_budget': '20.00'},
+                    writeback={'objects': {'obj': {'daily_budget': present}}})
+                self.assertEqual(verdict['gate'], rules.UNKNOWN)
+                self.assertEqual(verdict['writable_fields'], [])
+                self.assertEqual(rules.writable_rows([verdict]), [])
+                self.assertIn('基线明确为 null', ' '.join(verdict['gate_detail']))
+
+    def test_missing_or_null_baseline_does_not_block_an_already_satisfied_target(self):
+        for baseline in ({}, {'daily_budget': None}):
+            for target in ('20.00', None):
+                with self.subTest(baseline=baseline, target=target):
+                    verdict = self.verdict(
+                        baseline=baseline, target={'daily_budget': target},
+                        writeback={'objects': {'obj': {'daily_budget': target}}})
+                    self.assertEqual(verdict['gate'], rules.SATISFIED)
+                    self.assertEqual(verdict['satisfied_fields'], ['daily_budget'])
+                    self.assertEqual(verdict['writable_fields'], [])
+                    self.assertEqual(rules.writable_rows([verdict]), [])
+
+    def test_zero_is_a_recorded_baseline(self):
+        verdict = self.verdict(baseline={'daily_budget': 0}, target={'daily_budget': '20.00'},
+                               writeback={'objects': {'obj': {'daily_budget': '0.00'}}})
+        self.assertEqual(verdict['gate'], rules.READY)
+        self.assertEqual(rules.writable_rows([verdict])[0]['patch'], {'daily_budget': '20.00'})
+
+    def test_satisfied_field_needs_no_baseline_when_another_field_is_ready(self):
+        verdict = self.verdict(
+            baseline={'daily_budget': '10.00'},
+            target={'daily_budget': '20.00', 'status': 'PAUSED'},
+            writeback={'objects': {'obj': {'daily_budget': '10.00', 'status': 'PAUSED'}}})
+        self.assertEqual(verdict['gate'], rules.READY)
+        self.assertEqual(rules.writable_rows([verdict])[0]['patch'], {'daily_budget': '20.00'})
+
+    def test_unknown_baseline_blocks_the_whole_row_but_not_other_rows(self):
+        for status_baseline in ({}, {'status': None}):
+            with self.subTest(status_baseline=status_baseline):
+                blocked = self.verdict(
+                    baseline={'daily_budget': '10.00', **status_baseline},
+                    target={'daily_budget': '20.00', 'status': 'PAUSED'},
+                    writeback={'objects': {'obj': {'daily_budget': '10.00', 'status': 'ACTIVE'}}})
+                ready = self.verdict(
+                    baseline={'daily_budget': '10.00'}, target={'daily_budget': '20.00'},
+                    writeback={'objects': {'obj': {'daily_budget': '10.00'}}})
+                ready['object_key'] = 'another-object'
+                self.assertEqual(blocked['gate'], rules.UNKNOWN)
+                self.assertEqual(blocked['writable_fields'], [])
+                self.assertEqual([row['object_key'] for row in rules.writable_rows([blocked, ready])],
+                                 ['another-object'])
+
+    def test_unknown_baseline_preserves_other_field_conflicts(self):
+        for fields in [('daily_budget', 'status'), ('status', 'daily_budget')]:
+            with self.subTest(fields=fields):
+                targets = {'daily_budget': '20.00', 'status': 'PAUSED'}
+                verdict = self.verdict(
+                    baseline={'daily_budget': '10.00'},
+                    target={field: targets[field] for field in fields},
+                    writeback={'objects': {'obj': {'daily_budget': '30.00', 'status': 'ACTIVE'}}})
+                self.assertEqual(verdict['gate'], rules.UNKNOWN)
+                self.assertEqual(verdict['conflict_fields'], ['daily_budget'])
+                self.assertEqual(verdict['writable_fields'], [])
+                self.assertIn('基线未记录', ' '.join(verdict['gate_detail']))
+                self.assertIn('暂缓修改并核对变更来源', ' '.join(verdict['gate_detail']))
+
+    def test_generated_pause_preserves_missing_and_null_status_baselines(self):
+        for code, overrides in (
+                ('LINK_OR_TRACKING_BAD', {'linked': False}),
+                ('TEST_STOP_NOCONV', {'results': 0, 'spend': '20.00', 'impressions': 1800})):
+            for missing in (True, False):
+                with self.subTest(code=code, missing=missing):
+                    source = adset(configured_status=None, **overrides)
+                    if missing:
+                        del source['configured_status']
+                    proposals, _ = rules.decide_account(account([source]), methodology())
+                    proposed = next(item for item in proposals if item['code'] == code)
+                    self.assertEqual(proposed['baseline'], {} if missing else {'status': None})
+                    verdict = rules.gate([proposed], {'objects': {
+                        source['adset_key']: {'status': 'ACTIVE'}}})[0]
+                    self.assertEqual(verdict['gate'], rules.UNKNOWN)
+                    self.assertEqual(rules.writable_rows([verdict]), [])
+
     def test_finding_without_write_intent_is_advisory(self):
         verdict = self.verdict(code='TEST_UNDERTESTED')
         self.assertEqual(verdict['gate'], rules.ADVISORY)
@@ -376,6 +475,28 @@ class EndToEndTests(unittest.TestCase):
         summary = self.run_round()
         self.assertEqual(summary['planned_writes'], summary['gate']['ready'])
         self.assertLess(summary['planned_writes'], summary['proposals'])
+
+    def test_baseline_gaps_stay_out_of_write_plan_and_remain_in_the_ledger(self):
+        findings = {'round_id': 'baseline-gaps', 'proposals': [
+            {'code': 'MISSING', 'object_key': 'missing', 'target': {'daily_budget': '20.00'}},
+            {'code': 'NULL', 'object_key': 'null', 'baseline': {'daily_budget': None},
+             'target': {'daily_budget': '20.00'}},
+        ]}
+        gate = operating_loop.run_gate(findings, {
+            'kind': 'writeback_snapshot', 'objects': {
+                'missing': {'daily_budget': '30.00'}, 'null': {'daily_budget': '30.00'}}})
+        result = operating_loop.apply_gate(self.ledger, gate, '2026-09-25T00:00:00+00:00')
+        self.assertEqual(result['planned_writes'], 0)
+        self.assertEqual(result['write_plan'], [])
+        self.assertEqual(gate['summary'][rules.UNKNOWN], 2)
+        events = operating_loop.read_events(self.ledger)
+        self.assertEqual(len(events), 2)
+        for event, verdict in zip(events, gate['verdicts']):
+            self.assertEqual(event['type'], 'skipped')
+            self.assertIn('原方案基线证据不足', event['reason'])
+            self.assertEqual(event['detail'], verdict['gate_detail'])
+        self.assertIn('基线未记录', ' '.join(events[0]['detail']))
+        self.assertIn('基线明确为 null', ' '.join(events[1]['detail']))
 
     def test_round_catches_the_ineffective_write(self):
         summary = self.run_round()

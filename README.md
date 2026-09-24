@@ -60,6 +60,17 @@ See the [capability matrix](docs/capability-status.md) for platform coverage, ho
 3. Describe your product, method and current task. Reuse known information before asking for gaps.
 4. Follow the [host workflow](docs/workflow.md) and retain a [task record](templates/task-record.md) in a private directory.
 
+For an optional first read-only task, copy this prompt and specify the platforms and accounts you want reviewed:
+
+```text
+Please run a read-only advertising review for my selected platforms and accounts.
+First verify the account scope and available reading tools, and explain any missing access.
+Reuse the business context, confirmed method and related open items already available; ask only for missing information.
+Review the most recent complete advertising day in each account's own time zone. State the dates, time zones and data cutoff.
+Report data-quality problems, objects needing attention, recommendations and unresolved questions. Keep missing data distinct from zero.
+For this task, do not change accounts, budgets or creatives, or create or publish ads.
+```
+
 Without a connection, follow the [connection guide](docs/platform-connectivity.md), covering self-managed and hosted routes including optional Pipeboard.
 
 [First setup](docs/first-run.md) · [Loading and validation](docs/use-in-agent.md) · [Platform connections](docs/platform-connectivity.md)
@@ -98,6 +109,10 @@ These examples use fictional data, make no ad-platform calls, incur no ad spend 
 Models and connection tools supply understanding and operations. This project organizes advertising experience into a workflow that people can review, execute and trace.
 
 [Product design (Chinese)](docs/product.md) · [Architecture (Chinese)](docs/architecture.md) · [Knowledge base (Chinese)](docs/knowledge-base.zh-CN.md) · [Roadmap (Chinese)](docs/roadmap.md) · [Contributing](CONTRIBUTING.md)
+
+## Author and project background
+
+The maintainer organizes methods used in the business, designs the agent workflow and task specifications, develops and maintains the Python validation modules, and iterates on them using problems observed in actual work. Language-model understanding comes from the host's model; platform operations use its available tools and external MCP, API or SDK connections.
 
 ## License and provenance
 

@@ -60,6 +60,17 @@
 3. 说明产品、已有方法和当前任务。Agent 先复用已知信息，再问缺项。
 4. 按[宿主工作流](docs/workflow.zh-CN.md)形成方案与交接，用[任务模板](templates/task-record.zh-CN.md)在私有目录保留记录。
 
+想先体验一项只读任务，可以复制下面这段，再补充要检查的平台与账户：
+
+```text
+请对我选定的平台和账户做一次只读投放检查。
+先核对账户范围与本次可用的读取工具，具体说明缺少哪些访问能力。
+沿用已有业务资料、已确认方法和相关待办，只问缺失的信息。
+查看最近一个完整投放日，以各账户自己的时区为准，注明日期、时区和数据截至时间。
+输出数据质量问题、需要关注的对象、建议和待确认项；缺失数据不要写成零。
+本次暂不修改账户、预算或素材，也不创建或发布广告。
+```
+
 尚未接入时，先完成[接入指南](docs/platform-connectivity.zh-CN.md)；其中介绍自建和托管连接方式，包括可选的 Pipeboard。
 
 [首次配置](docs/first-run.zh-CN.md) · [加载与验收](docs/use-in-agent.zh-CN.md) · [平台接入](docs/platform-connectivity.zh-CN.md)
@@ -98,6 +109,10 @@ python3 scripts/demo_methods.py         # 六个虚构业务输入与方法修�
 模型和连接工具提供理解与操作能力；项目的工作是把投放经验组织为可审阅、可执行、可追溯的协作流程。
 
 [产品设计](docs/product.md) · [架构](docs/architecture.md) · [知识库](docs/knowledge-base.zh-CN.md) · [开发路线](docs/roadmap.md) · [贡献说明](CONTRIBUTING.md)
+
+## 作者与项目来源
+
+维护者负责梳理实际业务中的投放方法，设计 Agent 工作流与任务规范，开发和维护 Python 验证模块，并根据业务使用中发现的问题持续迭代。模型理解由宿主使用的模型提供，平台操作通过宿主已有工具及外部 MCP、API 或 SDK 连接完成。
 
 ## 许可证与来源
 

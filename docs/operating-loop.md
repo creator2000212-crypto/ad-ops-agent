@@ -136,12 +136,21 @@ plan; this is neither user authorization nor an execution receipt.**
 | `ready` | The implemented field comparison passes and differences remain | Add those fields to the review plan; this module does not submit them |
 | `satisfied` | Supplied current state already matches the target | Do not propose a duplicate change; the program does not determine learning-phase effects |
 | `conflict` | The current field matches neither baseline nor target | Isolate the row and investigate the difference without inferring its author |
-| `unknown` | The supplied state lacks the object or a target field | Obtain current state before proceeding; absence does not mean equality |
+| `unknown` | The supplied state lacks the object or a target field, or a differing field lacks a concrete baseline | Obtain the missing current state or original-plan baseline evidence; absence does not mean equality |
 | `advisory` | The finding declares no field change | Nothing to gate; counted separately so it does not inflate the rows needing attention |
 
-In the fixture, the `ready` rows match their declared baselines. The general
-function can also return `ready` when the baseline is `None`, so this label does
-not replace complete baseline, authorization or platform-capability checks.
+A present field already matching its target needs no baseline because it will
+not be changed. Every remaining field needs a concrete baseline. A missing field
+and an explicit `null` have different explanations but both produce `unknown`.
+The generic input does not define native null semantics: even two null values
+do not establish a safe baseline for a change. Numeric `0` is a concrete value
+and participates in the comparison normally.
+
+One unresolved baseline holds the entire proposal out of the write plan, with
+any other detected conflicts retained. Other proposals are checked independently.
+Recover evidence from the original plan; do not fill its old baseline with a
+fresh current value. Regenerate and review the plan when necessary. `ready`
+still does not replace user authorization or platform-capability checks.
 
 ### After-snapshot comparison
 
