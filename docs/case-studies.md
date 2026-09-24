@@ -2,7 +2,7 @@
 
 [中文](case-studies.zh-CN.md) · [Host workflow](workflow.md) · [Capabilities and evidence](capability-status.md)
 
-These cases were reconstructed on September 25, 2026 from local records of the maintainer's advertising work in WorkBuddy: plans, creative audits, scripts, execution records, platform-read snapshots and later reviews. They preserve the process and its evidence limits while removing clients, accounts, advertising object identifiers, financial amounts, media and tracking links.
+These cases were reconstructed on September 25, 2026 from local records of the maintainer's advertising work in an agent tool: plans, creative audits, scripts, execution records, platform-read snapshots and later reviews. They preserve the process and its evidence limits while removing clients, accounts, advertising object identifiers, financial amounts, media and tracking links.
 
 Labels such as `WB-01` correspond to the maintainer's private source index. The original records are not public, and the labels do not provide access to them. This is not a check of current advertising accounts. The cases explain why the project needs these working practices; **importing the project does not provide the same tools, authorization or execution capabilities**, and the cases do not establish that the offline Python runtime performed these live operations.
 

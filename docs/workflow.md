@@ -2,7 +2,7 @@
 
 [简体中文](workflow.zh-CN.md) · [Cases from practice](case-studies.md) · [Capability status](capability-status.md)
 
-This is a host-agent workflow: how to use tools already connected in WorkBuddy, Codex or another environment to take an advertising request through preparation, authorized operations and handoff. It distils historical work records. A new host must still verify its available tools and permissions.
+This is a host-agent workflow: how to take an advertising request through preparation, authorized operations and handoff using an agent tool with the necessary connections. It distils historical work records. A new host must still verify its available tools and permissions.
 
 This route can use the host's MCP, API, SDK or user-authorized platform UI. The repository's Python programs provide a separate offline validation route. They neither make these live calls nor need to become live adapters before a host can use its existing tools.
 
@@ -96,6 +96,6 @@ A user correction first fixes the current conclusion. When the user explicitly r
 
 Copy the [task record template](../templates/task-record.md) to a private directory and have the host follow this guide. Business facts, native object IDs, receipts and assets stay private. Connections and methods can change while preparation, review, execution and verification remain reusable.
 
-In a new host, begin with a read or preparation task, then validate writes and readback within explicit authorization. A historical WorkBuddy case does not prove another host is configured or every advertising product on all three platforms is supported.
+In a new host, begin with a read or preparation task, then validate writes and readback within explicit authorization. A historical case from an agent tool does not prove another host is configured or every advertising product on all three platforms is supported.
 
 For public-code checks of planning, recovery and data validation, use the [offline validation entry points](capability-status.md#offline-validation-entry-points). Simulation approvals and fictional accounts never authorize live work.

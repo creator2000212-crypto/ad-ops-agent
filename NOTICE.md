@@ -2,7 +2,7 @@
 
 Ad Ops Agent develops the reusable workflow direction of the MIT-licensed `ads-ops-playbook` project. Its original notice, `Copyright (c) 2026 Vincent`, is retained in LICENSE. New project code and documentation are provided under the same MIT license.
 
-The public repository contains a reusable host-agent workflow, anonymized case narratives distilled from the maintainer's WorkBuddy records, an offline Python validation prototype, fictional runnable examples and generalized operational knowledge. It does not redistribute private campaign records, media assets, credentials, local execution databases or personal workspace reports.
+The public repository contains a reusable host-agent workflow, anonymized case narratives distilled from the maintainer's records of work in an agent tool, an offline Python validation prototype, fictional runnable examples and generalized operational knowledge. It does not redistribute private campaign records, media assets, credentials, local execution databases or personal workspace reports.
 
 Documentation links to primary Meta, TikTok, Google and MCP sources where they support technical claims. Those linked third-party materials retain their own rights and terms; their full contents are not included or relicensed here. Platform names identify intended integrations and do not imply sponsorship or certification.
 

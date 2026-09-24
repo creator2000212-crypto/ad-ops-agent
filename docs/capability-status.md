@@ -2,13 +2,13 @@
 
 [简体中文](capability-status.zh-CN.md) · [Project home](../README.md) · [Cases from practice](case-studies.md)
 
-**The public Python code's lack of ad API calls does not describe the author's entire working setup. Historical use in WorkBuddy does not mean a fresh checkout has connected accounts.** These claims require different evidence.
+**The public Python code's lack of ad API calls does not describe the author's entire working setup. Historical use of an agent tool does not mean a fresh checkout has connected accounts.** These claims require different evidence.
 
 ## Three layers
 
 | Layer | What exists | Evidence or conditions |
 |---|---|---|
-| **WorkBuddy business practice** | Business conversations, tool operations, asset selection, creation/change records, reports and recurring reviews | Selected local historical records have been reviewed. Each case states its completion boundary. Private originals are not published and do not verify current platform state |
+| **Business practice in an agent tool** | Business conversations, tool operations, asset selection, creation/change records, reports and recurring reviews | Selected local historical records have been reviewed. Each case states its completion boundary. Private originals are not published and do not verify current platform state |
 | **Reusable host workflow** | Project instructions, task flow, business and method organization, batch review, execution checks and record templates | The host must load the instructions and have usable, authorized tools for this task. Each new environment requires validation |
 | **Public Python validation code** | Structured checks, limited method compilation, knowledge lookup, private records, offline diagnosis and simulated execution/recovery | Runnable locally; no model or ad-platform calls; live mode is rejected |
 

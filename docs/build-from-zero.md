@@ -2,7 +2,7 @@
 
 [简体中文](build-from-zero.zh-CN.md) · [See the runnable account-review demo](../demo/README.md)
 
-This agent connects account setup, business context, asset selection, configuration and result checks, leaving media buyers more time for analysis and decisions. It comes from advertising workflows already used in WorkBuddy. Others can load the instructions in their own host and work with tools they have connected and authorized. A fictional example shows how to assemble the work and hand it over.
+This agent connects account setup, business context, asset selection, configuration and result checks, leaving media buyers more time for analysis and decisions. It comes from advertising workflows already used in an agent tool. Others can load the instructions in their own host and work with tools they have connected and authorized. A fictional example shows how to assemble the work and hand it over.
 
 ## Meet the example
 
@@ -97,7 +97,7 @@ Experience accumulates through observations, candidates, confirmation and later 
 
 | Layer | How it relates to this example |
 |---|---|
-| Historical WorkBuddy business practice | Saved records cover media inspection, campaign building, reporting and account reviews; see the [case studies](case-studies.md). This course example remains fictional |
+| Historical business practice in an agent tool | Saved records cover media inspection, campaign building, reporting and account reviews; see the [case studies](case-studies.md). This course example remains fictional |
 | Reusable host workflow | The host handles conversation and uses connected, authorized tools to read, inspect media, configure and verify. The deployer validates the specific environment |
 | Public Python programs | They store business inputs/private records offline, propose two method types, prepare tests from declared differences, analyze snapshots and simulate recovery. They do not call platforms, understand media or learn automatically |
 

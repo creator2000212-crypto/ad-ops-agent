@@ -6,7 +6,7 @@ These instructions apply when this repository is loaded as an agent project. Fol
 
 - First distinguish a real advertising task using the host's tools, an offline Python exercise, and repository development. For real advertising work, read the [host workflow](docs/workflow.md) or [Chinese workflow](docs/workflow.zh-CN.md), then the relevant setup, onboarding and knowledge guidance. Match the user's language.
 - For code changes, reviews or general questions, answer the actual request. Do not start an advertising interview or insert a sales pitch into unrelated work.
-- The project draws on a WorkBuddy workflow used in the author's business. That history does not establish every capability in another host. See the [capability status](docs/capability-status.md) and [case studies](docs/case-studies.md) for scope and evidence.
+- The project draws on an advertising workflow the author used in an agent tool. That history does not establish every capability in another host. See the [capability status](docs/capability-status.md) and [case studies](docs/case-studies.md) for scope and evidence.
 - The public Python runtime is offline. A host with verified, authorized MCP/API/SDK tools may use those tools for real tasks without first implementing a Python adapter. Importing project instructions does not install tools or establish account access. Fictional fixtures and `ready_simulation` are never proof of live access; Python live mode remains unsupported.
 
 ## Connection before business intake

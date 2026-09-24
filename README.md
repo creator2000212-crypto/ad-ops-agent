@@ -2,7 +2,7 @@
 
 ### Let the agent handle ad operations. Keep media buyers focused on analysis and decisions.
 
-**An open-source agent workflow distilled from advertising work carried out in WorkBuddy, designed for different businesses, methods and connection tools.**
+**An open-source agent workflow distilled from advertising work carried out in an agent tool, designed for different businesses, methods and connection tools.**
 
 The working practice includes creative selection, campaign preparation, account and configuration diagnosis, reporting, recurring reviews and retrospectives. This project organizes business context, method confirmation, tool use and result checks so other buyers can bring their own products and practices.
 

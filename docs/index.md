@@ -1,6 +1,6 @@
 # 文档阅读路线
 
-Ad Ops Agent 从 WorkBuddy 实际投放工作中提炼可复用的任务流程。**真实使用案例、宿主工具工作流、公开 Python 离线验证**分别展示；先选择你要了解或开展的工作，不必从技术文档第一篇开始读。
+Ad Ops Agent 从使用 Agent 工具开展的实际投放工作中提炼可复用的任务流程。**真实使用案例、宿主工具工作流、公开 Python 离线验证**分别展示；先选择你要了解或开展的工作，不必从技术文档第一篇开始读。
 
 [中文首页](../README.zh-CN.md) · [English overview](../README.md)
 
@@ -17,7 +17,7 @@ Ad Ops Agent 从 WorkBuddy 实际投放工作中提炼可复用的任务流程�
 | 哪些来自真实工作，历史记录证明到哪？ | [脱敏案例](case-studies.zh-CN.md) · [English](case-studies.md) |
 | 一项真实任务怎样准备、确认、执行、读回和交接？ | [宿主工作流](workflow.zh-CN.md) · [English](workflow.md) |
 | 怎样在私有目录记录方案、批准、回执和下轮待办？ | [任务模板](../templates/task-record.zh-CN.md) · [English](../templates/task-record.md) |
-| WorkBuddy 实践、宿主工具和 Python 分别能做什么？ | [能力矩阵](capability-status.zh-CN.md) · [English](capability-status.md) |
+| Agent 工具的业务实践、宿主工作流和 Python 分别能做什么？ | [能力矩阵](capability-status.zh-CN.md) · [English](capability-status.md) |
 | 怎样从一个具体业务搭建工作流，新人和熟手如何选择方法？ | [搭建例子](build-from-zero.zh-CN.md) · [English](build-from-zero.md) |
 | 导入项目后，怎样确认宿主加载了指令？ | [加载与对话验收](use-in-agent.zh-CN.md) · [English](use-in-agent.md) |
 | 接口未配好时从哪里开始？ | [首次配置](first-run.zh-CN.md) · [English](first-run.md) |

@@ -2,7 +2,7 @@
 
 [简体中文](use-in-agent.zh-CN.md) · [Host workflow](workflow.md) · [Capability status](capability-status.md)
 
-The repository's conversation entry point is [AGENTS.md](../AGENTS.md). It distinguishes a real advertising task, an offline Python exercise and repository development before selecting a workflow. The project draws on a WorkBuddy workflow used in the author's business; another host still needs its own tool, account and permission checks. See the [source and case studies](case-studies.md).
+The repository's conversation entry point is [AGENTS.md](../AGENTS.md). It distinguishes a real advertising task, an offline Python exercise and repository development before selecting a workflow. The project draws on a workflow used in the author's business through an agent tool; another host still needs its own tool, account and permission checks. See the [source and case studies](case-studies.md).
 
 After loading the instructions, the host can use its model and verified, authorized MCP/API/SDK tools to organize business context, prepare batches, execute covered actions and check results. **Using existing host tools does not require first implementing a native Python adapter.** The public Python modules are a separate offline validation route. Loading project instructions neither installs a connection nor grants account access.
 
