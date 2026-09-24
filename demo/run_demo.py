@@ -255,7 +255,7 @@ def run_steps(out):
         if verdict['gate'] in ('conflict', 'unknown'):
             print(f"  ⚠ {verdict['object_key']} · {verdict['code']} · {verdict['gate_label']}"
                   f" — {' '.join(verdict['gate_detail'])}")
-    print('→ 原始判据中的“人工改过”只代表检测到状态不一致，不能判定是谁修改。冲突与缺失都需要单独确认。')
+    print('→ 冲突行暂缓修改并核对变更来源；缺失状态先补充证据。其余行按各自核对结果处理。')
 
     # ---- step 3: record, do not write --------------------------------------
     head(3, '登记',

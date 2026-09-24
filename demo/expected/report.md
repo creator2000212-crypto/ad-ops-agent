@@ -17,10 +17,8 @@
 
 **闸门待确认 2 条**（见 `gate.json`）：
 
-- `fictional-adset-a9` · LADDER_PROMOTE · **冲突隔离** — daily_budget：现值 30.00 既非基线 10.00 也非目标 20.00 ⇒ 人工改过，隔离该行。
+- `fictional-adset-a9` · LADDER_PROMOTE · **冲突隔离** — daily_budget：当前值 30.00 与基线 10.00、目标 20.00 均不一致 ⇒ 隔离该行，暂缓修改并核对变更来源。
 - `fictional-adset-b1` · LADDER_PROMOTE · **未知** — 写前状态里没有 'fictional-adset-b1' 的记录 ⇒ 先复拉，不要盲写。
-
-以上保留规则的原始判据。出现“人工改过”时，实际只检测到现值与基线、目标不一致；无法据此判定是谁修改，也不能直接覆盖。
 
 **快照对照不匹配 1 条**（见 `reconciliation.json`）：
 

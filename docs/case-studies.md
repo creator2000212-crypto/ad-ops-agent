@@ -16,9 +16,21 @@ Historical records: September 22–23, 2026. Record types: local creative audit,
 - **What the evidence establishes:** The audit and candidate plans exist. Some content looked more suitable but lacked sufficient resolution; other files met technical conditions while presenting unsuitable claims. This does not establish publication, approval or performance. An old “usable” label also does not replace a product-match check for the current task.
 - **Reusable mechanism:** Record technical readiness, business fit, previous use, the user's selection and inspection evidence separately. Candidate, selected, uploaded, available and delivering are different states.
 
-## WB-02 · Completing a TikTok creative set does not make every item in the batch ready
+<a id="tiktok-task"></a>
+
+## WB-02 · TikTok campaign setup and status handoff for three business lines
 
 Historical records: September 22–23, 2026. Record types: revised plan for three business lines, creation state files, readback script and launch receipt.
+
+**What was delivered:** A revised campaign plan, creation records, old-line pause results and a status receipt retaining unresolved items.
+
+| Business line in the receipt (anonymous label) | Recorded status | Handoff meaning |
+|---|---|---|
+| A | `AD_STATUS_DELIVERY_OK` | Recorded as eligible; spend and performance require separate data |
+| B | `AD_STATUS_DELIVERY_OK` | Recorded as eligible; spend and performance require separate data |
+| C | `AD_STATUS_AUDIT` | Recorded as in review; retain a follow-up status check |
+
+A/B/C are presentation labels, not platform names or object IDs. This table summarizes the historical receipt, not current account state.
 
 - **Input:** Three business lines, existing creatives and account settings, and older structures considered for replacement or pausing.
 - **Human decision:** Review the structure, creative selection and treatment of the old lines. The receipt still lists settlement definitions, available account capacity and some creative rules as unresolved; the record does not support filling them in as confirmed facts.

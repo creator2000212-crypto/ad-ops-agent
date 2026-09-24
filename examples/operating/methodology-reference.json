@@ -54,7 +54,7 @@
   "gate_states": {
     "ready": "现值与基线一致 -> 只发差异字段，其余行独立执行。",
     "satisfied": "现值已是目标值 -> 跳过不写（写了是 significant edit，会重置学习期）。",
-    "conflict": "现值既非基线也非目标 -> 人工改过，只隔离该行，不覆盖，也不让整批重做。",
+    "conflict": "当前值与基线、目标均不一致 -> 隔离该行，暂缓修改并核对变更来源，不覆盖，也不让整批重做。",
     "unknown": "没读到写前状态，或字段不在快照里 -> 先复拉；缺失不等于相等，绝不放行。"
   },
   "reporting_rules": [
@@ -170,7 +170,7 @@
       "action": "确认真断档还是暂停尾巴；恢复走 build-paused -> verify -> activate",
       "window": "次轮",
       "acceptance": "已区分真断档与暂停尾巴，且恢复过程有回读确认。",
-      "stop_condition": "看到 PAUSED 先查操作来源 —— 多半是人工在操作，不得当异常自动恢复。"
+      "stop_condition": "看到 PAUSED 先核对操作来源与暂停原因，未经确认不得当异常自动恢复。"
     },
     {
       "code": "ACC_BALANCE_LOW",

@@ -1,5 +1,5 @@
 """The operating loop must refuse to guess: unknown evidence, small samples and
-concurrent human edits each have a distinct, testable outcome."""
+unexplained current-state differences each have a distinct, testable outcome."""
 import copy
 import json
 from pathlib import Path
@@ -259,11 +259,12 @@ class GateTests(unittest.TestCase):
         self.assertEqual(verdict['gate'], rules.SATISFIED)
         self.assertEqual(verdict['writable_fields'], [])
 
-    def test_conflict_when_a_human_changed_it(self):
+    def test_conflict_when_current_value_matches_neither_baseline_nor_target(self):
         verdict = self.verdict(baseline={'daily_budget': '10.00'}, target={'daily_budget': '20.00'},
                                writeback={'objects': {'obj': {'daily_budget': '30.00'}}})
         self.assertEqual(verdict['gate'], rules.CONFLICT)
         self.assertEqual(verdict['conflict_fields'], ['daily_budget'])
+        self.assertEqual(verdict['writable_fields'], [])
 
     def test_absent_object_is_unknown(self):
         verdict = self.verdict(baseline={'daily_budget': '10.00'}, target={'daily_budget': '20.00'},
@@ -398,6 +399,9 @@ class EndToEndTests(unittest.TestCase):
         self.run_round()
         report = (self.out / 'report.md').read_text(encoding='utf-8')
         self.assertIn('冲突隔离', report)
+        self.assertIn('当前值 30.00 与基线 10.00、目标 20.00 均不一致', report)
+        self.assertIn('暂缓修改并核对变更来源', report)
+        self.assertNotIn('人工改过', report)
         self.assertIn('未生效', report)
         self.assertIn('不连接任何广告平台', report)
 

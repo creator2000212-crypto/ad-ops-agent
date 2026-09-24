@@ -632,9 +632,10 @@ def gate(proposals, writeback):
                    anyway would be a significant edit and would reset learning.
     ``ready``      the field still holds the value it held when the plan was
                    built, so only the differing fields are sent.
-    ``conflict``   the field holds neither the baseline nor the target, so
-                   somebody changed it in between. Isolate this row; do not
-                   overwrite, and do not restart the whole batch.
+    ``conflict``   the field holds neither the baseline nor the target.
+                   Isolate this row and check the source of the difference;
+                   the values alone do not identify who or what changed it.
+                   Do not overwrite or restart the whole batch.
     ``unknown``    the current state was not read, or the field is absent from
                    the read. Absent is not the same as equal — never pass it.
     ``advisory``   the finding declares no field change, so there is nothing to
@@ -674,7 +675,7 @@ def gate(proposals, writeback):
                 detail.append(f'{field}：{present} -> {wanted}（与基线一致，只发这个字段）。')
                 writes.append(field)
             else:
-                detail.append(f'{field}：现值 {present} 既非基线 {held} 也非目标 {wanted} ⇒ 人工改过，隔离该行。')
+                detail.append(f'{field}：当前值 {present} 与基线 {held}、目标 {wanted} 均不一致 ⇒ 隔离该行，暂缓修改并核对变更来源。')
                 conflicts.append(field)
         if conflicts:
             results.append(_verdict(item, CONFLICT, detail, conflict_fields=conflicts))

@@ -7,8 +7,8 @@ What this demonstrates, in order:
    without calling a platform.
 2. A zero-conversion ad set below the sample gate is *not* judged, while one that
    crosses both the sample gate and the loss line is.
-3. The write gate separates four outcomes: writable, already satisfied, conflict
-   with a concurrent human edit, and unreadable state.
+3. The write gate separates four outcomes: writable, already satisfied, a
+   current value matching neither baseline nor target, and unreadable state.
 4. A write that did not take effect is caught by the write-back reconciliation.
 5. The ledger is append-only: a second round adds rows and keeps the unresolved
    ones visible instead of resetting the round.
@@ -81,10 +81,12 @@ def run(output):
     for state in ('ready', 'satisfied', 'conflict', 'unknown', 'advisory'):
         require(summary[state] >= 1, f'Gate never produced a {state} row')
     conflict = next(v for v in gate['verdicts'] if v['gate'] == 'conflict')
-    require('人工改过' in ' '.join(conflict['gate_detail']),
-            'Conflict row did not explain the concurrent human edit')
+    require('暂缓修改并核对变更来源' in ' '.join(conflict['gate_detail']),
+            'Conflict row did not explain how to handle the unexplained difference')
     require(conflict['conflict_fields'] == ['daily_budget'],
-            'Conflict row did not name the field a human changed')
+            'Conflict row did not name the field that differs')
+    require(conflict['writable_fields'] == [],
+            'A conflicting row must not expose writable fields')
 
     # Only the ready rows may be written, and never more than there are proposals.
     require(first['planned_writes'] == summary['ready'], 'Write plan does not match the ready rows')

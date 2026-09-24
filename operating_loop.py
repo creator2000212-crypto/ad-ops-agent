@@ -380,8 +380,6 @@ def render_report(findings, gate_document, application, reconciliation, settleme
         for item in flagged:
             add(f"- `{item['object_key']}` · {item['code']} · **{item['gate_label']}** — "
                 + ' '.join(item['gate_detail']))
-        add('')
-        add('以上保留规则的原始判据。出现“人工改过”时，实际只检测到现值与基线、目标不一致；无法据此判定是谁修改，也不能直接覆盖。')
     else:
         add('没有冲突或状态缺失的闸门行。')
     add('')

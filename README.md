@@ -8,28 +8,19 @@ The working practice includes creative selection, campaign preparation, account 
 
 [简体中文](README.zh-CN.md) · [Cases from practice](docs/case-studies.md) · [Use the workflow](docs/workflow.md) · [Run the public demo](#run-the-public-demo-without-an-account) · [Documentation](docs/index.md)
 
-> **Three distinct materials:** cases summarize anonymized historical records; the host workflow requires connected, verified tools for the task; public Python programs provide offline demonstrations and validation. A checkout does not grant ad-account access. [Full capability status](docs/capability-status.md)
+> This project includes a workflow drawn from advertising practice and runnable offline examples. Real operations require connected, verified and authorized host tools. [Capability status](docs/capability-status.md)
 
-## Take an advertising task through to handoff
+## A real task: TikTok setup and handoff across three business lines
 
-A user might ask:
+**Task:** Revise the campaign plan and creative sets for three business lines using existing assets and account settings, handle older structures and deliver an itemized status report.
 
-> “Prepare the next test from these videos using our confirmed product context and method. Show me the asset choices, configuration and budget first. After confirmation, proceed and tell me what completed and what still needs attention.”
+![Historical TikTok task: existing assets and account settings, buyer review, agent preparation, creation and status reads; the receipt records two lines eligible and one in review.](docs/assets/tiktok-task.en.svg)
 
-The agent checks task accounts and tools, then reuses relevant business context. It checks assets against the destination, explains selection and exclusion, and prepares a batch. You choose the test direction and execution scope. After confirmation, the agent uses authorized host tools, reads actual configuration and separately hands off pending review, failures and unknown states.
+**Delivery:** A revised plan, creation records, old-line pause results, per-object status and an unresolved-items list. The historical receipt records two lines as `AD_STATUS_DELIVERY_OK` (eligible) and one as `AD_STATUS_AUDIT` (in review). Follow-up still includes checking the review outcome and confirming settlement definitions, available account capacity and some creative rules.
 
-```mermaid
-flowchart LR
-    A["Check task scope and connection"] --> B["Understand business and user method"]
-    B --> C["Prepare assets, configuration and batch"]
-    C --> D["User confirms execution scope"]
-    D --> E["Host tools execute and read back"]
-    E --> F["Hand off results, gaps and open items"]
-    F --> G["Human analyzes, corrects and decides"]
-    G --> B
-```
+The diagram is an anonymized reconstruction of September 22–23, 2026 records, not an agent UI screenshot. Eligibility does not establish spend or performance. [Read the full task, human decisions and evidence](docs/case-studies.md#tiktok-task)
 
-The next review first establishes whether previous recommendations were executed and configuration took effect. **People own goals and direction. The agent organizes evidence, prepares plans and completes authorized operations.**
+**People choose goals, methods and execution scope. The agent organizes evidence, prepares plans, carries out authorized operations and checks results.** [Follow the reusable workflow](docs/workflow.md)
 
 ## What the working records taught us
 
@@ -38,13 +29,11 @@ These are anonymized summaries of reviewed historical material. They preserve th
 | Work encountered | How the buyer and agent collaborated | Reusable mechanism |
 |---|---|---|
 | A video batch contained mismatched content, technical limitations and reusable assets | The agent organized assets and exclusions; the buyer clarified product and test constraints | Check content, specifications, prior use and method fit separately |
-| A TikTok multi-product plan needed revised creative sets and status checks | The user changed asset constraints; the agent adjusted the sets. Saved records showed some objects eligible and another in review | Hand off each object rather than declaring the whole batch live |
-| A daily report lacked one platform's data | Retain available data and mark source gaps; the user supplies material or restores access | Missing is not zero, and stale data is not fresh retrieval |
-| Renaming changed a report's business mapping | Trace structure, destination and rename history | Verify relationships; treat names as supporting labels |
+| A report lacked platform data or renaming changed its business mapping | Mark source gaps and differences; trace structure, destination and rename history | Missing is not zero; names alone do not establish ownership |
 | A receipt claimed activation while saved reads still showed paused or processing state | Inspect how the report was generated and preserve the conflict | Actual results must come from readback, not planned values |
 | A recurring review encountered last round's problem again | Check adoption and execution before discussing the outcome | Separate unexecuted work, changes that did not take effect and immature outcomes |
 
-[Read six cases and their evidence limits](docs/case-studies.md). The records establish use in actual tasks; they do not justify invented efficiency gains, advertising returns or a claim that every batch succeeded.
+[Read all six cases and their evidence](docs/case-studies.md).
 
 ## One workflow for newcomers and experienced buyers
 
@@ -62,7 +51,7 @@ These are anonymized summaries of reviewed historical material. They preserve th
 | Test method | Question, constants, variables, budget and observation conditions | Plan versions, user confirmation, execution records and review |
 | Platform or connection tool | Capabilities, native fields, object relationships, permissions and readback | Business context, user methods, tasks and historical evidence |
 
-This describes workflow reuse, not complete implementation of every advertising product. Public Python supports two limited method templates. A host can discuss other methods; execution depends on available tools and a confirmed plan. Historical Meta/TikTok use is also distinguished from Google's design and simulation coverage. [Capability matrix](docs/capability-status.md)
+See the [capability matrix](docs/capability-status.md) for platform coverage, host requirements and the public code's implementation scope.
 
 ## Use it in your agent environment
 
@@ -71,7 +60,7 @@ This describes workflow reuse, not complete implementation of every advertising 
 3. Describe your product, method and current task. Reuse known information before asking for gaps.
 4. Follow the [host workflow](docs/workflow.md) and retain a [task record](templates/task-record.md) in a private directory.
 
-With usable host tools and user authorization, real tasks can proceed through those tools without first converting the offline Python program into a production executor. Without a connection, follow the [connection guide](docs/platform-connectivity.md), covering self-managed and hosted routes including optional Pipeboard.
+Without a connection, follow the [connection guide](docs/platform-connectivity.md), covering self-managed and hosted routes including optional Pipeboard.
 
 [First setup](docs/first-run.md) · [Loading and validation](docs/use-in-agent.md) · [Platform connections](docs/platform-connectivity.md)
 
@@ -97,7 +86,7 @@ python3 scripts/demo_private_memory.py  # Private record versions and conditiona
 python3 scripts/demo_methods.py         # Six fictional inputs and method revisions
 ```
 
-These commands make no live platform calls and incur no ad spend. Native platform execution, real approval and network calls are outside the current Python implementation. Simulation results cannot authorize host account operations. [Detailed scope and checks](docs/capability-status.md)
+These examples use fictional data, make no ad-platform calls, incur no ad spend and grant no live-operation authority. [Other validation entry points](docs/capability-status.md#offline-validation-entry-points)
 
 ## What the project develops
 
@@ -106,7 +95,7 @@ These commands make no live platform calls and incur no ad spend. Native platfor
 - **Shared knowledge and private experience:** share reusable checks while keeping product data and user methods private; confirm new observations before reuse.
 - **Inspectable implementation:** use offline code to check inputs, plan consistency, method changes, recovery and records, then add integration evidence for specific live capabilities.
 
-Models and connection tools supply understanding and operations. This project organizes advertising experience into a workflow that people can review, execute and trace. Historical practice does not automatically become everyone's strategy.
+Models and connection tools supply understanding and operations. This project organizes advertising experience into a workflow that people can review, execute and trace.
 
 [Product design (Chinese)](docs/product.md) · [Architecture (Chinese)](docs/architecture.md) · [Knowledge base (Chinese)](docs/knowledge-base.zh-CN.md) · [Roadmap (Chinese)](docs/roadmap.md) · [Contributing](CONTRIBUTING.md)
 
