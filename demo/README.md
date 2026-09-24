@@ -8,6 +8,11 @@ can send, with the decisions it made and the decisions it refused to make at eac
 > sequence stage by stage. To read the end state without running anything:
 > [`expected/report.md`](expected/report.md).
 
+**This file covers how a round runs. For how the whole thing was built from zero** —
+how it is layered, how the modules are cut, how data flows, why the technology was
+chosen, and how the strategy grew out of each failure — see
+[Building from zero](../docs/build-from-zero.md).
+
 ---
 
 ## Step 0 · Starting point: what it costs to do this by hand

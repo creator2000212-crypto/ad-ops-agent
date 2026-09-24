@@ -39,6 +39,7 @@ REQUIRED = [
     'examples/operating/settlement-daily.json',
     'demo/README.md', 'demo/README.zh-CN.md', 'demo/run_demo.py',
     'demo/expected/report.md', 'demo/expected/summary.json',
+    'docs/build-from-zero.md', 'docs/build-from-zero.zh-CN.md',
     '.github/workflows/ci.yml', '.gitignore', '.gitattributes'
 ]
 SENSITIVE = [

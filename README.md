@@ -87,6 +87,8 @@ It prints the output directory, `review.md` location and the expected object cou
 
 The fastest way in is the [`demo/`](demo/README.md) folder. It commits the output of a real run, so you can read the result without installing anything: **[demo/expected/report.md](demo/expected/report.md)** is the one-page report of a complete round, and [demo/expected/summary.json](demo/expected/summary.json) is the deterministic summary beside it.
 
+To understand how the whole thing is put together — the layering, the module boundaries, the data flow, the technology choices, and how the strategy grew out of each failure — read [Building from zero](docs/build-from-zero.md).
+
 The recurring loop is self-contained and needs no connection. It reads one settled observation window and produces a classified action list, a write-gate verdict per row, a write-back reconciliation and a one-page report.
 
 ```bash

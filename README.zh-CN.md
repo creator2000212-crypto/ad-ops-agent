@@ -110,6 +110,9 @@ python3 scripts/demo_methods.py
 [`demo/expected/report.md`](demo/expected/report.md) 是一轮完整跑完的一页回执，
 [`demo/expected/summary.json`](demo/expected/summary.json) 是同一轮的机器可读摘要。
 
+想知道**整套东西是怎么从零搭起来的** —— 架构怎么分层、模块怎么切、数据怎么流、技术怎么选型、
+以及投放策略是怎么从每次失败里长出来的 —— 看 [从零搭建](docs/build-from-zero.zh-CN.md)。
+
 快循环是自包含的，不需要任何接入。它读一个已结算的观察窗口，产出逐组定性的动作清单、每行的写前闸门结果、写后核对以及一页回执。
 
 ```bash
