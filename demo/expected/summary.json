@@ -1,0 +1,82 @@
+{
+  "notice": "OFFLINE ANALYSIS ONLY — 不连接任何广告平台、不写任何账户、不上传素材。输出的动作清单是给人审阅的建议，不是已执行的指令。",
+  "mode": "offline_analysis_only",
+  "round_id": "demo-20260924-1150",
+  "snapshot_hash": "e00210a0777f3b23f656d29b0aef217432bbf60492a48382a071a0ffa9bd49e0",
+  "methodology": {
+    "methodology_id": "reference-1n1-ladder",
+    "version": "2026-09-24.1"
+  },
+  "accounts": 3,
+  "proposals": 16,
+  "findings_by_code": {
+    "ACC_BALANCE_LOW": 1,
+    "ACC_NO_DELIVERY": 1,
+    "ACC_STOPPED": 1,
+    "AD_STATUS": 1,
+    "CREATIVE_BREAKER": 1,
+    "CREATIVE_FATIGUE": 1,
+    "CREATIVE_OVERFLOW": 1,
+    "LADDER_PROMOTE": 4,
+    "LINK_OR_TRACKING_BAD": 1,
+    "TEST_STOP_NOCONV": 1,
+    "TEST_STOP_OVERCOST": 1,
+    "TEST_UNDERTESTED": 2
+  },
+  "gate": {
+    "ready": 4,
+    "satisfied": 1,
+    "conflict": 1,
+    "unknown": 1,
+    "advisory": 9,
+    "total": 16,
+    "needs_human": 2
+  },
+  "planned_writes": 4,
+  "write_plan_targets": [
+    {
+      "object_key": "fictional-adset-a1",
+      "patch": {
+        "daily_budget": "20.00"
+      }
+    },
+    {
+      "object_key": "fictional-adset-a4",
+      "patch": {
+        "status": "PAUSED"
+      }
+    },
+    {
+      "object_key": "fictional-adset-a6",
+      "patch": {
+        "daily_budget": "40.00"
+      }
+    },
+    {
+      "object_key": "fictional-adset-a8",
+      "patch": {
+        "status": "PAUSED"
+      }
+    }
+  ],
+  "needs_human": [
+    "fictional-adset-a9(conflict)",
+    "fictional-adset-b1(unknown)"
+  ],
+  "promotion_candidates": [
+    "fictional-adset-a1",
+    "fictional-adset-a6",
+    "fictional-adset-a9",
+    "fictional-adset-b1"
+  ],
+  "reconciliation": {
+    "checked": 4,
+    "effective": 3,
+    "ineffective": 1
+  },
+  "not_effective": [
+    "fictional-adset-a6"
+  ],
+  "open_rows": 1,
+  "native_platform_calls": 0
+}

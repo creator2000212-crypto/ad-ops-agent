@@ -83,12 +83,18 @@ The demo writes a new, uniquely named directory under `runs/` and verifies:
 
 It prints the output directory, `review.md` location and the expected object counts. All accounts and assets are fictional; fixture timestamps are refreshed only in a new copy. The demo never makes a network request.
 
-### Run a full operating round
+### See a full operating round
+
+The fastest way in is the [`demo/`](demo/README.md) folder. It commits the output of a real run, so you can read the result without installing anything: **[demo/expected/report.md](demo/expected/report.md)** is the one-page report of a complete round, and [demo/expected/summary.json](demo/expected/summary.json) is the deterministic summary beside it.
 
 The recurring loop is self-contained and needs no connection. It reads one settled observation window and produces a classified action list, a write-gate verdict per row, a write-back reconciliation and a one-page report.
 
 ```bash
-python3 scripts/demo_operating_loop.py
+python3 demo/run_demo.py            # run one round and print the report
+python3 demo/run_demo.py --check    # verify the committed sample still matches
+python3 demo/run_demo.py --refresh  # regenerate demo/expected/ from a real run
+
+python3 scripts/demo_operating_loop.py   # the same loop with assertions, for CI
 
 python3 operating_loop.py round \
     --snapshot examples/operating/snapshot-primary.json \
@@ -185,6 +191,7 @@ memory_store.py          Local private records, versions, history and revocation
 personalization.py       Product-scoped private methods and advisory notes
 operating_rules.py       Pure decision layer for the recurring operating loop
 operating_loop.py        Loop orchestration, ledger, report and CLI
+demo/                    One-command walkthrough with a committed sample of the output
 knowledge/               Runtime knowledge catalog with sources and conditions
 examples/                Fictional JSON inputs (examples/operating/ for the loop)
 tests/                   Executable offline contract tests

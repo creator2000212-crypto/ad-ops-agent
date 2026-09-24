@@ -31,5 +31,7 @@ jobs:
         run: python scripts/demo_methods.py
       - name: Demonstrate the recurring operating loop and its write gate
         run: python scripts/demo_operating_loop.py
+      - name: Verify the committed demo sample still matches a fresh run
+        run: python demo/run_demo.py --check
       - name: Check public repository contents
         run: python scripts/check_repository.py

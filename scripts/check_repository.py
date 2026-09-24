@@ -9,6 +9,10 @@ from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 SKIP = {'.git', '__pycache__', '.venv', 'venv', 'runs', '.direct-work'}
+# Generated demo output lives one level down, so it needs a path prefix rather
+# than a single component. It is gitignored; this keeps the source check honest
+# about not reading it in the meantime.
+SKIP_PREFIXES = {('demo', 'out')}
 REQUIRED = [
     'README.md', 'README.zh-CN.md', 'AGENTS.md', 'LICENSE', 'NOTICE.md', 'CONTRIBUTING.md', 'SECURITY.md',
     'adops.py', 'onboarding.py', 'guidance.py', 'knowledge.py', 'knowledge/catalog.json',
@@ -33,6 +37,8 @@ REQUIRED = [
     'examples/operating/methodology-reference.json', 'examples/operating/snapshot-primary.json',
     'examples/operating/writeback-snapshot.json', 'examples/operating/after-snapshot.json',
     'examples/operating/settlement-daily.json',
+    'demo/README.md', 'demo/README.zh-CN.md', 'demo/run_demo.py',
+    'demo/expected/report.md', 'demo/expected/summary.json',
     '.github/workflows/ci.yml', '.gitignore', '.gitattributes'
 ]
 SENSITIVE = [
@@ -58,6 +64,8 @@ def main():
     for path in sorted(ROOT.rglob('*')):
         relative = path.relative_to(ROOT)
         if any(part in SKIP for part in relative.parts) or not path.is_file():
+            continue
+        if tuple(relative.parts[:2]) in SKIP_PREFIXES:
             continue
         if path.name == '.DS_Store' or path.suffix in {'.pyc', '.pyo'}:
             continue
