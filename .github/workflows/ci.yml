@@ -25,6 +25,7 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Demonstrate execution and recovery
         run: python scripts/demo.py
+      - name: Demonstrate scoped private methods and corrections
+        run: python scripts/demo_private_memory.py
       - name: Check public repository contents
         run: python scripts/check_repository.py
-

@@ -12,6 +12,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import onboarding
 import knowledge
+import personalization
 
 PLATFORMS = {'meta', 'tiktok', 'google'}
 ACTIONS = {'create_simulated_draft', 'readback_simulated_draft'}
@@ -246,11 +247,14 @@ def build_plan(brief, candidates, context_path=None):
     if context:
         saved_context = onboarding.read(context['reference'])
         profile = onboarding.read(saved_context['source_ref'])
+        profile, private_snapshot = personalization.resolve(profile, account_scope=valid_targets)
+        if context.get('private_memory_hash') != private_snapshot['active_hash']:
+            raise ContractError('私有知识在计划准备期间变化；请重新准备方案。')
         scoped_profile = {**profile, 'facts': {**profile['facts'], 'platforms': {
             'value': sorted({target['platform'] for target in valid_targets}),
             'status': 'confirmed', 'source': 'validated_plan_targets'}}}
         catalog = knowledge.load_catalog()
-        knowledge_reviews = [knowledge.assess(scoped_profile, stage, catalog=catalog)
+        knowledge_reviews = [knowledge.assess(scoped_profile, stage, catalog=catalog, private_snapshot=private_snapshot)
                              for stage in ('planning', 'creative', 'launch')]
     plan = {'schema_version': 1, 'kind': 'offline_simulation_plan', 'notice': NOTICE,
             'task_id': brief.get('task_id'), 'mode': 'simulation', 'status': status,
@@ -288,9 +292,23 @@ def verify_plan(plan):
         raise ContractError('缺少 onboarding context；旧格式计划必须重新评估。')
     try:
         brief = plan['brief_snapshot']
-        onboarding.validate_context(context['reference'], expected_hash=context['profile_hash'],
-                                    targets=brief['targets'], workflow='publish',
-                                    brief_budget=brief['budget']['amount'], currency=brief['currency'])
+        current_context = onboarding.validate_context(context['reference'], expected_hash=context['profile_hash'],
+                                                       targets=brief['targets'], workflow='publish',
+                                                       brief_budget=brief['budget']['amount'], currency=brief['currency'])
+        current_private = current_context['private_memory_hash']
+        if context.get('private_memory_hash') != current_private or any(
+                review.get('private_memory', {}).get('active_hash') != current_private for review in reviews):
+            raise ContractError('私有知识已改版或撤回；请重新生成计划并审阅。')
+        source_ref = onboarding.read(context['reference'])['source_ref']
+        _, current_snapshot = personalization.resolve(onboarding.read(source_ref), account_scope=brief['targets'])
+        if current_snapshot['active_hash'] != current_private:
+            raise ContractError('私有知识在验证期间变化；请重新评估。')
+        for review in reviews:
+            frozen = review.get('private_memory')
+            if frozen is not None and frozen != current_snapshot:
+                raise ContractError('私有知识快照内容不一致；请重新生成计划并审阅。')
+            if frozen is None and current_snapshot['enabled']:
+                raise ContractError('计划缺少当前私有知识快照。')
     except (onboarding.OnboardingError, OSError, ValueError, TypeError, KeyError) as exc:
         raise ContractError('业务上下文检查失败：' + str(exc)) from exc
     for operation in plan['operations']:

@@ -4,6 +4,8 @@
 
 当前已接入离线运行时：`knowledge.py` 读取 `knowledge/catalog.json`，业务初始化输出知识建议，计划生成时把相关知识与批次审阅绑定。它使用确定性检索和结构化条件判断，不调用大模型、不拉取广告数据，也不会根据一条经验自行修改预算、改变受众或发布广告。
 
+M1 增加按需启用的[产品私有方法库](private-memory.zh-CN.md)：本地 SQLite 保存产品方法与操作观察，`personalization.py` 解析匹配条目，使初始化、计划和独立知识评估都能结合公共知识与私有经验。已采用方法用于补充未知的方法论，已有不同方法时保留冲突；操作观察始终只提供建议。
+
 ## 从“有经验文档”到“工作时用得上”
 
 现有的 [16 张实操卡](operations.md) 和 [Meta 素材恢复说明](meta-creative-recovery.md) 仍适合人阅读。运行时知识库把可复用部分拆成带来源、范围、前提、证据和下一步的条目，使 Agent 能回答：
@@ -73,7 +75,7 @@ python3 knowledge.py assess --profile examples/onboarding-learning.json --observ
 
 `adops.py` 在生成批次计划时使用 `planning`、`creative`、`launch` 阶段知识，帮助审阅测试设计、素材准备和发布前条件。相关报告随计划输出，不会暗中改变用户的预算或执行范围。
 
-知识库内容的 hash 随计划冻结。知识库发生变动后，旧计划需要重新生成、重新审阅并重新生成模拟授权，防止用户看到的依据与后续执行采用的依据不一致。现有计划 hash、业务档案漂移检查和模拟权限检查继续有效。
+公共知识库内容的 hash 随计划冻结。公共库发生变动后，旧计划需要重新生成、重新审阅并重新生成模拟授权。启用私有方法库时，另冻结本次产品与范围匹配的 `active` 条目；这些条目更新或撤回也要求重新准备。条目的 `stages` 控制知识审阅中的呈现，不再缩小该私有依赖快照。候选条目、其他产品或不匹配范围的私有改动不影响该依赖快照。现有计划 hash、业务档案漂移检查和模拟权限检查继续有效。
 
 来源新鲜度按报告中的 `as_of` 日期计算；跨日自然过期不会自动改变已冻结报告或撤销模拟授权。长时间搁置后应重新生成评估。真实发布接入还需要操作当时的平台能力与来源复核。
 
@@ -153,19 +155,27 @@ profile 与 observations 出现同名事实键时，程序拒绝覆盖。先核�
 5. **人工复核后入库。** 对平台事实补充当前官方证据；对经验标明来源类型与不确定性；增加适用、缺项、不匹配等测试。
 6. **在新任务中再次验证。** 收集结果作为下一轮维护依据，不能因为建议被执行就把案例自动提升为通用规则。
 
-当前尚未实现自动学习、反馈写回或经验晋升服务。上述流程是团队维护约定，知识文件的修改需要人工审阅。修改条目也不应直接触发任何广告账户操作。
+当前可通过 `memory_store.py` 将用户明确授权保存的方法、纠正或观察写入产品私有库，并保留版本与历史。任务观察可先保存为 `candidate`；只有用户明确确认采用，且来源为 `user_confirmation` / `user_statement`，才可写为 `active`。这表示采用意愿，不表示效果已验证。自然语言学习、自动反馈提取和自动经验晋升仍未实现；公共知识文件的修改继续需要人工审阅，任何条目写入都不触发广告账户操作。
 
 例如“更换媒体引用后审核结果变化”只能记录为一个带条件的观察。需要区分文件 hash、平台媒体 ID、creative ID、ad ID、post ID，以及技术故障、审核误判和内容问题；不能据此生成“改 hash 就能恢复投放”的自动规则。相关处理边界见 [Meta 素材恢复](meta-creative-recovery.md)。
 
 ## 公共知识与私有知识
 
-默认使用仓库的 `knowledge/catalog.json`。团队需要保存自己的方法、业务口径或案例时，可将符合相同结构的 catalog 放在 Git 之外，用自定义路径评估：
+默认使用仓库的 `knowledge/catalog.json`。需要跨任务复用产品方法与团队观察时，在业务档案中显式配置 `private_memory`，使用[私有方法库](private-memory.zh-CN.md)；省略或关闭配置时维持公共知识流程。私有库按 workspace 与产品隔离，匹配的已采用方法只在 `facts.methodology` 缺失或 `unknown` 时补充本次评估。不同有效方法同时出现时保持冲突，不静默覆盖源档案。`operational_note` 只供审阅，不会更改预算和执行权限。
+
+快速体验完整路径：
+
+```bash
+python3 scripts/demo_private_memory.py
+```
+
+单独需要替换本次公共 catalog 文件时，仍可使用 `--catalog`：
 
 ```bash
 python3 knowledge.py assess --profile examples/onboarding-learning.json --observations examples/knowledge-observations.json --stage diagnosis --catalog /absolute/path/team-knowledge.json --out runs/team-knowledge-review
 ```
 
-`--catalog` 选择本次评估使用的文件，不代表程序已经合并公共知识与私有知识，也不会上传该文件。私有内容的脱敏与访问控制由维护者负责。当前初始化与计划集成使用项目默认知识库；单独评估使用的私有文件不会自动替换这些工作流的知识来源。
+`--catalog` 选择本次独立评估的 catalog 文件，不会将其导入私有数据库，也不会上传文件。初始化与计划仍使用项目默认公共 catalog，另按档案配置读取私有库；独立评估临时选择的 catalog 不会自动替换其他工作流的公共来源。私有文件的脱敏、文件访问权限与备份由维护者负责；本地产品隔离不是多租户认证。
 
 新增公共条目前请阅读 [贡献说明](../CONTRIBUTING.md)。`contracts/experience-catalog.json` 等设计文件仍保持 `design_only`，运行时不会自动执行其中的候选能力；真正加载的知识在 `knowledge/` 下。不要靠修改设计状态标记宣称功能已经实现。
 

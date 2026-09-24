@@ -9,6 +9,7 @@ import math
 from pathlib import Path
 import sys
 import knowledge
+import personalization
 import guidance
 
 STATES = {'confirmed', 'observed', 'hypothesis', 'unknown', 'conflict', 'stale'}
@@ -87,6 +88,11 @@ def timestamp(value):
 
 def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, workflow='test_planning'):
     data = semantic_profile(profile)
+    source_profile_hash = digest(data)
+    try:
+        data, private_snapshot = personalization.resolve(data, account_scope=account_scope)
+    except ValueError as exc:
+        raise OnboardingError('私有知识无法解析：' + str(exc)) from exc
     if data.get('mode') != 'simulation':
         raise OnboardingError('onboarding 仅接受 simulation；没有真实连接检查实现。')
     if not isinstance(data.get('profile_id'), str) or not data['profile_id'].strip() or not isinstance(data.get('profile_version'), str) or not data['profile_version'].strip():
@@ -331,7 +337,8 @@ def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, work
         knowledge_profile = {**data, 'facts': {**facts, 'platforms': {
             'value': sorted({platform for platform, _ in selected_keys}),
             'status': 'confirmed', 'source': 'validated_selected_account_scope'}}}
-    knowledge_review = knowledge.assess(knowledge_profile, knowledge_stage, as_of=current)
+    knowledge_review = knowledge.assess(knowledge_profile, knowledge_stage, as_of=current,
+                                        private_snapshot=private_snapshot)
     if gate_gaps or guided['stage'] == 'collaboration_intake':
         knowledge_review.update(items=[], total_matches=0, truncated=False,
                                 deferred=True, notice='先完成接入验收与协作需求确认，投放知识评估暂不呈现。')
@@ -342,7 +349,8 @@ def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, work
     return {'schema_version': 1, 'kind': 'offline_onboarding_context', 'mode': 'simulation',
             'notice': '仅模拟连接 snapshot；没有真实 API/MCP/auth/provider 检查或变更。',
             'profile_id': data['profile_id'], 'profile_version': data['profile_version'],
-            'profile_hash': digest(data), 'profile_snapshot': data, 'readiness': readiness,
+            'profile_hash': source_profile_hash, 'profile_snapshot': data, 'readiness': readiness,
+            'private_memory': private_snapshot,
             'current_workflow': workflow,
             'connection_gate': connection_gate, 'guidance': guided,
             'knowledge_review': knowledge_review,
@@ -426,7 +434,9 @@ def validate_context(path, expected_hash=None, targets=None, workflow='publish',
         learning_budget = current['profile_snapshot']['facts']['learning_budget']['value']
         if currency != learning_budget['currency'] or Decimal(str(brief_budget)) > Decimal(str(learning_budget['amount'])):
             raise OnboardingError('brief 预算/币种超出业务档案已确认的学习预算。')
-    return {'reference': str(path), 'profile_id': current['profile_id'], 'profile_version': current['profile_version'], 'profile_hash': current['profile_hash'], 'mode': 'simulation'}
+    return {'reference': str(path), 'profile_id': current['profile_id'], 'profile_version': current['profile_version'],
+            'profile_hash': current['profile_hash'], 'private_memory_hash': current['private_memory']['active_hash'],
+            'mode': 'simulation'}
 
 
 def refresh_simulation_fixture(input_path, output_path, as_of=None):

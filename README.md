@@ -54,6 +54,7 @@ Start with the [first-run guide (Chinese)](docs/first-run.zh-CN.md). For source-
 | Asset selection | Explicit metadata filters and input order; no media inspection |
 | Budget allocation and batch review | Decimal arithmetic, frozen plan hash, Markdown review |
 | Contextual advertising knowledge | Runtime catalog retrieval, applicability/evidence/source review, intake and plan integration; advisory only |
+| Private product methods and notes | Local SQLite records, versions, idempotent writes, history and revocation; scoped reuse in intake, plans and knowledge assessment |
 | Execution and recovery | Local SQLite simulation, readback comparison, resume in the same state directory |
 | Real Meta/TikTok/Google operations | Planned; not implemented |
 | Additional operational recipes and design contracts | Human-readable guides and unloaded design JSON; separate from the runtime knowledge catalog |
@@ -78,6 +79,14 @@ The demo writes a new, uniquely named directory under `runs/` and verifies:
 4. An intentionally interrupted write is reconciled before remaining operations continue.
 
 It prints the output directory, `review.md` location and the expected object counts. All accounts and assets are fictional; fixture timestamps are refreshed only in a new copy. The demo never makes a network request.
+
+To try the private method store with fictional data:
+
+```bash
+python3 scripts/demo_private_memory.py
+```
+
+The local store isolates records by workspace and product, preserves changes and revocations, and reuses matching user-confirmed methods alongside public knowledge. An `active` record means the user has adopted it, not that its performance has been verified. It fills a missing or unknown methodology for the current evaluation; differing existing methods produce a conflict. It never silently edits the source profile or a budget. See the [private memory guide (Chinese)](docs/private-memory.zh-CN.md) for configuration, scope and manual commands. This is local logical isolation, not multi-tenant authentication; no automatic learning, live APIs or performance evaluation is included.
 
 Run the checks:
 
@@ -114,6 +123,7 @@ For an incomplete App + hybrid monetization example, replace the onboarding inpu
 ## Operational knowledge included
 
 - [Runtime knowledge base (Chinese)](docs/knowledge-base.zh-CN.md): source-linked knowledge with platform and business conditions, evidence gaps and review dates. `knowledge.py` supports deterministic search and assessment; onboarding and plan reviews use the same catalog without granting execution permissions.
+- [Private methods and observations (Chinese)](docs/private-memory.zh-CN.md): opt-in, local product records used by onboarding, plans and knowledge assessment. Candidates remain unconfirmed; operational notes remain advisory. Matching active changes invalidate dependent plans.
 - Sixteen [operation cards](docs/operations.md): media readiness, duplicate versus variant selection, existing posts, placement previews, tracking, parent status, copy defaults, budget ownership, concurrent human edits, timezone boundaries, attribution maturity, testing observations, Spark, RSA and ValueTrack.
 - [Meta creative recovery](docs/meta-creative-recovery.md): separate local hashes, media references, creative IDs, ad IDs and post identities; distinguish technical repair, suspected false rejection and content revision.
 - [Connector contract](contracts/connector-contract.json): native identity, capability/version records, normalization, uncertainty reconciliation and equivalent provider switching.
@@ -136,6 +146,8 @@ The assessment writes `report.json` and `review.md`. Results distinguish applica
 adops.py                 Offline plan, simulated authorization, execution and resume
 onboarding.py            Connection gate, collaboration guidance and business readiness
 knowledge.py             Deterministic knowledge search and advisory assessment
+memory_store.py          Local private records, versions, history and revocation
+personalization.py       Product-scoped private methods and advisory notes
 knowledge/               Runtime knowledge catalog with sources and conditions
 examples/                Fictional JSON inputs
 tests/                   Executable offline contract tests

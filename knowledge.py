@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+import personalization
 
 DEFAULT_CATALOG = Path(__file__).resolve().parent / 'knowledge' / 'catalog.json'
 STAGES = {'discovery', 'planning', 'creative', 'launch', 'measurement', 'diagnosis'}
@@ -136,13 +137,15 @@ def validate_facts(facts):
     canonical(facts)
 
 
-def assess(profile, stage, observations=None, query='', limit=12, as_of=None, catalog=None):
+def assess(profile, stage, observations=None, query='', limit=12, as_of=None, catalog=None, private_snapshot=None):
     """Return advisory candidates with explicit missing evidence; never create execution actions."""
     catalog = load_catalog() if catalog is None else validate_catalog(catalog)
     if stage not in STAGES or type(limit) is not int or not 1 <= limit <= 200 or not isinstance(query, str):
         raise KnowledgeError('需要合法 stage、query 与 1..200 的 limit。')
     if not isinstance(profile, dict):
         raise KnowledgeError('profile 必须为对象。')
+    if private_snapshot is None:
+        profile, private_snapshot = personalization.resolve(profile)
     facts = profile.get('facts', {})
     validate_facts(facts)
     observations = {} if observations is None else observations
@@ -201,12 +204,16 @@ def assess(profile, stage, observations=None, query='', limit=12, as_of=None, ca
                         'scope_missing': scope_missing, 'missing_facts': missing,
                         'matched_triggers': matched, 'sources': evidence, 'query_score': score,
                         'reason': '按声明的范围和条件匹配；未独立验证用户提供的事实，未完成平台检查或因果判断。'})
+    # Explicit user methods share the report but never masquerade as platform facts.
+    matches.extend(personalization.knowledge_items(private_snapshot, stage, query))
     # Evidence-backed triggers lead generic guidance. Uncertain scope is never presented as a match.
     matches.sort(key=lambda item: (bool(item['scope_missing']), -item['query_score'],
-                                  -len(item['matched_triggers']), item['priority'], item['id']))
+                                  -len(item['matched_triggers']), item['priority'],
+                                  0 if item.get('origin') == 'private' else 1, item['id']))
     return {'schema_version': 1, 'kind': 'knowledge_review', 'advisory_only': True,
             'retrieval': 'deterministic_scope_and_keyword_rules', 'knowledge_version': catalog['version'],
             'catalog_hash': digest(catalog), 'facts_hash': digest(facts), 'as_of': current.isoformat(),
+            'private_memory': private_snapshot,
             'stage': stage, 'query': query, 'total_matches': len(matches), 'truncated': len(matches) > limit,
             'items': matches[:limit],
             'notice': '知识提供检查和建议，不证明已完成，不授予操作权限；诊断假设不等于已确认根因。'}
@@ -225,7 +232,20 @@ def markdown(report):
             lines += [f"- {label}：{text}" for text in item[field]]
         lines += [f"- 补充问题：{question['question']}" for question in item['questions']
                   if question['key'] in item['missing_facts'] + item['scope_missing']]
-        lines += ['', *[f"- 来源：[{s['title']}]({s['url']})；复核 {s['checked_on']}；{s['freshness']}" for s in item['sources']], '']
+        for source in item['sources']:
+            if 'url' in source:
+                lines += [f"- 来源：[{source['title']}]({source['url']})；复核 {source['checked_on']}；{source['freshness']}"]
+            else:
+                lines += [f"- 私有来源：{source['reference']}；类型={source['kind']}；{source['freshness']}"]
+        lines.append('')
+    private = report.get('private_memory', {})
+    if private.get('enabled'):
+        lines += ['私有知识仅代表用户明确采用的约定；不证明经营效果，不增加执行权限。',
+                  '私有知识快照：`' + private['active_hash'] + '`', '']
+        for conflict in private.get('conflicts', []):
+            lines += ['- 私有方法冲突：' + conflict['reason']]
+        for pending in private.get('pending_scopes', []):
+            lines += ['- 私有条目适用范围待确认：' + pending['record_id'] + '；缺少 ' + '、'.join(pending['missing'])]
     if not report['items']:
         lines += ['没有匹配条目；不能据此判断不存在风险或问题。', '']
     return '\n'.join(lines)

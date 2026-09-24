@@ -1,0 +1,21 @@
+{
+  "record_id": "method-testing-01",
+  "product_id": "fictional-generic-product",
+  "kind": "methodology",
+  "title": "Fictional concept test method",
+  "text": "For this fictional product, compare creative concepts first, keep the agreed metadata constraints fixed, and review results using the selected observation window. Budget comes from the reviewed task.",
+  "status": "active",
+  "source": {
+    "kind": "user_confirmation",
+    "reference": "Fictional explicit user confirmation for the private-memory demonstration",
+    "mode": "user_statement"
+  },
+  "scope": {
+    "platforms": [],
+    "accounts": [],
+    "countries": [],
+    "surfaces": [],
+    "monetization": []
+  },
+  "stages": ["discovery", "planning", "creative", "launch", "measurement", "diagnosis"]
+}

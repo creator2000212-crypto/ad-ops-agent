@@ -64,6 +64,7 @@ flowchart LR
 | 素材筛选 | 只按显式元数据筛选并按输入顺序选取，未读取图片视频 |
 | 预算分配、整批审阅与计划绑定 | 已实现 Decimal、计划 hash、Markdown 审阅单 |
 | 按业务背景使用投放知识 | 已实现知识检索、适用条件与证据检查，接入初始化和计划审阅；仅提供建议 |
+| 产品私有方法与观察 | 已实现本地 SQLite、产品隔离、版本与幂等写入、历史和撤回，接入初始化、计划及知识评估 |
 | 执行、读回与中断续跑 | 已实现同一计划和本地 SQLite 状态目录中的模拟闭环 |
 | 真实平台适配、素材上传和广告发布 | 尚未实现 |
 | 其他实操卡、设计契约与恢复流程 | 保留阅读说明及尚未加载的设计 JSON，与运行时知识库分别维护 |
@@ -83,6 +84,14 @@ python3 scripts/demo.py
 演示会在 `runs/` 下创建新的独立目录，完成业务初始化、生成整批计划、模拟执行、重复续跑，以及写入中断后的恢复核验。输出包含审阅单位置和对象数量：第一次创建 3 个本地模拟对象，同一状态续跑新增 0 个。
 
 所有账号和素材都是虚构示例。更新 fixture 时间只产生新的模拟输入副本，不表示真实权限已检查。演示不发网络请求、不产生投放消耗。
+
+体验产品私有方法库：
+
+```bash
+python3 scripts/demo_private_memory.py
+```
+
+示例使用本地 SQLite 按 workspace 和产品保存方法、观察、历史与撤回，并把匹配的已确认方法与公共知识一起用于工作流。`active` 表示用户确认采用，不表示效果已验证；方法仅补充本次评估中缺失或未知的方法论，已有不同方法时保留冲突，不静默改写源档案或预算。配置、范围与手动命令见[私有方法库指南](docs/private-memory.zh-CN.md)。当前是本地逻辑隔离，不是多租户认证；尚无自动学习、真实 API 或效果判断。
 
 运行检查：
 
@@ -119,6 +128,7 @@ python3 adops.py resume --plan runs/manual/plan/plan.json --authorization runs/m
 ## 方案中包含哪些实操能力
 
 - [运行时投放知识库](docs/knowledge-base.zh-CN.md)：按平台、业务和工作阶段检索知识，说明适用条件、证据缺口与来源；用于初始化提问、方案审阅和诊断建议。
+- [产品私有方法库](docs/private-memory.zh-CN.md)：按需启用本地产品条目，用于初始化、计划和知识评估；候选保持未确认，操作观察仅供审阅，相关已采用条目变更使旧计划失效。
 - [首次配置引导](docs/first-run.zh-CN.md)：先验收连接，再按平台经验和当前需求选择协作方式。
 - [业务初始化](docs/onboarding.md)：接入与协作设置完成后，掌握任务所需背景，记录来源与未知。
 - [架构与接入](docs/architecture.md)：平台适配器、可替换连接器、对象身份、计划与证据。
@@ -144,6 +154,8 @@ python3 knowledge.py assess --profile examples/onboarding-learning.json --observ
 adops.py                 离线计划、模拟授权、执行与续跑
 onboarding.py            连接门槛、协作引导与业务就绪检查
 knowledge.py             确定性知识检索与建议评估
+memory_store.py          本地私有条目、版本、历史与撤回
+personalization.py       按产品范围解析私有方法与建议
 knowledge/               带来源和适用条件的运行时知识库
 examples/                虚构输入
 tests/                   可执行的离线契约测试
