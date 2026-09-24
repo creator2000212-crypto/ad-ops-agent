@@ -83,11 +83,11 @@ The demo writes a new, uniquely named directory under `runs/` and verifies:
 
 It prints the output directory, `review.md` location and the expected object counts. All accounts and assets are fictional; fixture timestamps are refreshed only in a new copy. The demo never makes a network request.
 
-### Start with a simple example
+### Walk through a specific ad review
 
-Ask the agent to check yesterday's ads. It organizes issues, proposes changes and lists unresolved questions for you to decide what happens next.
+Both a2 and a3 have no conversions. With only 180 impressions, a2 needs more observation. With 15.30 in spend and 420 impressions, a3 meets this example's pause-and-review conditions. The agent shows the evidence, checks current state, then hands you proposed changes and unresolved questions.
 
-[Read the one-minute demo](demo/README.md) · [See the full report (Chinese)](demo/expected/report.md) · [How to build it](docs/build-from-zero.md)
+[Read the worked example](demo/README.md) · [See the data report (Chinese)](demo/expected/report.md) · [How to build it](docs/build-from-zero.md)
 
 The example uses fictional data and makes no real account changes.
 

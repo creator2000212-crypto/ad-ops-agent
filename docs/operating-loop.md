@@ -1,7 +1,7 @@
 # Operating loop — a recurring test loop, implemented offline
 
 This page is the technical reference for rules, data dependencies and the CLI.
-Start with the [five-step demo](../demo/README.md) for the operator/agent division
+Start with the [worked ad-review example](../demo/README.md) for the operator/agent division
 of work and sample results; [building from zero](build-from-zero.md) explains the
 architecture and build order.
 

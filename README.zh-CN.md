@@ -104,11 +104,11 @@ python3 scripts/demo_methods.py
 
 完整流程见[方法确认与测试计划](docs/method-planning.zh-CN.md)。演示先完成初版计划的中断、恢复和重复运行核验，再确认修订方法、拒绝旧计划并生成新版；**新版停在计划审阅，不自动模拟执行**。用户通过宿主交流，不需要自己编辑 JSON；程序支持 `single_variable` 钩子比较与 `concept_exploration`，尚不能解析任意自然语言 SOP。M1 文本方法继续作为背景，新 MethodSpec 必须另行明确采用，才约束素材选择。离线示例不等于跨宿主的真人可用性验收或真实部署测试。
 
-### 先看一个简单例子
+### 看一轮具体的投放检查
 
-你说“帮我检查昨天的投放”，Agent 整理需要关注的广告、给出调整建议，再列出没解决的问题，由你决定下一步。
+同样是零转化，a2 只有 180 次展示，先观察；a3 花费 15.30、展示 420 次，达到本例的暂停复核条件。Agent 列出数据和依据，再检查当前状态，把待审调整和未解决的问题交给你。
 
-[一分钟看懂 demo](demo/README.zh-CN.md) · [查看完整报告](demo/expected/report.md) · [怎样搭建](docs/build-from-zero.zh-CN.md)
+[查看完整案例](demo/README.zh-CN.md) · [查看数据报告](demo/expected/report.md) · [怎样搭建](docs/build-from-zero.zh-CN.md)
 
 当前示例使用虚构数据，不会修改真实广告账户。
 
