@@ -88,7 +88,9 @@ class OnboardingTests(unittest.TestCase):
     def test_discovered_connection_is_not_write_verification(self):
         self.profile['connections']['checks'][0]['write'] = {'status': 'unknown', 'scopes': []}
         result = self.evaluate()
-        self.assertEqual(result['readiness']['test_planning']['status'], 'ready')
+        self.assertEqual(result['readiness']['test_planning']['status'], 'needs_input')
+        self.assertEqual(result['readiness']['discovery']['status'], 'needs_input')
+        self.assertEqual(result['next_questions'], [])
         self.assertEqual(result['readiness']['publish']['status'], 'needs_input')
         context = self.persist()
         saved = onboarding.read(context)

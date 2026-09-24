@@ -162,5 +162,19 @@
       }
     ]
   },
-  "fixture_only": true
+  "fixture_only": true,
+  "setup_preferences": {
+    "route": "existing",
+    "recommendation_dismissed": false
+  },
+  "collaboration": {
+    "approach": "bring_own",
+    "current_need": "Prepare a fictional metadata-only creative test with the existing method",
+    "experience_by_platform": {
+      "meta": "experienced",
+      "tiktok": "unknown",
+      "google": "unknown"
+    },
+    "explanation": "concise"
+  }
 }

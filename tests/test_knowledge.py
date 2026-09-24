@@ -276,8 +276,10 @@ class KnowledgeRuntimeIntegrationTests(unittest.TestCase):
     def test_knowledge_cannot_bypass_missing_write_authorization(self):
         self.profile['connections']['checks'][0]['write']['status'] = 'unknown'
         with patch.object(knowledge, 'load_catalog', return_value=self.catalog):
-            _, plan = self.build()
-            self.assertEqual(plan['status'], 'ready')
+            context, plan = self.build()
+            self.assertEqual(plan['status'], 'needs_input')
+            self.assertEqual(context['knowledge_review']['items'], [])
+            self.assertEqual(plan['operations'], [])
             with self.assertRaises(adops.ContractError):
                 adops.authorization_for(plan)
 

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "mode": "simulation",
+  "profile_id": "fictional-first-run",
+  "profile_version": "1",
+  "fixture_only": true,
+  "facts": {
+    "platforms": {
+      "value": [
+        "meta"
+      ],
+      "status": "confirmed",
+      "source": "fictional_selected_platform"
+    }
+  },
+  "selected_accounts": [
+    {
+      "platform": "meta",
+      "account_id": "fictional_meta_account"
+    }
+  ],
+  "connections": {
+    "mode": "simulation",
+    "max_age_hours": 24,
+    "checks": []
+  },
+  "setup_preferences": {
+    "route": "undecided",
+    "recommendation_dismissed": false
+  }
+}

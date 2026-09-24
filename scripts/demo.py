@@ -29,9 +29,15 @@ def run(output):
     output.mkdir(parents=True, exist_ok=False)
     profile, context = output / 'profile.json', output / 'context'
     plan, auth = output / 'plan', output / 'simulation-authorization.json'
+    setup = cli('onboarding.py', '--input', ROOT / 'examples/onboarding-setup-required.json',
+                '--out', output / 'setup-required', expected_code=2)
+    require(setup['connection_gate']['status'] == 'needs_input' and not setup['next_questions'], 'Setup gate failed')
+    require(setup['guidance']['recommendation'] is not None, 'First-run recommendation missing')
     cli('onboarding.py', '--input', ROOT / 'examples/onboarding-learning.json',
         '--out', profile, '--refresh-simulation-fixture')
-    cli('onboarding.py', '--input', profile, '--out', context)
+    intake = cli('onboarding.py', '--input', profile, '--out', context)
+    require(intake['connection_gate']['status'] == 'ready_simulation', 'Connection fixture not ready')
+    require(intake['guidance']['recommendation'] is None, 'Existing connection should not be upsold')
     knowledge_report = cli('knowledge.py', 'assess', '--profile', profile,
                            '--observations', ROOT / 'examples/knowledge-observations.json',
                            '--stage', 'diagnosis', '--out', output / 'knowledge')
@@ -64,6 +70,7 @@ def run(output):
         'recovery_created': 2, 'recovery_total': 3,
         'knowledge_review': str(output / 'knowledge' / 'review.md'),
         'knowledge_items': len(knowledge_report['items']),
+        'setup_gate': 'unconnected_blocked_then_verified_simulation_ready',
         'native_platform_calls': 0
     }
     (output / 'demo-summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

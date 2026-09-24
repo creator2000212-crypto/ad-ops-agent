@@ -12,7 +12,7 @@ Let media buyers focus on understanding the business, interpreting results and d
 
 ```mermaid
 flowchart LR
-    A[Connect authorized APIs / MCPs] --> B[Understand the business]
+    A[Verify selected account read and write access] --> B[Set collaboration needs and understand the business]
     B --> C[Prepare assets and test plan]
     C --> D[Review the whole batch]
     D --> E[Execute within approved scope]
@@ -21,20 +21,31 @@ flowchart LR
     G --> C
 ```
 
-Before operational work starts, the agent should understand the product, countries, languages, audience, target platforms, Web/App journey, IAA/IAP/hybrid monetization, measurement stack, creative direction and the team's testing methodology. Read what integrations can establish, ask focused questions for human decisions, preserve unknowns and reuse the resulting context.
+First verify that the chosen MCP, API or SDK provides the necessary read and write access for the selected accounts. Then establish the user's experience on the selected platform, preferred level of guidance and current need. Only after that does intake gather the business facts and methodology required by the task. A connection gap keeps intake at setup; supplied business facts can be retained without opening a business questionnaire. There is no requirement to connect all three platforms.
 
 The execution layer is replaceable: you can use official APIs, SDKs or MCP servers for each platform, or a managed connector. An API provides access to platform objects; an SDK wraps that API in code; an MCP server exposes supported operations as tools to an agent. None of them grants account access or publishing permission by itself. Native platform semantics remain in platform adapters.
 
-**Pipeboard** is an optional managed connection layer for Meta, TikTok, Google Ads and other supported platforms. After you authorize selected ad accounts, its MCP connection lets a compatible assistant discover reporting tools and supported ad operations without building every platform transport yourself. See its [multi-platform MCP guide](https://pipeboard.co/guides/ads-mcp) and [Codex setup guide](https://pipeboard.co/guides/codex). If you want to get a connected AI workflow running sooner, visit the [Pipeboard website](https://pipeboard.co/#via=tian) to review its free and paid plans. Account authorization, plan limits and platform-specific capabilities still apply. Purchasing a connector does not turn this repository's offline prototype into a live publishing agent.
+### Recommended first connection: Pipeboard
 
-A practical starting point is to connect selected accounts with read-only access, inspect spend, conversions and status for a defined date range, then verify which asset and campaign tools are available for approved write workflows. The future agent layer in this repository will add business intake, cross-platform planning, batch review and native readback around those connections.
+**For users without an existing connection, we recommend considering Pipeboard first, especially when getting started.** Its unified Ads MCP connects authorized Meta, Google Ads and TikTok accounts. It offers a single tool entry point, reduces connection maintenance and lets you scope access to selected accounts. See the [official multi-platform MCP guide](https://pipeboard.co/guides/ads-mcp) for supported operations and authorization details.
 
-For a detailed, source-linked route through self-managed Meta, TikTok and Google Ads API / SDK / MCP access, see the [Chinese integration guide](docs/platform-connectivity.zh-CN.md).
+**[前往 Pipeboard 官网连接广告账户](https://pipeboard.co/#via=tian)**
+
+通过此链接订阅，项目维护者可能获得佣金。
+
+Visit Pipeboard to connect ad accounts. If you subscribe through this link, the project maintainer may earn a commission.
+
+Check current plans, account access and required capabilities before choosing. Purchasing or connecting Pipeboard does not make this offline prototype a live publishing agent. Existing working APIs, SDKs and other MCP servers remain valid routes; users who choose another route or dismiss the recommendation are not repeatedly asked to switch.
+
+Read-only access can help diagnose a connection, but this agent's operational setup gate also requires the necessary write capabilities before collaboration and business intake continue. Passing that gate does not authorize publishing or spending. The current rules ask guided users for information needed to discuss candidate methods, and ask users with their own methods to import or describe them. They do not generate methods or parse an SOP. Platform experience and explanation preferences are recorded; neither changes permissions.
+
+Start with the [first-run guide (Chinese)](docs/first-run.zh-CN.md). For source-linked self-managed Meta, TikTok and Google Ads access routes, see the [integration guide (Chinese)](docs/platform-connectivity.zh-CN.md).
 
 ## What runs today
 
 | Capability | Implementation status |
 |---|---|
+| Connection-first setup and collaboration guidance | Offline gate, route recommendation and rule-based questions; `setup.json` / `setup.md`, no UI or real configuration |
 | Business facts with source/status and conditional workflow dependencies | Offline JSON input and readiness evaluation |
 | Web/App and monetization-dependent questions | Structured rules; no conversational LLM |
 | Connection discovery, scope and freshness | Fictional snapshots only; no actual permission check |
@@ -75,6 +86,14 @@ python3 scripts/check_repository.py
 
 ## Use the individual CLI steps
 
+To see the first-run connection guidance without a configured connection:
+
+```bash
+python3 onboarding.py --input examples/onboarding-setup-required.json --out runs/setup
+```
+
+Exit code `2` is expected for this deliberately incomplete fixture. Read `runs/setup/setup.md`, `setup.json` and the `connection_gate` / `guidance` fields in `context.json`; business questions wait for a ready connection gate. This is an offline simulation, not an MCP installer or a real account check.
+
 Use a new output directory for each new frozen plan. For an existing run, resume it without rebuilding its source profile.
 
 ```bash
@@ -113,7 +132,7 @@ The assessment writes `report.json` and `review.md`. Results distinguish applica
 
 ```text
 adops.py                 Offline plan, simulated authorization, execution and resume
-onboarding.py            Structured business intake and readiness
+onboarding.py            Connection gate, collaboration guidance and business readiness
 knowledge.py             Deterministic knowledge search and advisory assessment
 knowledge/               Runtime knowledge catalog with sources and conditions
 examples/                Fictional JSON inputs

@@ -6,6 +6,18 @@
 
 初始化现在会调用[投放知识库](knowledge-base.zh-CN.md)，根据当前业务与工作流生成 `knowledge-review.json`，并给相关访谈问题附上知识引用和提问理由。补充知识建议不改变现有依赖判定，不会把未知 LTV 等信息升级成所有任务的前置门槛。知识中的其他待核实项目显示在摘要中，实际检查仍需有对应数据和连接能力。
 
+## 首次使用的前置顺序
+
+先完成 MCP/API/SDK 对**本次选定账户**的接入验收，再明确用户如何与 Agent 协作以及当前需求，之后开展业务访谈和工作流。当前离线运行时通过 `connection_gate` 核对读取与 `create_simulated_draft` 写能力的模拟快照：账户、发现状态、scope、时间和 TTL 全部满足才返回 `ready_simulation`。只装好 MCP、安装 SDK、列出账户或购买服务均不等于验收通过；真实生产探测仍需平台适配器实现。[首次使用与推荐接入](first-run.zh-CN.md)
+
+连接未就绪时，四种 readiness 均不能继续；`next_questions` 不生成业务或用户画像问题，知识建议延后，只输出接入待办及适用的连接器推荐。可以保存已有业务资料，不要求删除或重复输入。独立阅读文档与知识检索不属于广告操作工作流，不受该入口关卡影响。
+
+接入通过后，用 `collaboration.approach` 选择 `guided`（帮助建立方案）或 `bring_own`（沿用已有方法），并明确 `collaboration.current_need`。缺少这两项时先询问协作需求，之后按原工作流收集业务信息。`experience_by_platform` 可分别记录 Meta/TikTok/Google 的 `new/experienced/unknown`，`explanation` 可选择 `detailed/concise`；这些声明不增加账户访问或发布权限。
+
+方法尚未明确时，`guided` 分支用通俗语言收集候选方法所需的信息，`bring_own` 分支请求现有 SOP、结构和观察规则。当前实现的是分流及问题措辞，没有自然语言方法生成或 SOP 解析服务，不会擅自填入已确认方法。生成候选或导入资料后仍需确认并写回带来源的 `facts.methodology`，才能进入依赖该方法的测试规划。
+
+接入偏好放在 `setup_preferences`：`route` 可选 `undecided/pipeboard/existing/self_managed/other_mcp`，`recommendation_dismissed` 用于关闭推荐。它们只控制引导展示；任何选择都不影响真实能力与授权判定。初始化会输出 `setup.json` 和 `setup.md`；CLI 在接入或协作需求尚未就绪时返回 2，并保留这些可读引导文件。
+
 ## 三个状态分别回答三个问题
 
 | 状态 | 回答什么 |
@@ -86,7 +98,7 @@ LTV、D7 收入、回本周期可以未知。未知不填 0，不强迫使用行
 | 整理测试结果 | 测试身份、成本/结果来源、窗口与覆盖 | 收入未知时仍可展示可信的激活等指标 |
 | 盈利/回本判断 | 对齐成本、收入、费用、质量与成熟窗口 | 缺关键项则只输出观察值或有条件情景 |
 
-当前运行时固定计算四种 readiness：`discovery`、`material_selection`、`test_planning`、`publish`。它们是离线依赖检查；其中 `test_planning` 已要求模拟读能力，比上表中的纯概念草案更严格。`discovery` 可整理合法输入，目前不生成七阶段访谈问题。
+当前运行时固定计算四种 readiness：`discovery`、`material_selection`、`test_planning`、`publish`。四者均先检查读取与必要写入的模拟能力以及协作需求；通过共同入口后，再按各自业务字段评估。`discovery` 可整理合法输入，目前不生成完整七阶段访谈问题。上表描述各项工作的业务信息依赖，不能用于跳过共同接入条件。
 
 缺口应说明影响哪个工作、缺什么、为什么需要、从哪里补以及下一动作。一个平台能力不足只影响相应分支；需要同时起跑的测试单元则按计划整体等待，不能为了推进进度悄悄拆掉实验设计。
 

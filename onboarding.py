@@ -9,6 +9,7 @@ import math
 from pathlib import Path
 import sys
 import knowledge
+import guidance
 
 STATES = {'confirmed', 'observed', 'hypothesis', 'unknown', 'conflict', 'stale'}
 PLATFORMS = {'meta', 'tiktok', 'google'}
@@ -210,7 +211,7 @@ def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, work
         raise OnboardingError('max_age_hours 必须为 0 至 720 之间的正数。')
     connection_results = []
     connection_requirements = {'read': [], 'write': []}
-    selected_platforms = value('platforms') or []
+    selected_platforms = value('platforms')
     if not selected_keys:
         missing('selected_accounts', 'unknown', '尚未明确本档案选定的平台账户。')
     for platform, account in selected_keys:
@@ -220,7 +221,7 @@ def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, work
             connection_requirements[permission].append(key)
             record = check.get(permission, {})
             status, reason = 'unknown', '连接被发现不等于读/写能力已经验证。'
-            if platform not in selected_platforms:
+            if selected_platforms is not None and platform not in selected_platforms:
                 status, reason = 'conflict', '选定账户的平台不在 facts.platforms 范围。'
             elif isinstance(record, dict) and record.get('status') == 'verified' and check.get('discovered') is True:
                 scopes = record.get('scopes', [])
@@ -243,6 +244,23 @@ def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, work
                 missing(key, status, reason)
             connection_results.append({'platform': platform, 'account_id': account, 'permission': permission, 'status': status, 'reason': reason})
 
+    connection_fields = connection_requirements['read'] + connection_requirements['write'] or ['selected_accounts']
+    gate_gaps = [key for key in connection_fields if key in gaps]
+    hard_gate = any(gaps[key]['status'] in {'conflict', 'stale', 'unsupported'} for key in gate_gaps)
+    connection_gate = {
+        'status': ('blocked' if hard_gate else 'needs_input') if gate_gaps else 'ready_simulation',
+        'mode': 'simulation', 'gaps': gate_gaps,
+        'selected_accounts': [{'platform': platform, 'account_id': account} for platform, account in selected_keys],
+        'required_capabilities': ['read_objects', 'create_simulated_draft'],
+        'notice': '先验收本次选定账户的读取与必要写能力，再进入访谈；当前只核对离线快照，不证明真实接入或授权发布。'}
+    guided = guidance.evaluate({**data, 'selected_accounts': connection_gate['selected_accounts']}, connected=not gate_gaps)
+    collaboration_fields = []
+    if not gate_gaps and guided['stage'] == 'collaboration_intake':
+        for question in guided['questions']:
+            key = question['key']
+            collaboration_fields.append(key)
+            missing(key, 'unknown', '接入已就绪；先明确希望如何协作及本次需求。')
+
     material_fields = ['product_name', 'surface', 'countries', 'creative_direction']
     planning_fields = material_fields + ['platforms', 'methodology', 'audience', 'goal_type', 'success_metric', 'learning_budget'] + app_fields
     if goal in {'revenue', 'value'}:
@@ -251,13 +269,13 @@ def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, work
         planning_fields += ['value_basis', 'value_window']
     if goal == 'conversion' and monetization == 'leadgen':
         planning_fields += ['lead_event', 'lead_qualification']
-    readiness = {'discovery': {'status': 'ready', 'gaps': [], 'note': '可整理已有资料，未知和冲突保留；无外部执行。'}}
+    readiness = {}
 
     def readiness_for(workflow, fields, connection_fields):
         required = list(dict.fromkeys(fields))
         for key in required:
             usable(key)
-        required += connection_fields
+        required += connection_fields + collaboration_fields
         if connection_fields and not selected_keys:
             required.append('selected_accounts')
         missing_keys = [key for key in dict.fromkeys(required) if key in gaps]
@@ -267,9 +285,10 @@ def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, work
         readiness[workflow] = {'status': ('blocked' if hard else 'needs_input') if missing_keys else 'ready',
                                'gaps': missing_keys, 'mode': 'simulation'}
 
-    readiness_for('material_selection', material_fields, [])
-    readiness_for('test_planning', planning_fields, connection_requirements['read'] or ['selected_accounts'])
-    readiness_for('publish', planning_fields, connection_requirements['read'] + connection_requirements['write'] or ['selected_accounts'])
+    readiness_for('discovery', [], connection_fields)
+    readiness_for('material_selection', material_fields, connection_fields)
+    readiness_for('test_planning', planning_fields, connection_fields)
+    readiness_for('publish', planning_fields, connection_fields)
     if workflow not in readiness:
         raise OnboardingError('不支持的当前 workflow。')
     asked = asked_questions if asked_questions is not None else profile.get('asked_questions', [])
@@ -282,6 +301,29 @@ def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, work
     ordered = sorted(human_gaps, key=lambda gap: (0 if gap['status'] in {'conflict', 'stale'} else 1, list(gaps).index(gap['key'])))
     next_questions = [{'key': gap['key'], 'question': QUESTIONS.get(gap['key'], '请补充或核对 ' + gap['key'] + ' 的信息、来源和当前状态。'),
                        'reason': gap['reason'], 'status': gap['status']} for gap in ordered if gap['key'] not in asked][:3]
+    if gate_gaps:
+        next_questions = []
+    elif guided['stage'] == 'collaboration_intake':
+        next_questions = [{**question, 'status': 'unknown', 'reason': '先确定协作方式和本次需求。'}
+                          for question in guided['questions'] if question['key'] not in asked][:3]
+        familiarity = guided.get('familiarity_question')
+        if familiarity:
+            missing(familiarity['key'], 'unknown', '可选的平台熟悉度；允许暂时不确定，不阻断业务工作流。')
+            if len(next_questions) < 3 and familiarity['key'] not in asked:
+                next_questions.append({**familiarity, 'status': 'unknown', 'reason': '帮助选择合适的说明方式，可跳过。'})
+    else:
+        method_question = next((question for question in guided['questions'] if question['key'] == 'methodology'), None)
+        for question in next_questions:
+            if question['key'] == 'methodology' and method_question:
+                question['question'] = method_question['question']
+            elif data.get('collaboration', {}).get('approach') == 'guided':
+                plain_questions = {
+                    'audience': '哪些人最可能需要这个产品？不知道也可以，先说说他们遇到的问题。',
+                    'creative_direction': '有哪些图片、视频或产品演示可用？你希望用户首先明白什么？',
+                    'goal_type': '这次最想得到订单、咨询、注册，还是先验证有没有人感兴趣？',
+                    'success_metric': '看到什么结果，你会认为这轮尝试有价值？我可以帮你整理可选指标。',
+                    'learning_budget': '这一轮最多愿意投入多少广告费，使用哪种货币？'}
+                question['question'] = plain_questions.get(question['key'], question['question'])
     knowledge_stage = {'discovery': 'discovery', 'material_selection': 'creative',
                        'test_planning': 'planning', 'publish': 'launch'}[workflow]
     knowledge_profile = data
@@ -290,6 +332,9 @@ def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, work
             'value': sorted({platform for platform, _ in selected_keys}),
             'status': 'confirmed', 'source': 'validated_selected_account_scope'}}}
     knowledge_review = knowledge.assess(knowledge_profile, knowledge_stage, as_of=current)
+    if gate_gaps or guided['stage'] == 'collaboration_intake':
+        knowledge_review.update(items=[], total_matches=0, truncated=False,
+                                deferred=True, notice='先完成接入验收与协作需求确认，投放知识评估暂不呈现。')
     for question in next_questions:
         supporting = [item for item in knowledge_review['items'] if question['key'] in item['required_facts']]
         question['knowledge_refs'] = [item['id'] for item in supporting]
@@ -299,6 +344,7 @@ def evaluate(profile, asked_questions=None, as_of=None, account_scope=None, work
             'profile_id': data['profile_id'], 'profile_version': data['profile_version'],
             'profile_hash': digest(data), 'profile_snapshot': data, 'readiness': readiness,
             'current_workflow': workflow,
+            'connection_gate': connection_gate, 'guidance': guided,
             'knowledge_review': knowledge_review,
             'connection_results': connection_results, 'gaps': list(gaps.values()), 'next_questions': next_questions,
             'machine_actions': [{'key': gap['key'], 'status': gap['status'], 'reason': gap['reason'],
@@ -318,6 +364,8 @@ def build_context(input_path, output_dir, as_of=None, workflow='test_planning'):
     result = evaluate(profile, asked_questions=asked, as_of=as_of, workflow=workflow)
     result['source_ref'] = str(source)
     write(output / 'context.json', result)
+    write(output / 'setup.json', {'connection_gate': result['connection_gate'], 'guidance': result['guidance']})
+    (output / 'setup.md').write_text(setup_markdown(result), encoding='utf-8')
     write(output / 'knowledge-review.json', result['knowledge_review'])
     write(output / 'gaps.json', {'profile_hash': result['profile_hash'], 'readiness': result['readiness'], 'gaps': result['gaps']})
     write(output / 'questions.json', {'workflow': workflow, 'next_questions': result['next_questions'], 'unresolved': result['question_progress']['unresolved'], 'machine_actions': result['machine_actions']})
@@ -333,10 +381,28 @@ def build_context(input_path, output_dir, as_of=None, workflow='test_planning'):
     lines += [f"- {q['question']}（{q['status']}）" for q in result['next_questions']] or ['没有新问题；已问未答仍在 unresolved 和 gaps 中，不代表信息已补齐。']
     lines += ['', '## 连接检查待办（机器动作，不是访谈问题）', '']
     lines += [f"- {action['key']}：{action['action']}；{action['reason']}" for action in result['machine_actions']] or ['当前工作流没有连接检查待办。']
-    lines += ['', '收入/LTV 等信息只阻断依赖它们的目标；discovery 可以先整理资料。', '']
+    lines += ['', '先完成连接验收与协作方式确认；之后收入/LTV 等信息只影响依赖它们的目标。', '']
     lines += [knowledge.markdown(result['knowledge_review'])]
     (output / 'summary.md').write_text('\n'.join(lines), encoding='utf-8')
     return result
+
+
+def setup_markdown(result):
+    gate, route = result['connection_gate'], result['guidance']
+    lines = ['# 首次接入与协作引导', '', gate['notice'], '',
+             '接入状态：' + gate['status'], '', '当前阶段：' + route['stage'], '']
+    recommendation = route.get('recommendation')
+    if recommendation:
+        # Structured content only; no installation, checkout, auth or ad writes occur here.
+        lines += [guidance.recommendation_markdown(recommendation), '']
+    lines += ['## 当前待办', '']
+    lines += [f"- {step}" for step in route.get('setup_steps', [])]
+    lines += [f"- {action['key']}：{action['reason']}" for action in result['machine_actions']]
+    lines += [f"- {question['question']}" for question in result['next_questions']]
+    if not result['machine_actions'] and not result['next_questions']:
+        lines += ['没有新问题；请结合 context.json 中仍未解决的缺口判断下一步。']
+    lines += ['', '协作方式与平台熟练度不会增加账户访问或发布权限。', '']
+    return '\n'.join(lines)
 
 
 def validate_context(path, expected_hash=None, targets=None, workflow='publish', as_of=None, brief_budget=None, currency=None):
@@ -398,8 +464,10 @@ def main(argv=None):
             print(json.dumps(refresh_simulation_fixture(args.input, args.out), ensure_ascii=False, indent=2))
             return 0
         result = build_context(args.input, args.out, workflow=args.workflow)
-        print(json.dumps({'mode': 'simulation', 'profile_hash': result['profile_hash'], 'readiness': result['readiness'], 'next_questions': result['next_questions'], 'machine_actions': result['machine_actions']}, ensure_ascii=False, indent=2))
-        return 0
+        print(json.dumps({'mode': 'simulation', 'profile_hash': result['profile_hash'], 'connection_gate': result['connection_gate'],
+                          'guidance': result['guidance'], 'readiness': result['readiness'], 'next_questions': result['next_questions'],
+                          'machine_actions': result['machine_actions']}, ensure_ascii=False, indent=2))
+        return 2 if result['connection_gate']['status'] != 'ready_simulation' or result['guidance']['stage'] == 'collaboration_intake' else 0
     except (OnboardingError, OSError, ValueError, TypeError, KeyError) as exc:
         print(json.dumps({'status': 'blocked', 'error': str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 2

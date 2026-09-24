@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "mode": "simulation",
-  "profile_id": "fictional-app-hybrid-discovery",
+  "profile_id": "fictional-guided-intake",
   "profile_version": "1",
   "facts": {
     "product_name": {
@@ -10,12 +10,12 @@
       "source": "fictional_fixture_only"
     },
     "surface": {
-      "value": "app",
+      "value": "web",
       "status": "confirmed",
       "source": "fictional_fixture_only"
     },
     "monetization": {
-      "value": "hybrid",
+      "value": "leadgen",
       "status": "confirmed",
       "source": "fictional_fixture_only"
     },
@@ -36,13 +36,13 @@
       "source": "fictional_fixture_only"
     },
     "methodology": {
-      "value": "Keep metadata requirements fixed; compare the same two fictional assets",
-      "status": "confirmed",
-      "source": "fictional_fixture_only"
+      "value": null,
+      "status": "unknown",
+      "source": "fictional_user_requests_help"
     },
     "audience": {
-      "value": "Two conflicting descriptions are still unresolved",
-      "status": "conflict",
+      "value": "Fictional broad adult audience; no real targeting configuration",
+      "status": "confirmed",
       "source": "fictional_fixture_only"
     },
     "creative_direction": {
@@ -51,7 +51,7 @@
       "source": "fictional_fixture_only"
     },
     "goal_type": {
-      "value": "revenue",
+      "value": "learning",
       "status": "confirmed",
       "source": "fictional_fixture_only"
     },
@@ -74,41 +74,6 @@
       "source": "fictional_fixture_only"
     },
     "payback_window": {
-      "value": null,
-      "status": "unknown",
-      "source": "fictional_fixture_only"
-    },
-    "os": {
-      "value": null,
-      "status": "unknown",
-      "source": "fictional_fixture_only"
-    },
-    "store": {
-      "value": null,
-      "status": "unknown",
-      "source": "fictional_fixture_only"
-    },
-    "measurement_stack": {
-      "value": null,
-      "status": "unknown",
-      "source": "fictional_fixture_only"
-    },
-    "ad_revenue_event": {
-      "value": null,
-      "status": "unknown",
-      "source": "fictional_fixture_only"
-    },
-    "ad_revenue_window": {
-      "value": null,
-      "status": "unknown",
-      "source": "fictional_fixture_only"
-    },
-    "purchase_revenue_event": {
-      "value": null,
-      "status": "unknown",
-      "source": "fictional_fixture_only"
-    },
-    "refund_policy": {
       "value": null,
       "status": "unknown",
       "source": "fictional_fixture_only"
@@ -146,11 +111,11 @@
         },
         "write": {
           "status": "verified",
+          "checked_at": "2026-09-24T09:12:41.042254+00:00",
           "scopes": [
             "create_simulated_draft"
           ],
-          "checked_at": "2026-09-24T09:12:41.042254+00:00",
-          "evidence": "fictional fixture only; NO real verification performed"
+          "evidence": "offline fixture, no real check"
         }
       },
       {
@@ -167,11 +132,11 @@
         },
         "write": {
           "status": "verified",
+          "checked_at": "2026-09-24T09:12:41.042254+00:00",
           "scopes": [
             "create_simulated_draft"
           ],
-          "checked_at": "2026-09-24T09:12:41.042254+00:00",
-          "evidence": "fictional fixture only; NO real verification performed"
+          "evidence": "offline fixture, no real check"
         }
       },
       {
@@ -188,11 +153,11 @@
         },
         "write": {
           "status": "verified",
+          "checked_at": "2026-09-24T09:12:41.042254+00:00",
           "scopes": [
             "create_simulated_draft"
           ],
-          "checked_at": "2026-09-24T09:12:41.042254+00:00",
-          "evidence": "fictional fixture only; NO real verification performed"
+          "evidence": "offline fixture, no real check"
         }
       }
     ]
@@ -203,13 +168,13 @@
     "recommendation_dismissed": false
   },
   "collaboration": {
-    "approach": "bring_own",
-    "current_need": "Prepare a fictional metadata-only creative test with the existing method",
+    "approach": "guided",
+    "current_need": "Understand how to prepare the first creative test",
     "experience_by_platform": {
-      "meta": "experienced",
+      "meta": "new",
       "tiktok": "unknown",
       "google": "unknown"
     },
-    "explanation": "concise"
+    "explanation": "detailed"
   }
 }
