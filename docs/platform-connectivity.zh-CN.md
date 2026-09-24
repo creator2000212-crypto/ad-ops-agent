@@ -58,6 +58,8 @@ https://business-api.tiktok.com/open_mcp/tt-ads-mcp-layer
 
 **先看 2026-09 的申请变化。** Google 已把**新 Google Ads API 接入及权限升级**迁至 Google Cloud Console；2026-09-09 后不应照旧教程去经理账户 API Center 新申请 developer token。已有 token 可暂时继续传，但服务器按 OAuth 凭据所属 Cloud 项目的访问级别判定，Google 建议更新客户端库。[Google 官方迁移说明](https://developers.google.com/google-ads/api/docs/api-policy/developer-token)。这里说的是 **Google Ads API**；Google 的 App Conversion Tracking API 在官方说明中有单独例外。
 
+**想照着控制台一步步申请，请看独立的[Google Ads API 新申请完整流程](google-ads-api-application.zh-CN.md)：**包含 Test → Explorer → Basic → Standard 的入口、IAM 与 Ads 账户权限、OAuth 身份、品牌验证、申请失败排查和验收记录。下面只保留三平台对比所需的摘要。
+
 1. 建立或选择 Google Cloud 项目，启用 Google Ads API，在该项目的 **Google Ads API Overview** 页面查看访问级别。启用后先有 Test access；要操作生产广告账户，按页面申请 Explorer / Basic / Standard 等级。各等级有不同配额和可用功能；Basic / Standard 的新申请涉及品牌验证。[Cloud 项目设置](https://developers.google.com/google-ads/api/docs/oauth/cloud-project) · [访问级别说明](https://developers.google.com/google-ads/api/docs/api-policy/access-levels)。
 2. 在同一项目配置 OAuth 2.0。若是给多个外部用户授权，选多用户 OAuth 流程；若是管理自己已有权限的账户，可按官方场景评估 service account，并把服务账户邮箱加入相应 Google Ads 账户。普通 OAuth 用户也必须具有该 Ads 账户权限。[OAuth 场景选择](https://developers.google.com/google-ads/api/docs/oauth/overview) · [服务账户流程](https://developers.google.com/google-ads/api/docs/oauth/service-accounts)。
 3. 确认目标 customer ID、登录用 manager ID（如有）、账户层级与目标广告产品。先在测试账户或只读范围调用 `GoogleAdsService.Search` / `SearchStream`，用 GAQL 读 campaign 和花费；之后再按 Search、PMax、Demand Gen、App 等产品的原生资源分别开发写入。经理账户用于管理多账户，但按当前[官方说明](https://developers.google.com/google-ads/api/docs/api-policy/developer-token)已不是新申请 Google Ads API 的必备入口。

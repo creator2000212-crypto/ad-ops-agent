@@ -9,6 +9,7 @@ Ad Ops Agent 把投放人员已确认的方向变成可靠的准备、配置、�
 | 产品替投放人员节省哪些劳动，人与 Agent 如何分工？ | [产品与流程](product.md) |
 | 哪些已实现，怎样增加或替换 API/MCP 连接器？ | [架构与实现边界](architecture.md) |
 | Meta、TikTok、Google Ads 的 API / SDK / MCP 怎样申请和接入？现成连接器怎样选？ | [三平台接入全攻略](platform-connectivity.zh-CN.md) |
+| Google Ads API 新申请如何从 Cloud 项目升级到生产访问？ | [Google Ads API 详细申请流程](google-ads-api-application.zh-CN.md) |
 | 接入后如何逐步理解业务，避免一次大问卷和重复提问？ | [业务初始化](onboarding.md) |
 | 素材、帖子、链接、预算、状态和数据现场问题怎样处理？ | [16 张实操卡](operations.md) |
 | 优质素材遇到上传故障或疑似误拒，怎样有条件恢复？ | [Meta 素材恢复](meta-creative-recovery.md) |

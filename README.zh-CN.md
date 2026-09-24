@@ -95,6 +95,7 @@ python3 adops.py resume --plan runs/manual/plan/plan.json --authorization runs/m
 
 - [业务初始化](docs/onboarding.md)：先掌握背景、记录来源与未知，再开展相关工作。
 - [架构与接入](docs/architecture.md)：平台适配器、可替换连接器、对象身份、计划与证据。
+- [Google Ads API 新申请](docs/google-ads-api-application.zh-CN.md)：按当前 Google Cloud 项目流程，从 Test 升级到 Explorer / Basic / Standard，配置 OAuth 并验收生产账户访问。
 - [16 张投放实操卡](docs/operations.md)：视频 ready、素材变体、原帖互动、版位预览、追踪、父级状态、复制配置、预算归属、并发改动、时区、归因、测试观察，以及 Spark/RSA/ValueTrack。
 - [Meta 素材恢复](docs/meta-creative-recovery.md)：区分文件 hash、素材引用、creative、ad 和 post；把技术修复、疑似误拒的有限尝试、内容修正分别处理。
 - [设计契约](contracts/README.md)：连接器、素材恢复、通用经验、初始化扩展与未来验收场景。
