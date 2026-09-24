@@ -1,335 +1,141 @@
-# From zero: one operator, 3 live accounts, 10 ad sets
+# One operating round: from observations to a useful handoff
 
-Reading the engine answers *how it computes*. This file answers *how it lands* —
-starting from the raw numbers you have in front of you and walking to a report you
-can send, with the decisions it made and the decisions it refused to make at each step.
+[简体中文](README.zh-CN.md) · [Project home](../README.md) · [How to build the workflow](../docs/build-from-zero.md)
 
-> To follow along in a terminal: `python3 demo/run_demo.py --steps` expands the same
-> sequence stage by stage. To read the end state without running anything:
-> [`expected/report.md`](expected/report.md).
+This demo shows a complete division of work: **the operator sets the goal and adopts a method; the agent organizes evidence, proposes changes, checks their conditions and returns results with unresolved work.**
 
-**This file covers how a round runs. For how the whole thing was built from zero** —
-how it is layered, how the modules are cut, how data flows, why the technology was
-chosen, and how the strategy grew out of each failure — see
-[Building from zero](../docs/build-from-zero.md).
+The workflow draws on the maintainer's advertising work with other agents. This public example reproduces the pattern with **fictional accounts and supplied snapshots**. It is not a raw production log and makes no advertising-platform calls.
 
----
-
-## Step 0 · Starting point: what it costs to do this by hand
-
-It is 11:50. You have:
-
-- 3 live accounts (two spending, one already stalled)
-- 10 ad sets across two ladder stages (`T`, `2T`)
-- yesterday's settled data
-- a written methodology: 85% target ROAS, ladder `T → 2T → 3T`, stop loss at `3T`
-
-One question: **what do I touch today?**
-
-By hand, that is five jobs:
-
-1. work out cost per result, `CTR`, `CVR` and budget utilisation for each ad set;
-2. decide what to scale, what to stop, and **what cannot be judged yet**;
-3. remember which rows you already edited, so you do not overwrite yourself;
-4. confirm the platform actually applied each change;
-5. write a one-page report.
-
-Jobs 2, 3 and 4 are the ones you can get wrong without noticing. Each step below
-shows what this does at that point.
-
-**What a data feed looks like** — this is the snapshot layer, the API response
-turned into something reviewable:
-
-```json
-{
-  "kind": "operating_snapshot",
-  "as_of": "2026-09-24T11:50:00+08:00",
-  "observation": {"kind": "settled_day", "date": "2026-09-23", "complete_delivery_day": true},
-  "accounts": [{
-    "account_key": "fictional-meta-account-a",
-    "account_timezone": "Etc/GMT",
-    "offer": {"offer_key": "fictional-offer-alpha", "unit_price": "4.000"},
-    "adsets": [{
-      "adset_key": "fictional-adset-a1",
-      "name": "1n1 | A1 | MAX | $10",
-      "configured_status": "ACTIVE", "effective_status": "ACTIVE",
-      "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
-      "daily_budget": "10.00", "ladder_stage": "T",
-      "spend": "12.40", "impressions": 3200, "clicks": 210, "results": 3, "frequency": "1.18"
-    }]
-  }]
-}
-```
-
-**Why `as_of` and the observation window come first**: without knowing when the data
-stops, maturity is meaningless and every later judgement is built on nothing.
-"Complete delivery day" decides whether promotion is even allowed — a window that
-starts mid-day does not count.
-
----
-
-## Step 1 · Classify: turn 10 ad sets into "what to touch"
-
-```bash
-python3 operating_loop.py diagnose \
-    --snapshot examples/operating/snapshot-primary.json \
-    --methodology examples/operating/methodology-reference.json \
-    --out demo/out/steps/1-diagnose
-```
-
-```
-{"kind": "operating_findings", "accounts": 3, "proposals": 16, "structure_findings": 3}
-→ 16 findings across 12 distinct rules
-```
-
-### The real design here: **the order of the checks is itself the judgement**
-
-The engine does not compute everything and then look. It passes **seven gates in a
-fixed order, first match wins**:
-
-| # | Gate | If it does not pass |
-|---|---|---|
-| 1 | Account health (stalled / no spend / low balance) | Account signal reported first, not buried per ad set |
-| 2 | Hard faults (rejected? broken link?) | Act immediately, do not wait for the window |
-| 3 | **Is the metric computable** | Uncomputable ⇒ missing evidence, **not zero** |
-| 4 | **Sample gate** (zero results: enough impressions?) | Too small ⇒ record only, **do not judge the creative** |
-| 5 | Loss line (`spend − T × results ≥ 3T`) | Past it ⇒ stop |
-| 6 | Budget utilisation (cannot spend / at cap) | Cannot spend ⇒ fix delivery first |
-| 7 | **Only now, promotion** | All six above must pass before scaling |
-
-Reverse the order and you would first see "a5 costs $1.60 against a $4.71 target —
-obviously scale it". Its utilisation is **32%**. **Its problem is not cost, it is
-that it cannot spend.** The order makes you see that first.
-
-### Two rows that look identical get opposite verdicts
-
-| Ad set | Data | Verdict | Reason |
-|---|---|---|---|
-| `a3` | $15.30 / **420 impressions** / 0 results | `TEST_STOP_NOCONV` (P0 pause) | 420 is **past the 300 gate**, and 15.30 is **past the 14.12 loss line** |
-| `a2` | $3.10 / **180 impressions** / 0 results | `TEST_UNDERTESTED` (record only) | 180 is **below the gate** ⇒ not enough evidence to call the creative bad |
-
-Both have zero results. **Only an engine with the right order dares say "I don't
-know" about one of them.**
-
----
-
-## Step 2 · From finding to action: every action carries its own acceptance and stop condition
-
-`diagnose` does not emit a sentence of advice. It emits a **reviewable object**. This
-is the line between an agent *working* and an agent *suggesting*:
-
-```json
-{
-  "code": "LADDER_PROMOTE",
-  "level": "P1",
-  "object_key": "fictional-adset-a1",
-  "action": "double the ad set budget (T -> 2T -> 3T)",
-  "window": "2-3 complete delivery days",
-  "acceptance": "read-back shows daily_budget at the target stage, and the change is visible in the activity feed. A mismatch counts as not executed.",
-  "stop_condition": "read-back shows bid_strategy / bid_amount overwritten by a default, or the stage did not cover a complete delivery day -> do not advance.",
-  "baseline": {"daily_budget": "10.00"},
-  "target":   {"daily_budget": "20.00"},
-  "evidence": ["3 results >= 3, complete delivery day = True, CPA 4.13 <= T 4.71."]
-}
-```
-
-Three fields matter:
-
-- **`acceptance`** — how you know it is done. Without it, an action stays at "I said so".
-- **`stop_condition`** — when you are **not allowed** to do it. "Retry with a changed
-  hash only once", "never silently swap the optimisation goal to get a create to
-  succeed". It is the only thing that keeps an agent inside its lane.
-- **`baseline` / `target`** — what was read when the plan was built, and what it should
-  become. **The next step's gate runs entirely on these two fields.**
-
-All 16 findings carry these three, with `evidence` holding the why.
-
----
-
-## Step 3 · Write gate: before touching anything, confirm nothing moved under you
-
-```bash
-python3 operating_loop.py gate \
-    --findings demo/out/steps/1-diagnose/findings.json \
-    --writeback examples/operating/writeback-snapshot.json \
-    --out demo/out/steps/2-gate
-```
-
-**16 findings → only 4 are writable.** Five outcomes:
-
-| Outcome | Count | Meaning |
-|---|---|---|
-| `ready` | **4** | matches the baseline ⇒ send only the differing fields |
-| `satisfied` | 1 | target already in place ⇒ **write nothing** (it would be a significant edit and reset learning) |
-| `conflict` | 1 | **a human changed it ⇒ isolate this row** |
-| `unknown` | 1 | pre-write state unreadable ⇒ **re-pull** (absent ≠ equal, never pass it) |
-| `advisory` | 9 | creative/account findings with no field change ⇒ nothing to gate |
-
-The two rows that need a human:
-
-```
-⚠ fictional-adset-a9 · LADDER_PROMOTE · conflict
-   — daily_budget: current 30.00 is neither the baseline 10.00 nor the target 20.00 ⇒ a human changed it; isolate this row.
-⚠ fictional-adset-b1 · LADDER_PROMOTE · unknown
-   — no record of 'fictional-adset-b1' in the pre-write state ⇒ re-pull first, do not write blind.
-```
-
-**Why this stage exists**: minutes — in practice tens of minutes — pass between
-collecting and writing, and the operator very likely edited something in Ads Manager
-in between.
-
-- Write without comparing ⇒ **you overwrite their edit**.
-- Restart the whole batch over one conflict ⇒ the other 15 rows wait a round for nothing.
-
-So the rule is: **isolate only the conflicting row, and let the rest proceed.**
-
----
-
-## Step 4 · Execute: send only the differing fields, record into an append-only ledger
-
-```bash
-python3 operating_loop.py apply \
-    --gate demo/out/steps/2-gate/gate.json \
-    --ledger demo/out/steps/ledger.jsonl --out demo/out/steps/3-apply
-```
-
-```
-{"planned_writes": 4, "recorded_events": 7, "not_written": 12}
-  → fictional-adset-a1  LADDER_PROMOTE       sends only {'daily_budget': '20.00'}
-  → fictional-adset-a4  TEST_STOP_OVERCOST   sends only {'status': 'PAUSED'}
-  → fictional-adset-a6  LADDER_PROMOTE       sends only {'daily_budget': '40.00'}
-  → fictional-adset-a8  LINK_OR_TRACKING_BAD sends only {'status': 'PAUSED'}
-```
-
-Two details:
-
-- **Only the differing fields.** Not the whole object written back, which would
-  rewrite fields the plan never intended to touch.
-- **Append-only ledger.** State is derived by folding the event stream, so history is
-  never rewritten. A damaged line surfaces as a `corrupt` event instead of vanishing.
-
-> In a live setup, `apply` is where the connector call goes and **nothing else changes**.
-> In the offline version it only records the decision.
-
----
-
-## Step 5 · Reconcile: confirm "sent" became "happened"
-
-```bash
-python3 operating_loop.py verify \
-    --gate demo/out/steps/2-gate/gate.json \
-    --after examples/operating/after-snapshot.json \
-    --ledger demo/out/steps/ledger.jsonl --out demo/out/steps/4-verify
-```
-
-```
-{"checked": 4, "effective": 3, "ineffective": 1}
-  ✗ fictional-adset-a6 not effective — read-back does not match the target:
-    daily_budget: expected 40.00, read 20.00
-```
-
-**This is the step most often skipped and most expensive to skip.** A successful API
-response is not a changed field. Read once more and compare; a mismatch is recorded
-as **not effective**, and **the row stays open** instead of counting as done and
-advancing the stage.
-
----
-
-## Step 6 · Report: one page, for a human
-
-Steps 1 to 5 assembled → [`expected/report.md`](expected/report.md).
-
-It contains: the one-line conclusion → account signals (including capability gaps) →
-per-ad-set judgement detail → the five gate outcomes → the rows needing a human →
-write-back reconciliation → settlement reconciliation → structure warnings → the rules.
-
-A report you can send without reformatting it.
-
----
-
-## Step 7 · Close the loop: back to step 0
-
-```bash
-python3 operating_loop.py open --ledger demo/out/steps/ledger.jsonl
-```
-
-```
-{"open": 1, "rows": [{"object_key": "fictional-adset-a6",
-                      "status": "verified_not_effective",
-                      "patch": {"daily_budget": "40.00"}}]}
-```
-
-The next round **starts by re-verifying what this round did not finish**, then
-proposes new actions.
-
-**Without this, actions hang forever** — this is the line between a system and
-scattered optimisation: a round says "change the budget", the next round nobody
-confirms whether it was changed or whether it helped, so the same list gets rewritten
-every time.
-
-The loop closes: **step 0 → … → step 7 → step 0**.
-
----
-
-## Run it
-
-```bash
-python3 demo/run_demo.py            # one pass, prints the report
-python3 demo/run_demo.py --steps    # expands the seven steps above (start here)
-python3 demo/run_demo.py --check    # verify the committed sample still matches a real run
-python3 demo/run_demo.py --refresh  # regenerate demo/expected/ from a real run
-```
-
-`--steps` still assembles the full report at the end, so walking through and jumping
-to the result give you the same artifact.
-
-### Bring your own accounts and thresholds
-
-```bash
-# 1. Shape your collected data like examples/operating/snapshot-primary.json
-# 2. Copy the methodology and change the numbers
-cp examples/operating/methodology-reference.json my-methodology.json
-# 3. Run
-python3 operating_loop.py diagnose --snapshot my-snapshot.json \
-    --methodology my-methodology.json --out runs/my-round
-```
-
-**No unit price, target ROAS or budget multiple is hard-coded.** The action catalogue
-travels with the thresholds, so every action always carries its own acceptance and
-stop condition.
-
----
-
-## What is in this folder
-
-| Path | Purpose |
+| What would you like to see? | Start here |
 |---|---|
-| `README.md` | This file |
-| `README.zh-CN.md` | The same walkthrough in Chinese |
-| `run_demo.py` | One command; `--steps` expands it; owns generating and drift-checking `expected/` |
-| `expected/report.md` | **The report from a real run** — readable without running anything |
-| `expected/summary.json` | Deterministic summary of the same run |
+| How a routine round works | Follow the five steps below |
+| The output without running anything | [Generated report (Chinese)](expected/report.md) · [Machine-readable summary](expected/summary.json) |
+| A local reproduction | Run `python3 demo/run_demo.py --steps` from the repository root |
+| Module design and method development | [From operating work to a reusable agent](../docs/build-from-zero.md) |
 
-The engine stays where the repository conventions put it (`operating_rules.py` and
-`operating_loop.py` at the root, fixtures under `examples/operating/`). This folder is
-a **presentation layer** and duplicates no logic.
+## Who does what
 
-> **Why `expected/` is drift-checked**: a sample that claims more than the code does is
-> worse than no sample. CI runs `--check` and fails the moment the two diverge.
+The operator owns business goals, method selection, budget boundaries and the decision to adopt a recommendation. The agent organizes evidence under those conditions, prepares field differences, compares results and preserves records.
 
----
+In a live workflow, publishing or changing an account also requires authorization, platform calls and independent readback. This demo covers the reproducible offline portion: reading files, applying declared rules, comparing fields, recording events and producing a report. `ready` means a field comparison passed; it does not mean a user authorized a change.
 
-## What it deliberately does not do
+```mermaid
+flowchart LR
+    A[Observation snapshot and selected method] --> B[1 Produce findings]
+    B --> C[2 Compare current fields]
+    C --> D[3 Record proposed differences]
+    D --> E[4 Compare the result snapshot]
+    E --> F[5 Hand off unresolved work]
+```
 
-- **No platform connection, no credentials, no account writes.** The output is a
-  proposal list for a human, not an executed instruction.
-- **No media understanding.** Assets are referenced by declared identity only.
-- **No automatic decision.** Every rule emits evidence; the gate and the human stay in the path.
-- **No claim that a result generalises.** A rule firing is not proof of a cause, and a
-  repaired row is not proof that the repair worked.
+A live connector would operate only after review and authorization. Step 3 here records a plan; step 4 reads an independently supplied result file.
 
-Next: the [full operating loop guide](../docs/operating-loop.md) — thresholds, the
-complete rules behind the five gate outcomes, the attribution identity, and how to
-swap in your own numbers.
+## Inputs for this round
 
-Back to the [project home](../README.md).
+The scenario is an inspection of existing delivery: which objects warrant attention, and which need more evidence? Connection setup and the business interview precede this round. Scope and methods should already be established through the [first-run process (Chinese)](../docs/first-run.zh-CN.md).
+
+| Input | This example | Purpose |
+|---|---|---|
+| Observation snapshot | 3 fictional Meta accounts, with 10 ad sets in total; account C has no ad set records | Preserve account state and ad set metrics |
+| Time basis | Snapshot cutoff: 2026-09-24 11:50 UTC+8; ad set observation window: the full delivery day of September 23 | Identify the period represented by each metric |
+| Method document | `reference-1n1-ladder`, including target ROAS, sample conditions, budget stages and stop-loss rules | Supply explicit criteria for this round |
+| Pre-change snapshot | Fields read before a proposed adjustment | Detect targets already satisfied, changed values and missing fields |
+| Post-change snapshot | Independently supplied example fields | Demonstrate matching and mismatching target values |
+| Settlement table | A separate revenue and cost example | Present the settlement basis alongside operational findings without treating both as one current dataset |
+
+Files live in [`examples/operating/`](../examples/operating/). Account health uses the snapshot's `today_spend`; ad set rules use the declared observation window; settlement has its own date. Do not add these together as if they were one live table.
+
+The **85% ROAS, 1n1 structure, T-based stages, 3T stop loss and impression threshold belong to this example method**. They are not universal defaults. T is the target cost per result calculated by this method; it does not replace the goals of every app, ecommerce or lead-generation business.
+
+## Five steps through a round
+
+### 1. Produce findings with evidence and open questions
+
+**Input:** observation snapshot and method. **Agent work:** calculate available metrics and inspect account health, creative signals and ad set conditions. **Output:** `findings.json`, with 16 findings across 12 rule codes.
+
+Those findings span account, ad set and creative levels. They are not 16 ad sets or 16 operations. One ad set can receive both a creative warning and a budget recommendation; the operator still needs to interpret that combination.
+
+Three objects illustrate the distinction. Short IDs below omit the `fictional-adset-` prefix.
+
+| Object | Observation | Result under this method |
+|---|---|---|
+| `a2` | Spend 3.10, 180 impressions, 0 conversions | Insufficient sample; retain uncertainty rather than declaring the creative ineffective |
+| `a3` | Spend 15.30, 420 impressions, 0 conversions | Meets the example's zero-conversion stop-loss conditions; propose pausing |
+| `a5` | CPA 1.60, but only 32% budget utilization | Investigate limited delivery before treating a low CPA as a reason to increase budget |
+
+Account and creative checks can produce parallel findings; the main ad set classification has its own order. The whole system is not a seven-gate chain that picks one winning conclusion. Findings include evidence, an observation window, acceptance guidance and stopping conditions. These descriptions support review; they do not themselves execute operations.
+
+### 2. Compare current fields and assign one of five states
+
+**Input:** findings and pre-change snapshot. **Agent work:** compare the original baseline, desired target and current fields. **Output:** `gate.json`.
+
+| State | Count | Treatment |
+|---|---|---|
+| `ready` | 4 | Current value still matches the baseline; include in a proposed difference plan, without implying authorization |
+| `satisfied` | 1 | Current value already matches the target; do not schedule the same change again |
+| `conflict` | 1 | Current value matches neither baseline nor target; retain the conflict and investigate its source |
+| `unknown` | 1 | Required object or fields are missing; read them before reconsidering |
+| `advisory` | 9 | No writable field difference is attached; retain as diagnostic or review material |
+
+For example, `a3` qualifies for a pause recommendation, but the pre-change snapshot is already paused. No duplicate change is planned. The budget for `a9` is 30, matching neither the baseline of 10 nor the target of 20, so that row is isolated. **A field mismatch alone does not identify who changed it.**
+
+### 3. Record the proposed field differences
+
+**Input:** the 4 rows that pass field comparison. **Agent work:** save the minimal differences and append events. **Output:** `application.json` and `ledger.jsonl`.
+
+| Object | Proposed difference |
+|---|---|
+| `a1` | `daily_budget` → `20.00` |
+| `a4` | `status` → `PAUSED` |
+| `a6` | `daily_budget` → `40.00` |
+| `a8` | `status` → `PAUSED` |
+
+The local `apply` command **records this plan without sending requests or modifying an account**. Live integration still needs review, authorization, native field mapping, failure handling and platform readback. Replacing this function with one API call would not establish production readiness.
+
+### 4. Compare the supplied result snapshot with the targets
+
+**Input:** proposed differences and the supplied post-change snapshot. **Agent work:** compare the target fields. **Output:** `reconciliation.json`.
+
+The example checks 4 rows: **3 match and 1 does not.** The target budget for `a6` is 40.00, while the result snapshot still says 20.00. It remains unresolved instead of being treated as complete.
+
+This demonstrates the comparison logic. No real write occurred, so a matching example field is not evidence of a successful ad update. Even a future live configuration readback would need to be distinguished from delivery and business outcomes.
+
+### 5. Hand off the findings and unresolved work
+
+**Input:** findings, field comparisons, reconciliation and events. **Agent work:** produce a report and identify follow-up work. **Output:** `report.md` and the records returned by `open`.
+
+Alongside the complete findings, three issues need explicit follow-up:
+
+| Object | Current issue | Next step |
+|---|---|---|
+| `a9` | Pre-change budget matches neither baseline nor target | Identify the source of the change and reconsider the proposal |
+| `b1` | Missing pre-change state | Read current fields and rerun the comparison |
+| `a6` | Result snapshot does not match the target | Investigate the difference and obtain fresh evidence |
+
+`open` returns **1 row**, covering only the recorded but unmatched plan for `a6`. The other two remain in the gate results. **`open_rows=1` does not mean there is only one item to follow up.** The CLI does not automatically schedule the next round; the host must inspect both sources. The 9 advisory findings remain in the report for judgement and are not automatically resolved.
+
+## Reproduce it locally
+
+Run from the repository root with Python 3.9+. No advertising account or API key is required. Terminal explanations and generated reports currently use Chinese; this page provides the separate English walkthrough.
+
+```bash
+python3 demo/run_demo.py --steps    # Show the five stages above
+python3 demo/run_demo.py            # Generate and print the complete report
+python3 demo/run_demo.py --check    # Compare committed samples with recomputed output
+```
+
+Output defaults to the ignored `demo/out/` directory. Use `--out runs/my-demo` for a separate run, and keep different tasks in different directories. `--steps` saves its stage artifacts and independently runs the same fixture inputs in `full/` to generate the combined report. That is not an automatically scheduled new operating round.
+
+After changing presentation or logic, maintainers can use `python3 demo/run_demo.py --refresh` to update `expected/`, review the differences and then commit them. This reruns the offline example, not a platform session.
+
+## Adapt the pattern to another workflow
+
+First establish the product, platforms, accounts, observation window, metric definitions and adopted method. Then prepare snapshots with known sources. Record threshold changes in the method document; new conditions or native object structures may also need rule and adapter changes with their own checks. This Meta example is not a validated TikTok or Google Ads operating recipe.
+
+Corrections can become experience candidates with scope and evidence, for the user to adopt into a later method revision. The demo does not automatically train a model, change thresholds or promote one result into public knowledge.
+
+- Building order and method development: [From operating work to a reusable agent](../docs/build-from-zero.md).
+- Fields, calculations and commands: [Operating loop reference](../docs/operating-loop.md).
+- Two creative-testing methods: [Methods and test plans](../docs/method-planning.md).
+
+These workflows can share business context, but the operating method document and creative-test MethodSpec are different formats and are not automatically converted into one another.

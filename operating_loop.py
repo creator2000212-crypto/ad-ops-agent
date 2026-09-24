@@ -338,6 +338,13 @@ def reconcile_and_record(ledger, gate_document, after, at):
 
 def render_report(findings, gate_document, application, reconciliation, settlement, signal_rows):
     summary = gate_document['summary']
+    flagged = [item for item in gate_document['verdicts'] if item['gate'] in rules.NEEDS_HUMAN]
+    unmatched = [item for item in reconciliation['rows'] if item.get('checked') and not item['effective']]
+    planned_fields = sum(len(row['patch']) for row in application['write_plan'])
+
+    def display(value):
+        return '—' if value is None else str(value)
+
     lines = []
     add = lines.append
     add(f"# 快循环回执 · {findings.get('round_id')}")
@@ -352,18 +359,42 @@ def render_report(findings, gate_document, application, reconciliation, settleme
     if observation:
         add('')
         add(f"**观察窗口：** {observation.get('date', '未声明')}"
-            f"（{observation.get('kind', '')}，覆盖完整投放日：{observation.get('complete_delivery_day')}）"
+            f"（{observation.get('kind', '')}，覆盖完整投放日："
+            f"{('是' if observation['complete_delivery_day'] else '否') if isinstance(observation.get('complete_delivery_day'), bool) else '—'}）"
             f"{' — ' + observation['note'] if observation.get('note') else ''}")
     add('')
-    add('## 一句话结论')
+    add('## 本轮结果')
     add('')
-    add(f"本轮共 {summary['total']} 条发现：**可执行 {summary[rules.READY]} 条**、"
-        f"已满足 {summary[rules.SATISFIED]} 条（跳过不写）、"
-        f"冲突隔离 {summary[rules.CONFLICT]} 条、需先补证据 {summary[rules.UNKNOWN]} 条、"
-        f"仅建议 {summary[rules.ADVISORY]} 条（不涉及写入）。"
-        f"模拟写入 {application['planned_writes']} 条对象，"
-        f"写后核对 {reconciliation['checked']} 条，其中 **{reconciliation['ineffective']} 条未真正生效**。"
-        + (f"需要人处理 **{summary['needs_human']} 条**。" if summary['needs_human'] else ''))
+    add(f"- 诊断产生 **{summary['total']} 条发现**，不代表 {summary['total']} 个不同对象。"
+        f"发现覆盖账户、广告组和素材；同一对象可以触发多条规则，下方列出全部 {len(findings['diagnostics'])} 个广告组的诊断。")
+    add(f"- `ready` **{summary[rules.READY]} 条**表示差异计划通过当前快照核对、可供审阅，**不表示已获操作授权**。")
+    add(f"- `apply` 仅向本地台账登记 **{application['planned_writes']} 条差异计划 / {planned_fields} 个拟改字段**；没有调用平台或写入广告账户。")
+    add(f"- 对照输入的 `after` 快照：**{reconciliation['effective']} 条匹配、{reconciliation['ineffective']} 条不匹配**。"
+        '演示使用预置快照，这些结果不证明真实修改已经生效。')
+    add('')
+    add('## 先处理这些待办')
+    add('')
+    add(f"**闸门待确认 {len(flagged)} 条**（见 `gate.json`）：")
+    add('')
+    if flagged:
+        for item in flagged:
+            add(f"- `{item['object_key']}` · {item['code']} · **{item['gate_label']}** — "
+                + ' '.join(item['gate_detail']))
+        add('')
+        add('以上保留规则的原始判据。出现“人工改过”时，实际只检测到现值与基线、目标不一致；无法据此判定是谁修改，也不能直接覆盖。')
+    else:
+        add('没有冲突或状态缺失的闸门行。')
+    add('')
+    add(f"**快照对照不匹配 {len(unmatched)} 条**（见 `reconciliation.json`）：")
+    add('')
+    if unmatched:
+        for item in unmatched:
+            add(f"- `{item['object_key']}` · {item['code']} — {item['detail']}")
+    else:
+        add('本次已对照的行没有发现不匹配。')
+    add('')
+    add('`open` 只列台账中待对照或已对照但不匹配的行；**不包含被闸门隔离的冲突、缺失行，不能视为完整待办**。'
+        '交接时应合并查看以上两组待办。规则原文中的“生效/未生效”仅指本次快照值是否匹配。')
     add('')
     add('## 账户信号')
     add('')
@@ -380,7 +411,7 @@ def render_report(findings, gate_document, application, reconciliation, settleme
         add(f"| `{signal['account_key']}` | {signal['offer_key']} | {signal['reward_code']} | "
             f"{signal['adsets_configured_live']} | {signal['adsets_effective_live']} | "
             f"{signal['adsets_total']} | {signal['today_spend']} | "
-            f"{signal['balance']} | {signal['spend_cap'] or 'null'} | {'；'.join(notes) or '—'} |")
+            f"{display(signal['balance'])} | {display(signal['spend_cap'])} | {'；'.join(notes) or '—'} |")
     add('')
     add('## 判定明细（按 ad set）')
     add('')
@@ -399,56 +430,58 @@ def render_report(findings, gate_document, application, reconciliation, settleme
         verdict = '；'.join(f"{item['code']}({item['level']})" for item in codes) or '保持观察'
         if values.get('blocked'):
             verdict = '无法判定：' + values['blocked']
-        add(f"| `{key}` | {values.get('stage')} | {values.get('spend')} | {values.get('impressions')} | "
-            f"{values.get('results')} | {values.get('cpa')} | {values.get('T_display')} | "
-            f"{values.get('stop_loss_line')} | {values.get('utilisation')} | {verdict} |")
+        add(f"| `{display(key)}` | {display(values.get('stage'))} | {display(values.get('spend'))} | {display(values.get('impressions'))} | "
+            f"{display(values.get('results'))} | {display(values.get('cpa'))} | {display(values.get('T_display'))} | "
+            f"{display(values.get('stop_loss_line'))} | {display(values.get('utilisation'))} | {verdict} |")
     if not findings['diagnostics']:
         add('| — | — | — | — | — | — | — | — | — | 本次没有可判定的广告组 |')
     add('')
-    add('## 写前闸门')
+    add('## 闸门结果与已登记的差异计划')
     add('')
     add('| 结果 | 条数 | 含义 |')
     add('|---|---|---|')
-    add(f"| 可执行 | {summary[rules.READY]} | 现值与基线一致，只发差异字段 |")
+    add(f"| 待审差异计划（ready） | {summary[rules.READY]} | 现值与基线一致；只列差异字段，尚未获得执行授权 |")
     add(f"| 已满足 | {summary[rules.SATISFIED]} | 目标值已就位，跳过不写 |")
-    add(f"| 冲突隔离 | {summary[rules.CONFLICT]} | 人工改过，只隔这一行 |")
+    add(f"| 冲突隔离 | {summary[rules.CONFLICT]} | 检测到状态不一致，无法判定修改者；隔离并确认 |")
     add(f"| 未知 | {summary[rules.UNKNOWN]} | 没读到写前状态或字段缺失，先复拉 |")
     add(f"| 仅建议 | {summary[rules.ADVISORY]} | 该发现不涉及写入字段，不过闸门 |")
     add('')
-    flagged = [item for item in gate_document['verdicts']
-               if item['gate'] in rules.NEEDS_HUMAN]
-    if flagged:
-        add(f'**需要人处理的行（{len(flagged)}）：**')
-        add('')
-        for item in flagged:
-            add(f"- `{item['object_key']}` · {item['code']} · **{item['gate_label']}** — "
-                + ' '.join(item['gate_detail']))
-        add('')
-    else:
-        add('没有需要人处理的冲突或未知行。')
-        add('')
+    add('下表是 `apply` 登记的拟改字段，不是已经提交的操作：')
+    add('')
+    add('| 对象 | 规则 | 拟改字段 |')
+    add('|---|---|---|')
+    for item in application['write_plan']:
+        patch = '；'.join(f"`{key}` → {display(value)}" for key, value in item['patch'].items())
+        add(f"| `{item['object_key']}` | {item['code']} | {patch or '—'} |")
+    if not application['write_plan']:
+        add('| — | — | 本轮没有待登记的差异字段 |')
+    add('')
     advisory = [item for item in gate_document['verdicts'] if item['gate'] == rules.ADVISORY]
     if advisory:
         add(f'仅建议（{len(advisory)} 条，不涉及写入，不需要过闸门）：'
             + '、'.join(f"`{item['object_key']}`·{item['code']}" for item in advisory))
         add('')
-    add('## 写后核对')
+    add('## 与 after 快照逐条对照')
+    add('')
+    add('这里对比目标值与输入快照，不执行平台写入。说明列保留原始判据，其中“生效”不代表真实操作已完成。')
     add('')
     if reconciliation['checked']:
-        add('| 对象 | 动作 | 是否生效 | 说明 |')
+        add('| 对象 | 规则 | 快照是否匹配 | 原始判据 |')
         add('|---|---|---|---|')
         for item in reconciliation['rows']:
             if not item['checked']:
                 continue
             add(f"| `{item['object_key']}` | {item['code']} | "
-                f"{'生效' if item['effective'] else '**未生效**'} | {item['detail']} |")
+                f"{'匹配' if item['effective'] else '**不匹配**'} | {item['detail']} |")
     else:
-        add('本轮没有可核对的写入。')
+        add('本轮没有需对照的差异计划。')
     unchecked = [item for item in reconciliation['rows'] if not item['checked']]
     if unchecked:
         add('')
-        add(f"未核对 {len(unchecked)} 条：" + '；'.join(
-            f"`{item['object_key']}` {item['reason']}" for item in unchecked[:6]))
+        add(f"**本轮未对照 {len(unchecked)} 条，完整列出如下：**")
+        add('')
+        for item in unchecked:
+            add(f"- `{item['object_key']}` · {item.get('code', '—')} — {item['reason']}")
     add('')
     if settlement:
         add('## 结算口径对账')
@@ -482,10 +515,10 @@ def render_report(findings, gate_document, application, reconciliation, settleme
         for item in findings['structure_findings']:
             add(f"- `{item['object_key']}` — {item['detail']}")
         add('')
-    add('## 纪律')
+    add('## 交接边界')
     add('')
-    add('- 动作发出不等于生效：改预算/改出价/改状态必须回读坐实。')
-    add('- 读到「已满足」就不再写；读到「冲突」只隔离该行，不覆盖人工改动。')
+    add('- 本轮只生成建议、登记本地台账并对照快照；真实 API 接入、操作授权、提交和平台回读仍需后续独立实现。')
+    add('- 「已满足」不产生差异计划；「冲突」隔离并确认原因，不推断修改者。')
     add('- 样本不足（展示未达判死门槛）不判素材好坏，只记录。')
     add('- 能力缺口如实说明（如额度字段读回为 null），不用推断填空。')
     add('')

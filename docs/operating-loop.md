@@ -1,27 +1,28 @@
 # Operating loop — a recurring test loop, implemented offline
 
-Everything else in this repository prepares, reviews and connects. This module is
-the part an operator actually runs on a schedule: take one settled observation
-window, classify every ad set, propose actions with evidence, confirm nothing has
-changed underneath you, then record what really happened.
+This page is the technical reference for rules, data dependencies and the CLI.
+Start with the [five-step demo](../demo/README.md) for the operator/agent division
+of work and sample results; [building from zero](build-from-zero.md) explains the
+architecture and build order.
 
-It runs entirely offline. It reads declared JSON, applies declared rules, and
-writes reviewable artifacts plus an append-only ledger. It never contacts a
-platform.
+This module reads a window declared as settled and a set of method parameters,
+produces proposals with evidence, compares fields in supplied files, and writes
+a report and an append-only ledger. It is entirely offline: it does not collect
+platform data, submit ad changes, check user authorization or schedule background
+runs. Every result depends on the JSON supplied by the caller.
 
 ## Why the loop is longer than "read the numbers"
 
-Three failures account for most of the damage in a recurring test loop, and none
-of them is an arithmetic mistake:
+The example demonstrates checks for three types of problem:
 
 | Failure | What it looks like | The guard |
 |---|---|---|
 | Judging a sample too small to judge | A zero-conversion ad set is killed on $3 of spend | A sample gate that requires both an impression floor and the loss line |
-| Treating a failed write as a success | The budget was "raised" but the platform never applied it | Write-back reconciliation against the declared target |
-| Overwriting a concurrent human edit | An operator changed the budget while the round was being prepared | A write gate that isolates the conflicting row instead of overwriting it |
+| Treating a target as the actual state | The plan targets a budget of 40, but the supplied after snapshot says 20 | Compare the after snapshot with the target; no write occurs in this example |
+| Missing a change in current state | The current field matches neither baseline nor target | Isolate the conflicting row; the difference alone does not identify who changed it |
 
-The loop therefore has more steps than the arithmetic needs, and each extra step
-exists to make one of those failures visible.
+These checks preserve proposals, state differences and unresolved work
+separately for review.
 
 ## Module map
 
@@ -31,23 +32,33 @@ exists to make one of those failures visible.
 | `operating_loop.py` | Orchestration and IO. Snapshot validation, account signals, the ledger, the report, and the CLI. |
 | `examples/operating/methodology-reference.json` | The thresholds, as data: target ROAS, ladder, sample gate, promotion rule, stop loss, utilisation bands, creative rules, and the action catalogue with each action's acceptance and stop condition. |
 | `examples/operating/snapshot-primary.json` | One settled observation window (fictional). |
-| `examples/operating/writeback-snapshot.json` | The state read back immediately before writing, including one row a human already changed. |
-| `examples/operating/after-snapshot.json` | The state read back after writing, including one write that did not take effect. |
+| `examples/operating/writeback-snapshot.json` | A separately supplied example of pre-write state, including one row different from its baseline. The program does not fetch it from an account. |
+| `examples/operating/after-snapshot.json` | A separately supplied after-state example in which one planned object does not match its target; it is not produced by `apply`. |
 | `examples/operating/settlement-daily.json` | Settlement rows for cross-checking the board against the settlement basis. |
 | `tests/test_operating_loop.py` | Executable contracts for every rule and every gate outcome. |
 | `scripts/demo_operating_loop.py` | End-to-end demonstration with assertions. |
 
-## The loop, step by step
+## The demo's five steps and their data dependencies
 
 ```
-0  re-verify what the previous round proposed        -> open rows in the ledger
-1  collect one settled observation window            -> snapshot JSON
-2  classify every ad set against the ladder          -> diagnose / decide
-3  turn findings into proposals with evidence        -> findings.json
-4  pass the write gate before touching anything      -> gate.json
-5  record the round in an append-only ledger         -> apply
-6  reconcile what was actually written, then report  -> report.md
+1  diagnose: observation snapshot + method         -> findings.json
+2  gate: findings + supplied pre-write state       -> gate.json / difference plan
+3  apply: gate                                    -> application.json / ledger events
+4  verify: gate + supplied after state + ledger    -> reconciliation.json / ledger events
+5  open: read the ledger                          -> unresolved rows; round also produces report.md
 ```
+
+`apply` only records proposed field changes. `verify` compares the supplied after
+snapshot without fetching platform data. `round` runs the computations and
+recording stages in sequence, then produces the report and open-row count; it
+does not recheck the previous round at startup or automatically retry rows from
+`open`. The optional settlement file supplies settlement figures and basis notes
+for the report; it does not automatically explain data discrepancies.
+
+The fixture contains three Meta accounts and ten ad sets, producing sixteen
+account/ad-set/creative findings. Four enter the difference plan; three match
+the after snapshot and one does not. `ready` is not authorization, and a matching
+snapshot is not proof of a successful live change.
 
 ### Target cost and the ladder
 
@@ -55,7 +66,8 @@ exists to make one of those failures visible.
 factor is 1, so a 4.00 unit price against an 85% target gives `T = 4.71`. The
 ladder is declared as a list; `T`, `2T`, `3T` become multipliers 1, 2 and 3, and
 the stop-loss line is declared in multiples of `T` rather than as an absolute
-amount. That keeps the thresholds coherent when a unit price changes.
+amount. A changed unit price therefore recalculates target cost and its related
+stop-loss thresholds.
 
 ### Metrics
 
@@ -68,7 +80,7 @@ A zero denominator is not a zero metric: nobody clicking out of 1,000 impression
 is a real `CTR` of 0, while `CPC` has no denominator and is therefore `None`. The
 engine never substitutes one for the other.
 
-### Cost attribution
+### Cost-gap decomposition
 
 `CPA = CPM / (1000 x CTR x CVR)`, so after taking logs the gaps add up:
 
@@ -76,58 +88,81 @@ engine never substitutes one for the other.
 log(CPA / CPA_reference) = dlog(CPM) - dlog(CTR) - dlog(CVR)
 ```
 
-The three signed terms are reported with their share of the absolute total. That
-answers "which stage of the funnel moved the cost" instead of "which number looks
-biggest". A non-zero residual means the quoted metrics do not quite satisfy the
-identity — usually because they were rounded before publication, which is itself
-worth knowing.
+For positive metrics with comparable definitions, the three signed terms
+describe the mathematical relationship between the CPA gap and changes in CPM,
+CTR and CVR. Each term's share of the absolute total is also reported. **This is
+not causal attribution or proof that changing a metric will improve results.**
+A non-zero residual means the inputs do not exactly satisfy the identity; check
+precision, observation windows and metric definitions. The program does not
+establish the cause of the discrepancy.
 
 ### Sample gate
 
-A zero-conversion ad set is only judged dead when **both** the impression floor
-and the loss line are crossed. Below the floor it is recorded as under-tested. An
-expensive click or an unusually low `CTR` produces an early stop that halts new
-spend **without** concluding that the creative is bad — a high `CPC` usually has a
-low `CTR` upstream, so the thing to fix is the hook, not the bid.
+The zero-conversion branch produces `TEST_STOP_NOCONV` only when **both** the
+impression floor and the loss line are met. Otherwise, it checks the declared
+CPC/CTR early-stop thresholds and proposes a pause if they trigger, without
+concluding that a creative is invalid; otherwise it returns `TEST_UNDERTESTED`.
+None of these proposals stops account spending by itself.
+
+The sample gate is not the first step for every rule. Account signals are
+independent. Per ad set, creative findings come first, followed by disapproval,
+link/tracking problems and missing required metrics. For ad sets with results,
+the classifier checks excess-cost stop loss, the minimum result count,
+utilisation and then promotion conditions. See `decide_account` and
+`_classify_adset`; insufficient samples do not stop all other rules from running.
 
 ### Creative rules
 
-* **Circuit breaker** — requires a spend share above the declared limit *and* a
-  cost above the declared multiple, and at least two creatives. With a single
-  creative "it consumed all the spend" is trivially true and says nothing.
-* **Fatigue** — requires frequency, `CTR` decline and `CVR` decline to hold
-  together. One or two of them is noise.
-* **Overflow** — more creatives than the declared cap, checked before any scale-up.
+* **Circuit-breaker finding** — requires a spend share above the declared limit
+  *and* a cost above the declared multiple, with at least two creatives. A
+  single-creative group does not trigger this rule but still has ad-set checks.
+* **Fatigue finding** — requires frequency, `CTR` decline and `CVR` decline to
+  meet their conditions together. Not triggering it does not prove that a
+  creative has no problem.
+* **Overflow finding** — records a proposal when creative count exceeds the
+  declared cap.
+
+Creative and ad-set proposals are generated separately. Creative findings do not
+automatically block promotion; fixture a6 has both creative findings and a
+promotion candidate.
 
 ### Write gate
 
-Five outcomes per proposal. Only `ready` rows may be written, and only for the
-fields that actually differ:
+There are five outcomes per proposal. **Only `ready` rows enter the difference
+plan; this is neither user authorization nor an execution receipt.**
 
 | Outcome | Meaning | Action |
 |---|---|---|
-| `ready` | The field still holds its baseline value | Send only the differing fields |
-| `satisfied` | The target value is already in place | Write nothing — writing again is a significant edit that resets learning |
-| `conflict` | The field holds neither the baseline nor the target | Isolate this row; do not overwrite, and do not restart the batch |
-| `unknown` | The state was not read, or the field is absent from the read | Re-pull first. Absent is not the same as equal |
+| `ready` | The implemented field comparison passes and differences remain | Add those fields to the review plan; this module does not submit them |
+| `satisfied` | Supplied current state already matches the target | Do not propose a duplicate change; the program does not determine learning-phase effects |
+| `conflict` | The current field matches neither baseline nor target | Isolate the row and investigate the difference without inferring its author |
+| `unknown` | The supplied state lacks the object or a target field | Obtain current state before proceeding; absence does not mean equality |
 | `advisory` | The finding declares no field change | Nothing to gate; counted separately so it does not inflate the rows needing attention |
 
-An absent field is deliberately `unknown` rather than writable. A ladder stage
-that has no bid amount today is exactly the situation where writing a bid blindly
-would be worst.
+In the fixture, the `ready` rows match their declared baselines. The general
+function can also return `ready` when the baseline is `None`, so this label does
+not replace complete baseline, authorization or platform-capability checks.
 
-### Reconciliation
+### After-snapshot comparison
 
-After writing, the state is read again and compared with the declared target. A
-mismatch is recorded as **not effective**, and the row stays open. A write that
-was sent is not a write that happened.
+`verify` compares targets from `ready` rows with the `--after` file. An object
+present in that file counts as `checked`; all target fields matching means
+`effective`, while differences mean a mismatch. An absent object is not counted
+as checked. Here `effective` is a snapshot comparison, not proof of a submitted
+request, live delivery or business impact. Fixture a6 targets a budget of 40,
+while its after-state value is 20.
 
 ### Ledger
 
-Append-only JSONL. Proposals, skips and reconciliation events accumulate; state is
-derived by folding the stream, so history is never rewritten. A damaged line is
-surfaced as a `corrupt` event instead of disappearing, because a silently missing
-action is worse than a visibly broken one.
+Append-only JSONL preserves proposals, skips and reconciliation events; current
+state is obtained by folding the stream. `open` lists only `pending_write` and
+`verified_not_effective`. It does not recheck, retry or schedule another round.
+`conflict` and `unknown` are recorded as `skipped` and are not included in `open`;
+`advisory` produces no action event. The fixture's one open row is a6. The two
+separate rows needing human review are the a9 conflict and missing b1 snapshot.
+
+`read_events` returns a `corrupt` record for a damaged JSON line, but `open` is
+not a complete event list or corruption report.
 
 ## Running it
 
@@ -155,23 +190,29 @@ python3 operating_loop.py open     --ledger <ledger.jsonl>
 python3 -m unittest tests.test_operating_loop -v
 ```
 
-`round` and the sub-commands accept `--at` so a run can be stamped with a fixed
-time; without it the wall clock is used and only the ledger timestamps differ.
+Only `round`, `apply` and `verify` accept optional `--at`, which sets timestamps
+in events and application/reconciliation artifacts; omission uses the current
+time. `diagnose`, `gate` and `open` do not accept it. It does not change the
+observation date inside the input snapshot. `round` also accepts optional
+`--settlement` and `--ledger`; without `--ledger`, it uses `ledger.jsonl` in the
+output directory.
 
 ## Bringing your own thresholds
 
 Copy `examples/operating/methodology-reference.json`, change the numbers, and pass
-it with `--methodology`. The action catalogue travels with the thresholds, so an
-action always carries its own acceptance and stop condition. Nothing about a unit
-price, a target ROAS or a budget multiple is hard-coded in the engine.
+it with `--methodology`. The action catalogue supplies acceptance and stop
+descriptions; those descriptions are not separate authorization checks.
+Configuration changes cover implemented parameters, not Python branch order or
+new platform actions. Defaults still exist, such as a `quality_factor` of 1
+when omitted; not every behavior is defined by the supplied configuration.
 
 ## What this module deliberately does not do
 
 * No platform connection, no credentials, no account writes. The output is a
   proposal list for a human, not an executed instruction.
 * No media understanding. Assets are referenced by declared identity only.
-* No automatic decision. Every rule emits a proposal with evidence; the gate and
-  the human remain in the path.
+* No automatic account operations. Rules classify inputs and generate proposals,
+  but this module has no user-approval, publishing or background scheduler implementation.
 * No claim that one account's result generalises. A rule firing is not proof of a
   cause, and a repaired row is not proof that the repair worked.
 
@@ -180,8 +221,9 @@ price, a target ROAS or a budget multiple is hard-coded in the engine.
 `knowledge/catalog.json` remains the contextual advisory layer, and the files
 under `contracts/` remain design references that are not loaded at runtime. This
 module is executable and self-contained: it does not read the contracts and it
-does not write to any platform. If a real connector is added later, it replaces
-the snapshot files at the edges — the classification, gate and reconciliation
-logic does not change.
+does not write to any platform. Live integration needs a separately designed
+process for metric definitions, object mapping, permissions, authorization,
+submission and readback, followed by validation of the applicable rules.
+Replacing file inputs with a connector does not complete a live deployment.
 
 Return to the [documentation index](index.md).

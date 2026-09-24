@@ -104,39 +104,18 @@ python3 scripts/demo_methods.py
 
 完整流程见[方法确认与测试计划](docs/method-planning.zh-CN.md)。演示先完成初版计划的中断、恢复和重复运行核验，再确认修订方法、拒绝旧计划并生成新版；**新版停在计划审阅，不自动模拟执行**。用户通过宿主交流，不需要自己编辑 JSON；程序支持 `single_variable` 钩子比较与 `concept_exploration`，尚不能解析任意自然语言 SOP。M1 文本方法继续作为背景，新 MethodSpec 必须另行明确采用，才约束素材选择。离线示例不等于跨宿主的真人可用性验收或真实部署测试。
 
-### 跑一整轮投放快循环
+### 看懂一轮投放巡检
 
-**最快的入口是 [`demo/`](demo/README.zh-CN.md) 文件夹**：里面提交了一轮真实运行的产出，**不用装任何东西就能看结果**——
-[`demo/expected/report.md`](demo/expected/report.md) 是一轮完整跑完的一页回执，
-[`demo/expected/summary.json`](demo/expected/summary.json) 是同一轮的机器可读摘要。
+先读 [demo 五步走读](demo/README.zh-CN.md)：**形成发现 → 核对当前字段 → 登记差异计划 → 对照结果快照 → 交接未完成事项**。每一步都说明输入、Agent 的工作、人的判断和输出文件。也可以直接看[报告样例](demo/expected/report.md)及[机器可读摘要](demo/expected/summary.json)。
 
-想知道**整套东西是怎么从零搭起来的** —— 架构怎么分层、模块怎么切、数据怎么流、技术怎么选型、
-以及投放策略是怎么从每次失败里长出来的 —— 看 [从零搭建](docs/build-from-zero.zh-CN.md)。
-
-快循环是自包含的，不需要任何接入。它读一个已结算的观察窗口，产出逐组定性的动作清单、每行的写前闸门结果、写后核对以及一页回执。
+示例参考实际投放工作方式，使用 3 个虚构 Meta 账户和 10 个广告组。16 条发现中，4 条进入待审阅差异计划；后置样例有 3 条目标匹配、1 条不匹配。程序只读取预置文件并记录结果，**没有修改广告账户，字段比较通过也不代表已获授权**。
 
 ```bash
-python3 demo/run_demo.py            # 跑一轮并把回执打到终端
-python3 demo/run_demo.py --check    # 校验提交的样例是否仍与真实运行一致
-python3 demo/run_demo.py --refresh  # 从一次真实运行重新生成 demo/expected/
-
-python3 scripts/demo_operating_loop.py   # 同一套循环的带断言版本，CI 用
-
-python3 operating_loop.py round \
-    --snapshot examples/operating/snapshot-primary.json \
-    --writeback examples/operating/writeback-snapshot.json \
-    --after examples/operating/after-snapshot.json \
-    --methodology examples/operating/methodology-reference.json \
-    --settlement examples/operating/settlement-daily.json \
-    --out runs/operating-demo
+python3 demo/run_demo.py --steps    # 按五步查看过程与输出
+python3 demo/run_demo.py --check    # 核对提交样例与离线重算结果
 ```
 
-参考示例**刻意覆盖了每一个分支**：应晋级的健康组、样本不足只记录的零转化组、判死的零转化组、超成本止损、花不动的组、一个带三类发现的组、被拒审的广告、失效链接、命名与实际不符，以及三条账户级信号。写前快照里再放一行被人工改过的对象，写后快照里放一次没有生效的写入。
-
-**为什么 `demo/expected/` 里要有已提交的样例，还要 `--check`**：一份比代码说得更多的样例，比没有样例更糟。
-CI 里挂了这一步，样例一旦与代码漂移就会红。
-
-阈值即数据。复制 `examples/operating/methodology-reference.json` 改数字，用 `--methodology` 传进去即可；引擎里没有任何单价、目标 ROAS 或预算倍数被写死。详见[投放快循环指南](docs/operating-loop.zh-CN.md)或[英文版](docs/operating-loop.md)。
+想了解搭建顺序、模块分工及方法如何形成新版本，阅读[从实际工作到可复用 Agent](docs/build-from-zero.zh-CN.md)。字段、公式与单步命令见[投放巡检循环参考](docs/operating-loop.zh-CN.md)。示例阈值属于一种可选方法，需要按用户业务选择并验证。
 
 运行检查：
 
@@ -207,7 +186,7 @@ memory_store.py          本地私有条目、版本、历史与撤回
 personalization.py       按产品范围解析私有方法与建议
 operating_rules.py       快循环的纯判定层（指标、归因、素材规则、动作定性、写前闸门）
 operating_loop.py        快循环编排、台账、回执与命令行
-demo/                    一条命令跑通，并提交一份真实运行的产出样例
+demo/                    五步工作流走读与可复验的离线报告样例
 knowledge/               带来源和适用条件的运行时知识库
 examples/                虚构输入（快循环见 examples/operating/）
 tests/                   可执行的离线契约测试

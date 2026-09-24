@@ -1,28 +1,19 @@
 #!/usr/bin/env python3
-"""One command to see what the operating loop actually produces.
+"""用虚构快照跑通诊断、核对、登记、对照与交接，输出中文报告。
 
-Run it and you get, without any platform connection:
+    python3 demo/run_demo.py              # 运行离线演示并打印报告
+    python3 demo/run_demo.py --steps      # 按五个步骤说明输入、处理和产物
+    python3 demo/run_demo.py --check      # 比较本次离线输出与已提交样例
+    python3 demo/run_demo.py --refresh    # 用本次离线输出更新 demo/expected/
 
-* a classified action list for every ad set in one settled observation window,
-* a write-gate verdict per row (what may be written, what must not be),
-* a write-back reconciliation (including a write that silently did not take effect),
-* a one-page report.
-
-    python3 demo/run_demo.py              # run one round and print the report
-    python3 demo/run_demo.py --steps      # the same loop, one stage at a time
-    python3 demo/run_demo.py --check      # CI: fail if the committed sample drifted
-    python3 demo/run_demo.py --refresh    # regenerate demo/expected/ from a real run
-
-``demo/expected/`` holds a committed sample so a reader can see the output without
-running anything. ``--check`` keeps that sample honest: it re-runs the loop and
-compares byte for byte, so a committed sample can never quietly go stale.
-
-No network. No credentials. No account is written.
+ready 只表示差异计划可供审阅，不等于获得授权。apply 只登记本地台账；
+after 是预置对照快照，匹配不证明真实修改生效。没有网络调用、凭据或账户写入。
 """
 import argparse
 import filecmp
 import json
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 
@@ -50,7 +41,7 @@ def run_round(out):
                *[part for pair in FIXTURE_ARGS for part in pair]]
     result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True)
     if result.returncode != 0:
-        raise RuntimeError('round failed:\n' + result.stdout + result.stderr)
+        raise RuntimeError('离线汇总运行失败：\n' + result.stdout + result.stderr)
     return json.loads(result.stdout)
 
 
@@ -98,7 +89,7 @@ def refresh(out):
     (EXPECTED / 'report.md').write_bytes((out / 'report.md').read_bytes())
     (EXPECTED / 'summary.json').write_text(
         json.dumps(sample(out), ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print(f'refreshed {EXPECTED.relative_to(ROOT)}/ from a real run')
+    print(f'已用本次离线演示输出更新 {EXPECTED.relative_to(ROOT)}/；没有平台调用。')
 
 
 def check(out):
@@ -107,21 +98,20 @@ def check(out):
         committed = EXPECTED / name
         fresh = out / name
         if not committed.exists():
-            problems.append(f'{name}: committed sample is missing')
+            problems.append(f'{name}：缺少已提交的样例')
             continue
         if name == 'summary.json':
             fresh.write_text(json.dumps(sample(out), ensure_ascii=False, indent=2) + '\n',
                              encoding='utf-8')
         if not filecmp.cmp(committed, fresh, shallow=False):
-            problems.append(f'{name}: committed sample no longer matches a fresh run')
+            problems.append(f'{name}：已提交样例与本次离线输出不一致')
     if problems:
-        print('The committed sample has drifted from the loop:', file=sys.stderr)
+        print('样例与当前程序的离线输出出现差异：', file=sys.stderr)
         for problem in problems:
             print('  - ' + problem, file=sys.stderr)
-        print('\nA sample that says more than the code does is worse than no sample.\n'
-              'Re-run with --refresh and review the diff before committing.', file=sys.stderr)
+        print('\n请用 --refresh 重新生成样例，并在提交前审阅差异。', file=sys.stderr)
         return 1
-    print('sample check passed: demo/expected/ matches a fresh run')
+    print('样例检查通过：demo/expected/ 与本次离线输出逐字节一致。')
     return 0
 
 
@@ -129,14 +119,14 @@ def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--out', type=Path, default=HERE / 'out',
-                        help='Where the run writes; defaults to demo/out (ignored by git)')
+                        help='产物目录，默认 demo/out（已被 Git 忽略）')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--steps', action='store_true',
-                       help='Walk the loop one step at a time, the way a round actually runs')
+                       help='逐步展示离线诊断、核对、登记、对照与交接')
     group.add_argument('--refresh', action='store_true',
-                       help='Regenerate demo/expected/ from this run')
+                       help='用本次离线输出更新 demo/expected/')
     group.add_argument('--check', action='store_true',
-                       help='Compare a fresh run against demo/expected/ and fail on drift')
+                       help='与 demo/expected/ 比较，存在差异时返回失败')
     args = parser.parse_args()
 
     out = args.out.resolve()
@@ -163,14 +153,16 @@ def main():
     summary = sample(out)
     gate = summary['gate']
     print('=' * 78)
-    print(f"跑完一轮：{summary['accounts']} 个账户 / {summary['proposals']} 条发现")
-    print(f"  闸门：可执行 {gate['ready']}｜已满足 {gate['satisfied']}｜"
+    print(f"离线演示：{summary['accounts']} 个账户 / {summary['proposals']} 条发现（发现数不等于对象数）")
+    print(f"  闸门：待审差异计划 {gate['ready']}｜已满足 {gate['satisfied']}｜"
           f"冲突隔离 {gate['conflict']}｜未知 {gate['unknown']}｜仅建议 {gate['advisory']}")
-    print(f"  模拟写入 {summary['planned_writes']} 个对象，"
-          f"写后核对 {summary['reconciliation']['checked']} 条，"
-          f"{summary['reconciliation']['ineffective']} 条未真正生效")
-    print(f"  需要人处理：{', '.join(summary['needs_human']) or '无'}")
-    print(f"  未生效：{', '.join(summary['not_effective']) or '无'}")
+    fields = sum(len(row['patch']) for row in summary['write_plan_targets'])
+    print(f"  apply 只登记 {summary['planned_writes']} 条差异计划 / {fields} 个拟改字段；ready 不等于授权，没有账户写入。")
+    print(f"  与预置 after 快照对照：{summary['reconciliation']['effective']} 条匹配、"
+          f"{summary['reconciliation']['ineffective']} 条不匹配；不证明真实生效。")
+    print(f"  闸门待确认 {len(summary['needs_human'])} 条：{', '.join(summary['needs_human']) or '无'}")
+    print(f"  对照不匹配 {len(summary['not_effective'])} 条：{', '.join(summary['not_effective']) or '无'}")
+    print(f"  open 只列台账未闭合的 {summary['open_rows']} 条，不包含闸门冲突/缺失；两部分需要一起交接。")
     print(f"  平台调用次数：{summary['native_platform_calls']}")
     print('=' * 78)
     print()
@@ -183,7 +175,7 @@ def main():
 
 
 # --------------------------------------------------------------------------
-# --steps: the same loop, one stage at a time, in the order it really runs
+# --steps: one ledger for the five stages; a separate fixture round for the report
 # --------------------------------------------------------------------------
 
 LEDGER_IN_STEPS = 'ledger.jsonl'
@@ -194,7 +186,7 @@ def _cli(out, *arguments):
     result = subprocess.run([sys.executable, str(ROOT / 'operating_loop.py'), *map(str, arguments)],
                             cwd=ROOT, text=True, capture_output=True)
     if result.returncode != 0:
-        raise RuntimeError('stage failed:\n' + result.stdout + result.stderr)
+        raise RuntimeError('离线步骤运行失败：\n' + result.stdout + result.stderr)
     out.mkdir(parents=True, exist_ok=True)
     return json.loads(result.stdout)
 
@@ -202,28 +194,31 @@ def _cli(out, *arguments):
 def run_steps(out):
     """Print the loop as a sequence, so the order of decisions is visible.
 
-    Each stage states what was on hand, what ran, what came out, and why that
-    stage exists at all. The report at the end is the same one a full ``round``
-    produces; nothing here is a special demo path.
+    Five stages share steps/ledger.jsonl. The report at the end is independently
+    regenerated from the same fixtures in full/, using its own ledger.
     """
     steps = out / 'steps'
     ledger = steps / LEDGER_IN_STEPS
     banner = '─' * 78
 
-    def head(number, title, why):
+    def head(number, title, inputs, action, outputs):
         print()
         print(banner)
         print(f'第 {number} 步 · {title}')
-        print(f'  why：{why}')
+        print(f'  输入：{inputs}')
+        print(f'  做什么：{action}')
+        print(f'  输出：{outputs}')
         print(banner)
 
     def cmd_text(*arguments):
-        shown = ' '.join(str(a).replace(str(ROOT) + '/', '') for a in arguments)
-        print(f'$ python3 operating_loop.py {shown}')
+        shown = shlex.join([sys.executable, str(ROOT / 'operating_loop.py'), *map(str, arguments)])
+        print('$ ' + shown)
 
     # ---- step 1: classify every ad set -------------------------------------
-    head(1, '定性 —— 逐个广告组算指标、按固定顺序套规则',
-         '先把「谁该动」判出来。判定顺序本身就是判据：样本关不过，后面一律不谈。')
+    head(1, '诊断',
+         '虚构观察快照 snapshot-primary.json 与声明的方法论阈值。',
+         '推导指标并按规则生成发现；发现是待审建议，同一对象可触发多条规则。',
+         str(steps / '1-diagnose' / 'findings.json') + '，以及账户信号与诊断明细。')
     cmd_text('diagnose', '--snapshot', FIXTURES / 'snapshot-primary.json',
              '--methodology', FIXTURES / 'methodology-reference.json',
              '--out', steps / '1-diagnose')
@@ -231,10 +226,7 @@ def run_steps(out):
                     '--snapshot', FIXTURES / 'snapshot-primary.json',
                     '--methodology', FIXTURES / 'methodology-reference.json',
                     '--out', steps / '1-diagnose')
-    print(json.dumps({'kind': findings['kind'], 'accounts': findings['accounts'],
-                      'proposals': findings['proposals'],
-                      'structure_findings': findings['structure_findings']},
-                     ensure_ascii=False))
+    print(f"  账户 {findings['accounts']} 个；发现 {findings['proposals']} 条；结构警告 {findings['structure_findings']} 条。")
     codes = {}
     for proposal in json.loads((steps / '1-diagnose' / 'findings.json').read_text(encoding='utf-8'))['proposals']:
         codes[proposal['code']] = codes.get(proposal['code'], 0) + 1
@@ -242,9 +234,11 @@ def run_steps(out):
           + '、'.join(f'{k}x{v}' for k, v in sorted(codes.items())))
 
     # ---- step 2: gate before touching anything -----------------------------
-    head(2, '写前闸门 —— 动手之前，先确认脚下没被改过',
-         '取数和写回之间有几分钟。这几分钟里可能有人已经改过。不比对就直接写，会覆盖人工改动。')
-    cmd_text('gate', '--findings', 'demo/out/steps/1-diagnose/findings.json',
+    head(2, '核对',
+         '上一步的发现与预置 writeback-snapshot.json。',
+         '比较基线、目标与快照现值；ready 仅表示待审差异计划，不授予执行权限。',
+         str(steps / '2-gate' / 'gate.json') + '，含差异计划、冲突和缺失状态。')
+    cmd_text('gate', '--findings', steps / '1-diagnose' / 'findings.json',
              '--writeback', FIXTURES / 'writeback-snapshot.json',
              '--out', steps / '2-gate')
     _cli(steps / '2-gate', 'gate',
@@ -254,38 +248,41 @@ def run_steps(out):
     # The CLI prints counts; the detail sits in the artifact, which is what a
     # person would open next.
     gate_artifact = json.loads((steps / '2-gate' / 'gate.json').read_text(encoding='utf-8'))
-    print(json.dumps({'summary': gate_artifact['summary'],
-                      'write_plan': len(gate_artifact['write_plan'])}, ensure_ascii=False))
+    counts = gate_artifact['summary']
+    print(f"  待审差异计划 {counts['ready']}｜已满足 {counts['satisfied']}｜"
+          f"冲突 {counts['conflict']}｜缺失 {counts['unknown']}｜仅建议 {counts['advisory']}")
     for verdict in gate_artifact['verdicts']:
         if verdict['gate'] in ('conflict', 'unknown'):
             print(f"  ⚠ {verdict['object_key']} · {verdict['code']} · {verdict['gate_label']}"
-                  f" — {verdict['gate_detail'][0]}")
-    print(f"→ {gate_artifact['summary']['total']} 条里只有 "
-          f"{len(gate_artifact['write_plan'])} 条可写；其余是「不涉及写入」"
-          f"「已经是目标值」或「人工改过」")
+                  f" — {' '.join(verdict['gate_detail'])}")
+    print('→ 原始判据中的“人工改过”只代表检测到状态不一致，不能判定是谁修改。冲突与缺失都需要单独确认。')
 
     # ---- step 3: record, do not write --------------------------------------
-    head(3, '执行 —— 只发差异字段，并把本轮记进只追加台账',
-         '这一步只记录「决定要写什么」。真实环境里这里换成连接器调用，其余逻辑不变。')
-    cmd_text('apply', '--gate', 'demo/out/steps/2-gate/gate.json',
-             '--ledger', 'demo/out/steps/ledger.jsonl',
+    head(3, '登记',
+         '上一步的 gate.json。',
+         'apply 只把拟改字段和跳过原因登记到本地台账；不调用接口、不向广告账户写入。',
+         str(steps / '3-apply' / 'application.json') + ' 与 ' + str(ledger) + '。')
+    cmd_text('apply', '--gate', steps / '2-gate' / 'gate.json',
+             '--ledger', ledger,
              '--out', steps / '3-apply', '--at', DEMO_TIMESTAMP)
     _cli(steps / '3-apply', 'apply',
          '--gate', steps / '2-gate' / 'gate.json',
          '--ledger', ledger, '--out', steps / '3-apply', '--at', DEMO_TIMESTAMP)
     application = json.loads((steps / '3-apply' / 'application.json').read_text(encoding='utf-8'))
-    print(json.dumps({'planned_writes': application['planned_writes'],
-                      'recorded_events': application['recorded_events'],
-                      'not_written': len(application['not_written'])}, ensure_ascii=False))
+    fields = sum(len(row['patch']) for row in application['write_plan'])
+    print(f"  登记 {application['planned_writes']} 条差异计划 / {fields} 个拟改字段；"
+          f"追加 {application['recorded_events']} 个台账事件；没有平台写入。")
     for row in application['write_plan']:
-        print(f"  → {row['object_key']}  {row['code']}  只发 {row['patch']}")
+        print(f"  → {row['object_key']}  {row['code']}  拟改字段 {row['patch']}")
 
     # ---- step 4: reconcile -------------------------------------------------
-    head(4, '写后核对 —— 确认「发出去的」真的变成了「发生了的」',
-         '写入返回成功不等于字段变了。回读一次再比对，不一致就当作未生效。')
-    cmd_text('verify', '--gate', 'demo/out/steps/2-gate/gate.json',
+    head(4, '对照',
+         '差异计划与预置 after-snapshot.json；该快照不是本程序操作账户后的返回值。',
+         '逐字段比较目标与快照，并记录匹配或不匹配；不把匹配解释为真实操作生效。',
+         str(steps / '4-verify' / 'reconciliation.json') + '，并向同一份步骤台账追加对照事件。')
+    cmd_text('verify', '--gate', steps / '2-gate' / 'gate.json',
              '--after', FIXTURES / 'after-snapshot.json',
-             '--ledger', 'demo/out/steps/ledger.jsonl',
+             '--ledger', ledger,
              '--out', steps / '4-verify', '--at', '2026-09-24T04:05:00+00:00')
     _cli(steps / '4-verify', 'verify',
          '--gate', steps / '2-gate' / 'gate.json',
@@ -293,29 +290,36 @@ def run_steps(out):
          '--ledger', ledger, '--out', steps / '4-verify',
          '--at', '2026-09-24T04:05:00+00:00')
     reconciliation = json.loads((steps / '4-verify' / 'reconciliation.json').read_text(encoding='utf-8'))
-    print(json.dumps({k: reconciliation[k] for k in ('checked', 'effective', 'ineffective')},
-                     ensure_ascii=False))
+    print(f"  对照 {reconciliation['checked']} 条；预置快照匹配 {reconciliation['effective']} 条、"
+          f"不匹配 {reconciliation['ineffective']} 条。")
     for row in reconciliation['rows']:
         if row['checked'] and not row['effective']:
-            print(f"  ✗ {row['object_key']} 未生效 — {row['detail']}")
+            print(f"  ✗ {row['object_key']} 不匹配 — 原始判据：{row['detail']}")
+    print('→ 原始判据中的“生效/未生效”只描述本次快照对照结果。真实 API 接入、授权、提交与平台回读需后续独立实现。')
 
     # ---- step 5: what stays open ------------------------------------------
-    head(5, '闭环 —— 下一轮开头，先回验这一轮没做完的（回到第 1 步）',
-         '闭环发生在轮与轮之间：没生效的行继续挂着，而不是悄悄算完成。')
-    cmd_text('open', '--ledger', 'demo/out/steps/ledger.jsonl')
+    head(5, '交接',
+         '本次步骤台账，以及第 2 步 gate.json 的冲突、缺失记录。',
+         'open 列出台账中待对照或不匹配的行；合并闸门待确认记录一起交接，避免漏项。',
+         '终端列出 open 行；完整待办仍需同时查看 gate.json 与 reconciliation.json。')
+    cmd_text('open', '--ledger', ledger)
     opened = _cli(steps / '5-open', 'open', '--ledger', ledger)
-    print(json.dumps({'open': opened['open'],
-                      'rows': [{'object_key': r['object_key'], 'status': r['status'],
-                                'patch': r.get('patch')} for r in opened['rows']]},
-                     ensure_ascii=False, indent=2))
-    print('→ 这条行会带着进下一轮；这就是「系统」与「零散优化」的分界')
+    print(f"  open 共 {opened['open']} 条：")
+    for row in opened['rows']:
+        print(f"  → {row['object_key']} · {row['status']} · 拟改字段 {row.get('patch') or '—'}")
+    flagged = [row for row in gate_artifact['verdicts'] if row['gate'] in ('conflict', 'unknown')]
+    print(f"  另有闸门待确认 {len(flagged)} 条，不在 open 中："
+          + ('、'.join(f"{row['object_key']}({row['gate']})" for row in flagged) or '无'))
+    print('→ 本例 open 只含快照不匹配行；它不是全部待办，也不代表其余发现已经解决。')
 
     # ---- the assembled report ---------------------------------------------
     print()
     print('=' * 78)
-    print('把上述五步合起来跑（`operating_loop.py round`）就是一份可直接发出去的回执：')
+    print('接下来用同一套虚构输入独立运行 round，生成完整汇总报告。')
+    print(f'  五步台账：{ledger}')
+    print(f'  汇总台账：{out / "full" / "ledger.jsonl"}（独立台账，不是继续执行上面的五步）')
     print(f'  {EXPECTED.relative_to(ROOT)}/report.md   ← 已在仓库里，不用跑就能看')
-    print(f'  {out}/report.md                  ← 本次 --steps 也会在末尾生成一份')
+    print(f'  {out}/report.md                  ← 独立汇总报告的副本')
     print('=' * 78)
     run_round(out / 'full')
     (out / 'report.md').write_bytes((out / 'full' / 'report.md').read_bytes())

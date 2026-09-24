@@ -83,33 +83,18 @@ The demo writes a new, uniquely named directory under `runs/` and verifies:
 
 It prints the output directory, `review.md` location and the expected object counts. All accounts and assets are fictional; fixture timestamps are refreshed only in a new copy. The demo never makes a network request.
 
-### See a full operating round
+### Understand one operating round
 
-The fastest way in is the [`demo/`](demo/README.md) folder. It commits the output of a real run, so you can read the result without installing anything: **[demo/expected/report.md](demo/expected/report.md)** is the one-page report of a complete round, and [demo/expected/summary.json](demo/expected/summary.json) is the deterministic summary beside it.
+Start with the [five-step demo](demo/README.md): **produce findings → compare current fields → record proposed differences → compare the result snapshot → hand off unresolved work**. Each step explains its input, agent work, human judgement and output. You can also read the [generated report (Chinese)](demo/expected/report.md) and [machine-readable summary](demo/expected/summary.json) without running anything.
 
-To understand how the whole thing is put together — the layering, the module boundaries, the data flow, the technology choices, and how the strategy grew out of each failure — read [Building from zero](docs/build-from-zero.md).
-
-The recurring loop is self-contained and needs no connection. It reads one settled observation window and produces a classified action list, a write-gate verdict per row, a write-back reconciliation and a one-page report.
+The example draws on operating practice and uses 3 fictional Meta accounts with 10 ad sets. Of 16 findings, 4 enter a proposed difference plan; the supplied result snapshot matches 3 targets and differs on 1. The program reads files and records results. **It makes no account changes, and passing a field comparison does not establish authorization.**
 
 ```bash
-python3 demo/run_demo.py            # run one round and print the report
-python3 demo/run_demo.py --check    # verify the committed sample still matches
-python3 demo/run_demo.py --refresh  # regenerate demo/expected/ from a real run
-
-python3 scripts/demo_operating_loop.py   # the same loop with assertions, for CI
-
-python3 operating_loop.py round \
-    --snapshot examples/operating/snapshot-primary.json \
-    --writeback examples/operating/writeback-snapshot.json \
-    --after examples/operating/after-snapshot.json \
-    --methodology examples/operating/methodology-reference.json \
-    --settlement examples/operating/settlement-daily.json \
-    --out runs/operating-demo
+python3 demo/run_demo.py --steps    # Inspect the five stages and their outputs
+python3 demo/run_demo.py --check    # Compare committed samples with offline output
 ```
 
-The reference fixtures exercise every branch on purpose: a healthy ad set proposed for promotion, a zero-conversion ad set recorded as under-tested, another judged dead, an over-cost stop, an under-delivering group, a group with three simultaneous findings, a disapproved ad, a broken link, a naming mismatch, and three account-level signals. The write-back snapshot then contains one row a human already changed, and the after snapshot contains one write that did not take effect.
-
-Thresholds are data. Copy `examples/operating/methodology-reference.json`, change the numbers, and pass it with `--methodology`; nothing about a unit price, target ROAS or budget multiple is hard-coded. See the [operating loop guide](docs/operating-loop.md) or the [Chinese version](docs/operating-loop.zh-CN.md).
+For building order, module responsibilities and method revisions, read [From operating work to a reusable agent](docs/build-from-zero.md). Fields, formulas and individual commands belong in the [operating loop reference](docs/operating-loop.md). Example thresholds describe one optional method and require selection and validation for each user's business.
 
 To try the private method store with fictional data:
 
@@ -193,7 +178,7 @@ memory_store.py          Local private records, versions, history and revocation
 personalization.py       Product-scoped private methods and advisory notes
 operating_rules.py       Pure decision layer for the recurring operating loop
 operating_loop.py        Loop orchestration, ledger, report and CLI
-demo/                    One-command walkthrough with a committed sample of the output
+demo/                    Five-step walkthrough and reproducible offline report sample
 knowledge/               Runtime knowledge catalog with sources and conditions
 examples/                Fictional JSON inputs (examples/operating/ for the loop)
 tests/                   Executable offline contract tests
