@@ -25,7 +25,7 @@ Before operational work starts, the agent should understand the product, countri
 
 The execution layer is replaceable: Pipeboard is one possible connector, alongside other MCP services and direct APIs. Native platform semantics belong in platform adapters. Business context and operational methods do not depend on a vendor's tool names.
 
-If you want to try Pipeboard, you can use the [maintainer's Pipeboard referral link](https://pipeboard.co/#via=tian). **Affiliate disclosure:** The maintainer may earn a commission if you sign up or purchase through this link. Pipeboard is optional; this project can also use other MCP services or direct APIs.
+If you want to use Pipeboard, visit the [Pipeboard website](https://pipeboard.co/#via=tian) to explore plans and subscribe.
 
 ## What runs today
 

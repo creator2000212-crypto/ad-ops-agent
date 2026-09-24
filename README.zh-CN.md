@@ -25,7 +25,7 @@ flowchart LR
 
 接入方案可以替换。Pipeboard 是一种可选连接器，也可以使用其他 MCP 或官方 API；业务档案和方法不依赖供应商工具名，FB/TK/GG 的原生差异由各自平台适配器处理。
 
-如果你想使用 Pipeboard，可以通过[项目维护者的 Pipeboard 推广链接](https://pipeboard.co/#via=tian)了解或注册。**推广披露：**通过该链接注册或购买，项目维护者可能获得佣金。Pipeboard 是可选方案，本项目也可以接入其他 MCP 或官方 API。
+如需使用 Pipeboard，可前往[Pipeboard 官网](https://pipeboard.co/#via=tian)查看方案并选择合适的套餐。
 
 默认协作方式是：Agent 自动准备、配置和校验，投放人员确认整批方案后发布，在授权范围内自动完成后续步骤。
 
