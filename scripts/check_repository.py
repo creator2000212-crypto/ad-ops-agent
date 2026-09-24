@@ -10,9 +10,9 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 SKIP = {'.git', '__pycache__', '.venv', 'venv', 'runs', '.direct-work'}
 REQUIRED = [
-    'README.md', 'README.zh-CN.md', 'LICENSE', 'NOTICE.md', 'CONTRIBUTING.md', 'SECURITY.md',
+    'README.md', 'README.zh-CN.md', 'AGENTS.md', 'LICENSE', 'NOTICE.md', 'CONTRIBUTING.md', 'SECURITY.md',
     'adops.py', 'onboarding.py', 'guidance.py', 'knowledge.py', 'knowledge/catalog.json',
-    'tests/test_guidance.py', 'tests/test_setup_flow.py', 'docs/first-run.zh-CN.md',
+    'tests/test_guidance.py', 'tests/test_setup_flow.py', 'docs/first-run.zh-CN.md', 'docs/use-in-agent.zh-CN.md',
     'examples/onboarding-setup-required.json', 'examples/onboarding-guided.json',
     'docs/knowledge-base.zh-CN.md', 'tests/test_knowledge.py',
     'scripts/demo.py', 'tests/test_adops.py', 'tests/test_onboarding.py',

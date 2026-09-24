@@ -8,6 +8,12 @@ Let media buyers focus on understanding the business, interpreting results and d
 
 **Current release: an executable offline Python prototype plus a product and integration blueprint.** It does not connect to ad accounts, upload media, call an LLM, inspect images, publish ads or change budgets. The three platform names are simulation adapters using `generic_draft`; `native_payload` is always `null` and live mode is rejected. Design contracts are not loaded by the runtime.
 
+## Use with Codex and other agent clients
+
+Open the complete repository as a Codex project and start a new task within it. The root [AGENTS.md](AGENTS.md) defines conversational setup, connection-first intake and the exact Pipeboard referral CTA with a short commission disclosure. Other clients must support or explicitly load the project instructions.
+
+See the [loading and conversation verification guide (Chinese)](docs/use-in-agent.zh-CN.md). Uploading only a README, sharing a GitHub link or copying a script does not ensure instruction loading. Loading instructions does not install an MCP server or enable live ad operations.
+
 ## The intended workflow
 
 ```mermaid
