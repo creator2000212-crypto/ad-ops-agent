@@ -104,18 +104,13 @@ python3 scripts/demo_methods.py
 
 完整流程见[方法确认与测试计划](docs/method-planning.zh-CN.md)。演示先完成初版计划的中断、恢复和重复运行核验，再确认修订方法、拒绝旧计划并生成新版；**新版停在计划审阅，不自动模拟执行**。用户通过宿主交流，不需要自己编辑 JSON；程序支持 `single_variable` 钩子比较与 `concept_exploration`，尚不能解析任意自然语言 SOP。M1 文本方法继续作为背景，新 MethodSpec 必须另行明确采用，才约束素材选择。离线示例不等于跨宿主的真人可用性验收或真实部署测试。
 
-### 看懂一轮投放巡检
+### 先看一个简单例子
 
-先读 [demo 五步走读](demo/README.zh-CN.md)：**形成发现 → 核对当前字段 → 登记差异计划 → 对照结果快照 → 交接未完成事项**。每一步都说明输入、Agent 的工作、人的判断和输出文件。也可以直接看[报告样例](demo/expected/report.md)及[机器可读摘要](demo/expected/summary.json)。
+你说“帮我检查昨天的投放”，Agent 整理需要关注的广告、给出调整建议，再列出没解决的问题，由你决定下一步。
 
-示例参考实际投放工作方式，使用 3 个虚构 Meta 账户和 10 个广告组。16 条发现中，4 条进入待审阅差异计划；后置样例有 3 条目标匹配、1 条不匹配。程序只读取预置文件并记录结果，**没有修改广告账户，字段比较通过也不代表已获授权**。
+[一分钟看懂 demo](demo/README.zh-CN.md) · [查看完整报告](demo/expected/report.md) · [怎样搭建](docs/build-from-zero.zh-CN.md)
 
-```bash
-python3 demo/run_demo.py --steps    # 按五步查看过程与输出
-python3 demo/run_demo.py --check    # 核对提交样例与离线重算结果
-```
-
-想了解搭建顺序、模块分工及方法如何形成新版本，阅读[从实际工作到可复用 Agent](docs/build-from-zero.zh-CN.md)。字段、公式与单步命令见[投放巡检循环参考](docs/operating-loop.zh-CN.md)。示例阈值属于一种可选方法，需要按用户业务选择并验证。
+当前示例使用虚构数据，不会修改真实广告账户。
 
 运行检查：
 

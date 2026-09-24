@@ -83,18 +83,13 @@ The demo writes a new, uniquely named directory under `runs/` and verifies:
 
 It prints the output directory, `review.md` location and the expected object counts. All accounts and assets are fictional; fixture timestamps are refreshed only in a new copy. The demo never makes a network request.
 
-### Understand one operating round
+### Start with a simple example
 
-Start with the [five-step demo](demo/README.md): **produce findings → compare current fields → record proposed differences → compare the result snapshot → hand off unresolved work**. Each step explains its input, agent work, human judgement and output. You can also read the [generated report (Chinese)](demo/expected/report.md) and [machine-readable summary](demo/expected/summary.json) without running anything.
+Ask the agent to check yesterday's ads. It organizes issues, proposes changes and lists unresolved questions for you to decide what happens next.
 
-The example draws on operating practice and uses 3 fictional Meta accounts with 10 ad sets. Of 16 findings, 4 enter a proposed difference plan; the supplied result snapshot matches 3 targets and differs on 1. The program reads files and records results. **It makes no account changes, and passing a field comparison does not establish authorization.**
+[Read the one-minute demo](demo/README.md) · [See the full report (Chinese)](demo/expected/report.md) · [How to build it](docs/build-from-zero.md)
 
-```bash
-python3 demo/run_demo.py --steps    # Inspect the five stages and their outputs
-python3 demo/run_demo.py --check    # Compare committed samples with offline output
-```
-
-For building order, module responsibilities and method revisions, read [From operating work to a reusable agent](docs/build-from-zero.md). Fields, formulas and individual commands belong in the [operating loop reference](docs/operating-loop.md). Example thresholds describe one optional method and require selection and validation for each user's business.
+The example uses fictional data and makes no real account changes.
 
 To try the private method store with fictional data:
 
