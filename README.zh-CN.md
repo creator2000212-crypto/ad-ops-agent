@@ -66,6 +66,7 @@ flowchart LR
 | 按业务背景使用投放知识 | 已实现知识检索、适用条件与证据检查，接入初始化和计划审阅；仅提供建议 |
 | 产品私有方法与观察 | 已实现本地 SQLite、产品隔离、版本与幂等写入、历史和撤回，接入初始化、计划及知识评估 |
 | 方法候选与测试编译 | 两类离线模板、明确采用、组件身份检查、每单元一个素材、目标内共享预算；无素材内容理解或随机 A/B 执行 |
+| **周期性投放快循环** | **已实现可运行的离线闭环：按声明阶梯逐组定性、CPA 三段归因、样本关、素材熔断与衰竭判据、五种结果的写前闸门、写后核对、只追加台账与一页回执。只读声明的 JSON，不连接任何平台** |
 | 统一任务流程 | `task.py` 管理私有任务副本、版本化方法文件、计划输出与模拟恢复；宿主自然语言提取另行负责 |
 | 执行、读回与中断续跑 | 已实现同一计划和本地 SQLite 状态目录中的模拟闭环 |
 | 真实平台适配、素材上传和广告发布 | 尚未实现 |
@@ -102,6 +103,26 @@ python3 scripts/demo_methods.py
 ```
 
 完整流程见[方法确认与测试计划](docs/method-planning.zh-CN.md)。演示先完成初版计划的中断、恢复和重复运行核验，再确认修订方法、拒绝旧计划并生成新版；**新版停在计划审阅，不自动模拟执行**。用户通过宿主交流，不需要自己编辑 JSON；程序支持 `single_variable` 钩子比较与 `concept_exploration`，尚不能解析任意自然语言 SOP。M1 文本方法继续作为背景，新 MethodSpec 必须另行明确采用，才约束素材选择。离线示例不等于跨宿主的真人可用性验收或真实部署测试。
+
+### 跑一整轮投放快循环
+
+快循环是自包含的，不需要任何接入。它读一个已结算的观察窗口，产出逐组定性的动作清单、每行的写前闸门结果、写后核对以及一页回执。
+
+```bash
+python3 scripts/demo_operating_loop.py
+
+python3 operating_loop.py round \
+    --snapshot examples/operating/snapshot-primary.json \
+    --writeback examples/operating/writeback-snapshot.json \
+    --after examples/operating/after-snapshot.json \
+    --methodology examples/operating/methodology-reference.json \
+    --settlement examples/operating/settlement-daily.json \
+    --out runs/operating-demo
+```
+
+参考示例**刻意覆盖了每一个分支**：应晋级的健康组、样本不足只记录的零转化组、判死的零转化组、超成本止损、花不动的组、一个带三类发现的组、被拒审的广告、失效链接、命名与实际不符，以及三条账户级信号。写前快照里再放一行被人工改过的对象，写后快照里放一次没有生效的写入。
+
+阈值即数据。复制 `examples/operating/methodology-reference.json` 改数字，用 `--methodology` 传进去即可；引擎里没有任何单价、目标 ROAS 或预算倍数被写死。详见[投放快循环指南](docs/operating-loop.zh-CN.md)或[英文版](docs/operating-loop.md)。
 
 运行检查：
 
@@ -170,8 +191,10 @@ onboarding.py            连接门槛、协作引导与业务就绪检查
 knowledge.py             确定性知识检索与建议评估
 memory_store.py          本地私有条目、版本、历史与撤回
 personalization.py       按产品范围解析私有方法与建议
+operating_rules.py       快循环的纯判定层（指标、归因、素材规则、动作定性、写前闸门）
+operating_loop.py        快循环编排、台账、回执与命令行
 knowledge/               带来源和适用条件的运行时知识库
-examples/                虚构输入
+examples/                虚构输入（快循环见 examples/operating/）
 tests/                   可执行的离线契约测试
 scripts/                 演示和仓库检查
 docs/                    产品、架构、初始化、实操与路线

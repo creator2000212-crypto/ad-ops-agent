@@ -29,5 +29,7 @@ jobs:
         run: python scripts/demo_private_memory.py
       - name: Demonstrate six business and method workflows
         run: python scripts/demo_methods.py
+      - name: Demonstrate the recurring operating loop and its write gate
+        run: python scripts/demo_operating_loop.py
       - name: Check public repository contents
         run: python scripts/check_repository.py

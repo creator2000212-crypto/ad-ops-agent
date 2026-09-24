@@ -46,6 +46,13 @@ These instructions apply when this repository is loaded as an agent project. Fol
 - Match product and scope; respect each record's stages when presenting knowledge reviews. A matching adopted methodology may fill a missing or unknown methodology for the current evaluation; conflicting existing or multiple methods require resolution, not a silent source-profile edit. Operational notes remain advisory. Record corrections only when authorized, retain history and revoke superseded material when requested.
 - A changed or revoked matching active record requires a new dependent plan review and simulation authorization. Private records do not grant account access, publishing or budget permissions. This implementation has no natural-language learning, performance verification or automatic background writes.
 
+## Running a recurring operating round
+
+- The loop in `operating_loop.py` is executable and offline. It classifies one settled observation window, proposes actions with evidence, gates every write against a freshly read state, and reconciles what was actually written. Read `docs/operating-loop.md` (or `docs/operating-loop.zh-CN.md`) before changing it.
+- Thresholds live in a methodology document, not in the code. Pass a copy of `examples/operating/methodology-reference.json` with `--methodology`; do not hard-code a unit price, target ROAS or budget multiple into `operating_rules.py`.
+- A proposal is advisory. The gate decides what may be written, and only `ready` rows proceed. Treat `satisfied` as "write nothing", `conflict` as "a human changed this, isolate the row", and `unknown` as "re-pull first" — never as permission to write.
+- Never describe a simulated round as a real account operation. The fixtures are fictional and `native_platform_calls` must stay 0.
+
 ## Repository work
 
 Keep private inputs and generated runs out of Git. Preserve the distinction between executable offline code, host tools and unloaded `contracts/` designs. For changes, follow [CONTRIBUTING.md](CONTRIBUTING.md) and run its relevant checks. The [host loading guide](docs/use-in-agent.zh-CN.md) describes how to verify that these instructions are actually in use.

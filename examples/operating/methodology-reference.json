@@ -1,0 +1,230 @@
+{
+  "methodology_id": "reference-1n1-ladder",
+  "version": "2026-09-24.1",
+  "status_note": "虚构参考口径，用于演示判定引擎。它不是任何账户的建议，也不来自任何真实投放结果。",
+  "target_roas": "0.85",
+  "quality_factor": "1",
+  "ladder": ["T", "2T", "3T"],
+  "budget_examples_note": "HYPOTHETICAL。T 只是可接受 CPA 的锚，实际预算档位由团队自行决定。",
+  "balance_alert_below": "50",
+  "max_creatives_per_adset": 8,
+  "recommended_creatives_per_adset": 6,
+  "sample_gate": {
+    "_why": "零转化有两种性质完全不同的原因：素材真的不行，或者样本根本不够。先过样本关再谈判定。",
+    "impressions_for_dead": 300,
+    "early_stop_cpc_above": "1.00",
+    "early_stop_ctr_below": "0.0600",
+    "judgement_rule": "判死需要「展示 >= 300 且 0 转化」同时「累计花费 >= 止损线」；中间只记录，不改状态。"
+  },
+  "promotion": {
+    "_why": "晋级的三个条件必须同时成立，缺一个就只记录。",
+    "min_results": 3,
+    "require_full_day": true,
+    "budget_multiple": "2",
+    "rule": "转化数够 + 覆盖完整投放日 + 该档独立算 CPA <= T。"
+  },
+  "stop_loss": {
+    "_why": "这是超过目标成本的测试止损线，不等于财务净亏损，也不证明素材永远无效。暂停可恢复。",
+    "measured_in_t": "3",
+    "rules": [
+      "零转化：累计消耗达 3T 仍无转化，且正常回传时间已过 -> 暂停复核。",
+      "有转化但持续过贵：累计花费 - T x 转化数 >= 3T -> 暂停复核。"
+    ]
+  },
+  "utilisation": {
+    "_why": "「花不动」和「不够花」是两种病，混在一句话里就会开错药。",
+    "under_delivering_below": "0.50",
+    "at_cap_above": "1.07",
+    "note": "预算利用率 <= 50% 判花不动，先解决出价/预算能不能花的问题；107% 以上视为顶满，是平台允许的超投区间。"
+  },
+  "creative_rules": {
+    "circuit_breaker_spend_share_above": "0.40",
+    "circuit_breaker_cpa_multiple_above": "1.7",
+    "circuit_breaker_note": "单条素材吃掉组内 40% 以上花费、且 CPA 高于目标 1.7 倍 -> 熔断该素材，不动整组。",
+    "fatigue_frequency_at_least": "2.5",
+    "fatigue_drop_at_least": "0.20",
+    "fatigue_note": "判衰竭必须三条同时满足：频次 >= 2.5 且 CTR 环比降 >= 20% 且 CVR 同向降 >= 20%。只满足一条属于误判。"
+  },
+  "learning": {
+    "conversions_for_exit": 50,
+    "days": 7,
+    "daily_budget_multiple_of_t": "7.14",
+    "note": "门槛日预算 = 7.14 x 可代价位。若按单次转化目标计。学习期内不做 significant edit。"
+  },
+  "gate_states": {
+    "ready": "现值与基线一致 -> 只发差异字段，其余行独立执行。",
+    "satisfied": "现值已是目标值 -> 跳过不写（写了是 significant edit，会重置学习期）。",
+    "conflict": "现值既非基线也非目标 -> 人工改过，只隔离该行，不覆盖，也不让整批重做。",
+    "unknown": "没读到写前状态，或字段不在快照里 -> 先复拉；缺失不等于相等，绝不放行。"
+  },
+  "reporting_rules": [
+    "一律按 campaign / adset 出数，不拿账户总 CPA 直接判素材。",
+    "期望转化 < 判死门槛时标「样本不足」，不用它下结论。",
+    "成本口径统一叫 CPA；区分广告侧与整体（含混量）。",
+    "不确定的字段如实标 unknown，不用推断填空。"
+  ],
+  "actions": [
+    {
+      "code": "LADDER_PROMOTE",
+      "level": "P1",
+      "rule_driven": true,
+      "action": "原组预算 x2（T -> 2T -> 3T）",
+      "window": "2-3 个完整投放日",
+      "acceptance": "回读 daily_budget = 目标档位金额，且变更流水可查（某一天必须用 since=D, until=D+1 拉取）。两者不一致视为未执行。",
+      "stop_condition": "回读发现 bid_strategy / bid_amount 被默认覆盖，或该档未覆盖完整投放日 -> 本轮不晋级，先修结构。"
+    },
+    {
+      "code": "TEST_STOP_NOCONV",
+      "level": "P0",
+      "rule_driven": true,
+      "action": "暂停复核（先查链路与回传，再决定是否放弃）",
+      "window": "立即",
+      "acceptance": "status=PAUSED 回读确认，且链路与回传已核对。",
+      "stop_condition": "展示 < 判死门槛时不得按「素材无效」下结论；样本不够只标「未测充分」。"
+    },
+    {
+      "code": "TEST_STOP_OVERCOST",
+      "level": "P0",
+      "rule_driven": true,
+      "action": "暂停复核；回传未齐可先停新增花费",
+      "window": "立即",
+      "acceptance": "status=PAUSED 回读确认；暂停只停新增花费。",
+      "stop_condition": "回传未成熟时不得作确定性排名或停投结论，只保留可靠的花费/展示字段。"
+    },
+    {
+      "code": "TEST_EARLY_STOP",
+      "level": "P1",
+      "rule_driven": true,
+      "action": "停新增花费并复核钩子，不改组状态",
+      "window": "次轮",
+      "acceptance": "确认 CPC 或 CTR 已回落，或已定位到钩子问题。",
+      "stop_condition": "展示未达判死门槛时不得下「素材无效」结论；CPC 高通常上游是 CTR 低，要修的是钩子而不是出价。"
+    },
+    {
+      "code": "TEST_UNDERTESTED",
+      "level": "P2",
+      "rule_driven": true,
+      "action": "标记「未测充分」，不判失败；先解决出价/预算能不能花的问题",
+      "window": "次轮",
+      "acceptance": "已把「花不动」定位到具体一项：出价进不了场 / 预算撞顶 / 受众过窄 / 素材被拒。",
+      "stop_condition": "未定位就加预算 -> 停手。期望转化不足时一律标「样本不足」，不得据此判素材好坏。"
+    },
+    {
+      "code": "LINK_OR_TRACKING_BAD",
+      "level": "P0",
+      "rule_driven": true,
+      "action": "立即暂停检查，不必等满观察期",
+      "window": "立即",
+      "acceptance": "目的地实际打开与 offer 相符，且回传参数完整收到 ——「URL 可访问但参数丢失」不算通过。",
+      "stop_condition": "参数被吞 / 宏原样落地 / 深链回退错误 -> 暂停该行，不得边跑边修。"
+    },
+    {
+      "code": "AD_STATUS",
+      "level": "P0",
+      "rule_driven": true,
+      "action": "按素材恢复流程处置（改哈希重传 + 质检）",
+      "window": "次轮",
+      "acceptance": "新素材编码 ready、effective_status 不再是 DISAPPROVED，且对象标识未变可证是换绑而非新建。",
+      "stop_condition": "改哈希只试 1 次；再拒改单变量换文案；三次不过质疑画面/落地页。不得把「改哈希」当通过审核的方法。"
+    },
+    {
+      "code": "CREATIVE_BREAKER",
+      "level": "P1",
+      "rule_driven": true,
+      "action": "熔断该条素材，不动整组",
+      "window": "次轮",
+      "acceptance": "该素材已不在组内投放，组内其余素材花费占比重新分布。",
+      "stop_condition": "只满足「花费占比高」或只满足「CPA 高」时不得熔断，两条必须同时成立。"
+    },
+    {
+      "code": "CREATIVE_FATIGUE",
+      "level": "P2",
+      "rule_driven": true,
+      "action": "换素材（新增而非替换）；判新素材只看 CVR",
+      "window": "2-3 个完整投放日",
+      "acceptance": "新素材已在组内产出转化，且 CVR >= 该链接基线 +20%。",
+      "stop_condition": "频次、CTR 降幅、CVR 降幅三条未同时满足时不得判衰竭。"
+    },
+    {
+      "code": "CREATIVE_OVERFLOW",
+      "level": "P2",
+      "rule_driven": true,
+      "action": "先裁剪到推荐条数，再谈扩量",
+      "window": "次轮",
+      "acceptance": "组内素材条数已回到推荐上限以内。",
+      "stop_condition": "条数超上界时不得直接扩量 —— 预算放大只会让系统更集中在少数几条上。"
+    },
+    {
+      "code": "ACC_NO_DELIVERY",
+      "level": "P0",
+      "rule_driven": true,
+      "action": "查被拒审 / 学习受限 / 余额与支付 / 竞价过低；复拉仍为 0 才重启",
+      "window": "2h",
+      "acceptance": "已定位到四项中的具体一项；复拉仍为 0 才激活。",
+      "stop_condition": "额度字段读回为 null 时不得对余量下结论，如实说明能力缺口。"
+    },
+    {
+      "code": "ACC_STOPPED",
+      "level": "P0",
+      "rule_driven": true,
+      "action": "确认真断档还是暂停尾巴；恢复走 build-paused -> verify -> activate",
+      "window": "次轮",
+      "acceptance": "已区分真断档与暂停尾巴，且恢复过程有回读确认。",
+      "stop_condition": "看到 PAUSED 先查操作来源 —— 多半是人工在操作，不得当异常自动恢复。"
+    },
+    {
+      "code": "ACC_BALANCE_LOW",
+      "level": "P0",
+      "rule_driven": true,
+      "action": "立即充值（历史上撞额度上限曾引发投放断崖）",
+      "window": "次轮",
+      "acceptance": "充值到账，复拉余额与当日消耗已恢复。",
+      "stop_condition": "余额字段不等于剩余额度，不得用它反推额度上限。"
+    },
+    {
+      "code": "SCALE_ADD20",
+      "level": "P1",
+      "rule_driven": false,
+      "action": "原组预算 +20%",
+      "window": ">= 2 个完整投放日",
+      "acceptance": "回读新预算已生效，覆盖 >= 2 个完整投放日，且该档独立算 CPA <= T。",
+      "stop_condition": "撞额度上限或利用率顶满时先确认账户额度再加。扩量只加预算，不加 adset。"
+    },
+    {
+      "code": "SCALE_STOP",
+      "level": "P1",
+      "rule_driven": false,
+      "action": "停止加量，回调上一档或暂停；盈利的原组继续保留",
+      "window": "次轮",
+      "acceptance": "回调或暂停已生效，且盈利的原组仍为 ACTIVE。",
+      "stop_condition": "单日波动不足以回调，必须等数据成熟；不得因一天超标就砍掉盈利组。"
+    },
+    {
+      "code": "OPT_111_TEST",
+      "level": "P2",
+      "rule_driven": false,
+      "action": "保留原 MAX，只新开 1 个受控出价验证，初始预算约等于已验证可盈利预算",
+      "window": ">= 2 个完整投放日",
+      "acceptance": "原组未动，新组回读 bid_strategy / bid_amount / optimization_goal 与方案一致，预算已计入总测试额度。",
+      "stop_condition": "出价低于已验证成本时风险是花不出去，不是省钱；样本不够不得下「受控出价压不住成本」的结论。"
+    },
+    {
+      "code": "LEGACY_CPA_BAD",
+      "level": "P2",
+      "rule_driven": false,
+      "action": "只识别、不提动作；由新结构取代，硬异常除外",
+      "window": "不适用",
+      "acceptance": "新结构计划已覆盖该 offer，旧结构无需任何动作。",
+      "stop_condition": "不得以「优化」为名去动旧结构（不迁移、不修补）。"
+    },
+    {
+      "code": "CAMP_GHOST_SPEND",
+      "level": "P2",
+      "rule_driven": false,
+      "action": "确认是主动下线；若误删而它本来在出转化则重建同素材",
+      "window": "次轮",
+      "acceptance": "已确认是主动下线，且该 campaign 当日消耗归零。",
+      "stop_condition": "先建后删，不得先删后查。"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "kind": "writeback_snapshot",
+  "notice": "FICTIONAL FIXTURE — 写入之后的回读，用来核对本次目标字段是否真的生效。",
+  "as_of": "2026-09-24T12:05:00+08:00",
+  "collected_by": "offline_fixture",
+  "reconciliation_note": "其中 fictional-adset-a6 刻意保持原值，用来演示「写了但没生效」必须被识别出来。",
+  "objects": {
+    "fictional-adset-a1": {"daily_budget": "20.00", "status": "ACTIVE"},
+    "fictional-adset-a4": {"daily_budget": "30.00", "status": "PAUSED"},
+    "fictional-adset-a6": {"daily_budget": "20.00", "status": "ACTIVE"},
+    "fictional-adset-a8": {"daily_budget": "10.00", "status": "PAUSED"}
+  }
+}

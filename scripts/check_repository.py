@@ -27,10 +27,16 @@ REQUIRED = [
     'docs/operations.md', 'docs/meta-creative-recovery.md', 'docs/roadmap.md',
     'contracts/README.md', 'contracts/connector-contract.json', 'contracts/creative-recovery.json',
     'contracts/acceptance-scenarios.json', 'contracts/experience-catalog.json',
-    'contracts/onboarding-extensions.json', '.github/workflows/ci.yml', '.gitignore', '.gitattributes'
+    'contracts/onboarding-extensions.json',
+    'operating_rules.py', 'operating_loop.py', 'tests/test_operating_loop.py',
+    'scripts/demo_operating_loop.py', 'docs/operating-loop.md', 'docs/operating-loop.zh-CN.md',
+    'examples/operating/methodology-reference.json', 'examples/operating/snapshot-primary.json',
+    'examples/operating/writeback-snapshot.json', 'examples/operating/after-snapshot.json',
+    'examples/operating/settlement-daily.json',
+    '.github/workflows/ci.yml', '.gitignore', '.gitattributes'
 ]
 SENSITIVE = [
-    ('personal workspace path', re.compile('/' + 'Users/[^/\s]+/|/' + 'home/[^/\s]+/')),
+    ('personal workspace path', re.compile('/' + r'Users/[^/\s]+/|/' + r'home/[^/\s]+/')),
     ('GitHub token', re.compile(r'gh[pousr]_[A-Za-z0-9_]{20,}')),
     ('private key', re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----')),
     ('API key', re.compile(r'\bsk-[A-Za-z0-9_-]{24,}')),

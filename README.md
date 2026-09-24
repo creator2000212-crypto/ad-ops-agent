@@ -56,6 +56,7 @@ Start with the [first-run guide (Chinese)](docs/first-run.zh-CN.md). For source-
 | Contextual advertising knowledge | Runtime catalog retrieval, applicability/evidence/source review, intake and plan integration; advisory only |
 | Private product methods and notes | Local SQLite records, versions, idempotent writes, history and revocation; scoped reuse in intake, plans and knowledge assessment |
 | Method proposal and test compilation | Two offline templates, explicit adoption, component-identity checks, one asset per unit and a shared target budget; no media understanding or randomized A/B execution |
+| **Recurring operating loop** | **Executable offline: settled-window classification against a declared ladder, multi-stage cost attribution, sample gating, creative circuit breaker and fatigue rules, a five-outcome write gate, write-back reconciliation, an append-only ledger and a one-page report. Reads declared JSON only; no platform connection** |
 | Unified task flow | `task.py` manages private task copies, versioned method files, plan outputs and simulation recovery; host conversational extraction is separate |
 | Execution and recovery | Local SQLite simulation, readback comparison, resume in the same state directory |
 | Real Meta/TikTok/Google operations | Planned; not implemented |
@@ -81,6 +82,26 @@ The demo writes a new, uniquely named directory under `runs/` and verifies:
 4. An intentionally interrupted write is reconciled before remaining operations continue.
 
 It prints the output directory, `review.md` location and the expected object counts. All accounts and assets are fictional; fixture timestamps are refreshed only in a new copy. The demo never makes a network request.
+
+### Run a full operating round
+
+The recurring loop is self-contained and needs no connection. It reads one settled observation window and produces a classified action list, a write-gate verdict per row, a write-back reconciliation and a one-page report.
+
+```bash
+python3 scripts/demo_operating_loop.py
+
+python3 operating_loop.py round \
+    --snapshot examples/operating/snapshot-primary.json \
+    --writeback examples/operating/writeback-snapshot.json \
+    --after examples/operating/after-snapshot.json \
+    --methodology examples/operating/methodology-reference.json \
+    --settlement examples/operating/settlement-daily.json \
+    --out runs/operating-demo
+```
+
+The reference fixtures exercise every branch on purpose: a healthy ad set proposed for promotion, a zero-conversion ad set recorded as under-tested, another judged dead, an over-cost stop, an under-delivering group, a group with three simultaneous findings, a disapproved ad, a broken link, a naming mismatch, and three account-level signals. The write-back snapshot then contains one row a human already changed, and the after snapshot contains one write that did not take effect.
+
+Thresholds are data. Copy `examples/operating/methodology-reference.json`, change the numbers, and pass it with `--methodology`; nothing about a unit price, target ROAS or budget multiple is hard-coded. See the [operating loop guide](docs/operating-loop.md) or the [Chinese version](docs/operating-loop.zh-CN.md).
 
 To try the private method store with fictional data:
 
@@ -162,8 +183,10 @@ onboarding.py            Connection gate, collaboration guidance and business re
 knowledge.py             Deterministic knowledge search and advisory assessment
 memory_store.py          Local private records, versions, history and revocation
 personalization.py       Product-scoped private methods and advisory notes
+operating_rules.py       Pure decision layer for the recurring operating loop
+operating_loop.py        Loop orchestration, ledger, report and CLI
 knowledge/               Runtime knowledge catalog with sources and conditions
-examples/                Fictional JSON inputs
+examples/                Fictional JSON inputs (examples/operating/ for the loop)
 tests/                   Executable offline contract tests
 scripts/                 Demonstration and repository checks
 docs/                    Product, architecture, onboarding and operational guides

@@ -9,6 +9,7 @@ python3 -m unittest discover -s tests -v
 python3 scripts/demo.py
 python3 scripts/demo_private_memory.py
 python3 scripts/demo_methods.py
+python3 scripts/demo_operating_loop.py
 python3 scripts/check_repository.py
 ```
 
