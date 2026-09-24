@@ -37,7 +37,7 @@
 3. 打开该项目的 **Google Ads API Overview** 页面，读出当前 **API access level**。首次启用后应为 **Test**；把项目 ID、级别及检查日期记入接入记录。若看不到升级入口，先核对项目是否正确、API 是否启用以及自己是否具备配额管理权限。[访问级别说明](https://developers.google.com/google-ads/api/docs/api-policy/access-levels)
 4. 如需在等待生产权限时先测试，可依[官方测试账户指南](https://developers.google.com/google-ads/api/docs/best-practices/test-accounts)创建独立的 test manager 和 test client，在测试 client 中建样例对象。测试账户不能与生产账户混在同一层级，不产生真实展示、花费或转化；不要用它的零指标判断真实投放效果。
 
-**这一阶段的验收：**Overview 显示 Test；能用本项目的认证身份对测试 customer 发出成功请求。Test 级别调用生产账户会被拒绝，这不是 OAuth 凭据已经坏了。
+**这一阶段的验收：**Overview 显示 Test。完成下文的 OAuth 身份配置后，再用该项目的认证身份对测试 customer 发出成功请求。Test 级别调用生产账户会被拒绝，这不是 OAuth 凭据已经坏了。
 
 ## 第二阶段：在 Cloud 项目申请 Explorer 生产访问
 
@@ -46,7 +46,7 @@
 3. 提交后返回 Overview **重新读取当前级别**，不要仅凭按钮已点击就认为获批。Google 说明多数 Explorer 申请会自动审核升级，但实际结果以页面状态和可用的生产账户调用为准。[官方项目接入说明](https://developers.google.com/google-ads/api/docs/oauth/cloud-project)
 4. 获批后只对已授权的生产 Ads 账户做最小只读调用，例如列可访问 customer，或用 `GoogleAdsService.Search` 读取一条 campaign 的 ID、名称与状态。把返回的 customer ID 与 Ads 后台所见账户核对；再考虑是否测试创建**暂停**对象。[官方客户端库](https://developers.google.com/google-ads/api/docs/client-libs) · [Google Ads MCP](https://developers.google.com/google-ads/api/docs/developer-toolkit/mcp-server)
 
-**这一阶段的验收：**Cloud Overview 明确显示 Explorer 或更高；同一项目的 OAuth 身份可读取目标生产 customer。只看到 Explorer 还不够，账户权限可能仍未配置。Google 官方 MCP 目前只读，可用于首轮账户与报表核验，不能证明写入能力。[官方 MCP 边界](https://developers.google.com/google-ads/api/docs/developer-toolkit/mcp-server)
+**这一阶段的验收：**Cloud Overview 明确显示 Explorer 或更高。完成下文的 OAuth 身份与 Ads 账户授权后，才继续验证能否读取目标生产 customer；只看到 Explorer 还不够。Google 官方 MCP 目前只读，可用于首轮账户与报表核验，不能证明写入能力。[官方 MCP 边界](https://developers.google.com/google-ads/api/docs/developer-toolkit/mcp-server)
 
 ## 第三阶段：选对 OAuth 身份，授权具体广告账户
 
