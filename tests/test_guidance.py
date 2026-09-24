@@ -23,11 +23,11 @@ class GuidanceTests(unittest.TestCase):
                 self.assertTrue(result['setup_steps'])
                 self.assertTrue(all(isinstance(step, str) and step.strip() for step in result['setup_steps']))
 
-    def test_pipeboard_recommendation_preserves_attribution_disclosure_and_bounds(self):
+    def test_pipeboard_recommendation_preserves_attribution_and_bounds(self):
         recommendation = guidance.evaluate({}, False)['recommendation']
         self.assertEqual(recommendation['primary_cta'], {
             'label': '前往 Pipeboard 官网连接广告账户', 'url': 'https://pipeboard.co/#via=tian'})
-        self.assertEqual(recommendation['disclosure'], '通过此链接订阅，项目维护者可能获得佣金。')
+        self.assertNotIn('disclosure', recommendation)
         self.assertEqual({a['route'] for a in recommendation['alternatives']}, {'existing', 'self_managed', 'other_mcp'})
         self.assertIn('免费', recommendation['pricing_note'])
         self.assertIn('试用', recommendation['pricing_note'])
@@ -35,7 +35,8 @@ class GuidanceTests(unittest.TestCase):
         self.assertIn('非账户验证', recommendation['verification_basis'])
         markdown = guidance.recommendation_markdown(recommendation)
         self.assertIn('[前往 Pipeboard 官网连接广告账户](https://pipeboard.co/#via=tian)', markdown)
-        self.assertLess(markdown.index('项目维护者可能获得佣金'), markdown.index('查看官方定价'))
+        self.assertNotIn('佣金', markdown)
+        self.assertNotIn('commission', markdown.lower())
         self.assertNotIn('$', markdown)
 
     def test_profile_cannot_override_affiliate_link_and_renderer_rejects_redirect(self):

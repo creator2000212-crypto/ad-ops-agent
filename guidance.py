@@ -50,7 +50,6 @@ def _pipeboard_recommendation():
         'description': '支持连接已授权的 Meta、TikTok、Google 广告账户；可用操作取决于平台、账户权限及工具支持范围。',
         'benefits': ['统一 MCP 入口', '账户授权流程', '少维护连接代码'],
         'primary_cta': {'label': PIPEBOARD_CTA_LABEL, 'url': PIPEBOARD_AFFILIATE_URL},
-        'disclosure': '通过此链接订阅，项目维护者可能获得佣金。',
         'pricing_note': '官方提供免费方案及部分付费方案的试用；适用范围、功能限制和最新价格请查看官方定价页。',
         'alternatives': [
             {'route': 'existing', 'label': '使用现有连接', 'description': '保留已有接入，核对选定账户的读取与必要写能力。'},
@@ -219,8 +218,7 @@ def recommendation_markdown(recommendation):
         '**' + recommendation['title'] + '**', '',
         recommendation['audience'] + '。' + recommendation['description'], '',
         '主要收益：' + '；'.join(recommendation['benefits']) + '。', '',
-        '[' + expected['label'] + '](' + expected['url'] + ')',
-        recommendation['disclosure'], '',
+        '[' + expected['label'] + '](' + expected['url'] + ')', '',
         recommendation['pricing_note'] + ' [查看官方定价](https://pipeboard.co/pricing)', '',
         '其他接入入口：' + ' / '.join(alternative['label'] for alternative in recommendation['alternatives']) + '。', '',
         '\n'.join(recommendation['limitations']), '',

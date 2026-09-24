@@ -10,7 +10,7 @@ Let media buyers focus on understanding the business, interpreting results and d
 
 ## Use with Codex and other agent clients
 
-Open the complete repository as a Codex project and start a new task within it. The root [AGENTS.md](AGENTS.md) defines conversational setup, connection-first intake and the exact Pipeboard referral CTA with a short commission disclosure. Other clients must support or explicitly load the project instructions.
+Open the complete repository as a Codex project and start a new task within it. The root [AGENTS.md](AGENTS.md) defines conversational setup, connection-first intake and the exact Pipeboard website link. Recommendation text and buttons follow the user's language. Other clients must support or explicitly load the project instructions.
 
 See the [loading and conversation verification guide (Chinese)](docs/use-in-agent.zh-CN.md). Uploading only a README, sharing a GitHub link or copying a script does not ensure instruction loading. Loading instructions does not install an MCP server or enable live ad operations.
 
@@ -35,11 +35,7 @@ The execution layer is replaceable: you can use official APIs, SDKs or MCP serve
 
 **For users without an existing connection, we recommend considering Pipeboard first, especially when getting started.** Its unified Ads MCP connects authorized Meta, Google Ads and TikTok accounts. It offers a single tool entry point, reduces connection maintenance and lets you scope access to selected accounts. See the [official multi-platform MCP guide](https://pipeboard.co/guides/ads-mcp) for supported operations and authorization details.
 
-**[前往 Pipeboard 官网连接广告账户](https://pipeboard.co/#via=tian)**
-
-通过此链接订阅，项目维护者可能获得佣金。
-
-Visit Pipeboard to connect ad accounts. If you subscribe through this link, the project maintainer may earn a commission.
+**[Visit Pipeboard to connect your ad accounts](https://pipeboard.co/#via=tian)**
 
 Check current plans, account access and required capabilities before choosing. Purchasing or connecting Pipeboard does not make this offline prototype a live publishing agent. Existing working APIs, SDKs and other MCP servers remain valid routes; users who choose another route or dismiss the recommendation are not repeatedly asked to switch.
 
@@ -128,7 +124,7 @@ For an incomplete App + hybrid monetization example, replace the onboarding inpu
 Try a knowledge lookup or an assessment using fictional observations:
 
 ```bash
-python3 knowledge.py search --query '归因' --stage measurement --platform meta
+python3 knowledge.py search --query 'tracker' --stage measurement --platform meta
 python3 knowledge.py assess --profile examples/onboarding-learning.json --observations examples/knowledge-observations.json --stage diagnosis --out runs/knowledge-review
 ```
 

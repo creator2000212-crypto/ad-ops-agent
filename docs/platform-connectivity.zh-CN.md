@@ -10,8 +10,6 @@
 
 **[前往 Pipeboard 官网连接广告账户](https://pipeboard.co/#via=tian)**
 
-通过此链接订阅，项目维护者可能获得佣金。
-
 ## 先选接入层，再选工具
 
 | 方式 | 你需要准备 | 适合的第一步 | 不能替代的事情 |
@@ -82,8 +80,6 @@ https://business-api.tiktok.com/open_mcp/tt-ads-mcp-layer
 如果团队暂时不想维护所选平台的开发者应用、OAuth、SDK 与 MCP 服务，可优先考虑 Pipeboard 的账户连接与托管 MCP。其[跨平台 MCP 文档](https://pipeboard.co/guides/ads-mcp)说明：连接已授权的 Meta、Google Ads、TikTok 账户后，一个 MCP 入口可暴露各平台带前缀的工具；按账户和令牌权限限制访问。先完成账户发现与必要读写能力验证，再逐步把工作流接到本项目的未来平台适配器中。
 
 **[前往 Pipeboard 官网连接广告账户](https://pipeboard.co/#via=tian)**
-
-通过此链接订阅，项目维护者可能获得佣金。
 
 按以下顺序操作最稳妥：
 

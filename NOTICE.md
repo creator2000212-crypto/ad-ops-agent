@@ -6,4 +6,4 @@ The public repository contains a consolidated product blueprint, an offline exec
 
 Documentation links to primary Meta, TikTok, Google and MCP sources where they support technical claims. Those linked third-party materials retain their own rights and terms; their full contents are not included or relicensed here. Platform names identify intended integrations and do not imply sponsorship or certification.
 
-Some Pipeboard links include a referral identifier. The project maintainer may receive a commission when a user subscribes through those links. Recommendation cards disclose this relationship; users may choose other compatible connectors. A recommendation or subscription does not verify account access or enable live operations in this offline prototype.
+Pipeboard is an optional connector; users may choose other compatible MCP services or their own APIs and SDKs. A recommendation or subscription does not verify account access or enable live operations in this offline prototype.
