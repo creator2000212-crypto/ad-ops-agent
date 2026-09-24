@@ -1,0 +1,34 @@
+# 文档阅读路线
+
+Ad Ops Agent 把投放人员已确认的方向变成可靠的准备、配置、批次操作和结果整理。当前仓库是**可运行的离线契约原型，加上真实平台接入的设计文档**；尚不是能直接登录三个广告平台并发布的成品 Agent。
+
+想直接运行示例或测试，先看 [根 README](../README.md)。下面按问题选择文档，无需从头阅读全部内容。
+
+| 你想了解什么 | 阅读 |
+|---|---|
+| 产品替投放人员节省哪些劳动，人与 Agent 如何分工？ | [产品与流程](product.md) |
+| 哪些已实现，怎样增加或替换 API/MCP 连接器？ | [架构与实现边界](architecture.md) |
+| 接入后如何逐步理解业务，避免一次大问卷和重复提问？ | [业务初始化](onboarding.md) |
+| 素材、帖子、链接、预算、状态和数据现场问题怎样处理？ | [16 张实操卡](operations.md) |
+| 优质素材遇到上传故障或疑似误拒，怎样有条件恢复？ | [Meta 素材恢复](meta-creative-recovery.md) |
+| 下一步先实现什么，贡献如何验收？ | [路线图](roadmap.md) |
+
+## 建议阅读顺序
+
+- **投放人员与产品协作者：**产品 → 业务初始化 → 按当前问题查实操卡。重点确认理解、批次预览和结果交接能否减少人工工作。
+- **接入开发者：**架构 → 连接器契约 → 实操卡 → 路线图。先核对一个平台产品的原生对象、字段与能力，再实现小闭环。
+- **素材恢复或审核排障开发者：**Meta 素材恢复 → 恢复契约 → 相应实操卡。区分媒体、创意、广告、帖子与学习，不使用一个模糊的“刷新素材”动作。
+
+## 结构化设计契约
+
+| 文件 | 定位 |
+|---|---|
+| [connector-contract.json](../contracts/connector-contract.json) | 供应商中立的连接器与能力映射 |
+| [creative-recovery.json](../contracts/creative-recovery.json) | 条件化素材恢复动作、记录与验收 |
+| [acceptance-scenarios.json](../contracts/acceptance-scenarios.json) | 未来实现的验收场景，不是已执行测试报告 |
+| [experience-catalog.json](../contracts/experience-catalog.json) | 有适用范围与处置方式的经验候选，不是自动优化规则 |
+| [onboarding-extensions.json](../contracts/onboarding-extensions.json) | 业务初始化的扩展建议，不代表 CLI 已接受全部字段 |
+
+这些文件是实现参考，当前离线运行时不会自动加载、启用或执行其中的候选能力。官方来源支持限定范围的事实；工程步骤仍需在所选平台、账户、广告产品和版本下验证。运行时实现在架构文档中单独列出，避免把设计完成当成功能上线。
+
+返回 [项目首页](../README.md)。
