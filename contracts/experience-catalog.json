@@ -1,0 +1,580 @@
+{
+  "format_version": "1.0",
+  "artifact_type": "design_only",
+  "runtime_loaded": false,
+  "enabled": false,
+  "execution_guarantee": false,
+  "status_note": "这些 JSON 是可评审的设计数据，不是可执行配置、JSON Schema、已实现能力或操作授权。",
+  "purpose": "按投放工作流组织的可复用设计经验；只表达通用原则、待验证能力和可选择方法，不包含个人投放记录。",
+  "entry_count": 32,
+  "stage_order": [
+    "discovery",
+    "planning",
+    "asset_preparation",
+    "execution",
+    "measurement",
+    "diagnosis"
+  ],
+  "classification_contract": {
+    "design_requirement": "建议实现的工程与证据行为，不表示已实现。",
+    "versioned_capability": "按当前平台、广告产品、账户与连接器版本验证后才可执行。",
+    "business_choice": "由使用者选择并范围化的方法参数，不是通用平台规则。",
+    "diagnostic_hypothesis": "有条件的分析方向，不是已证明的因果。"
+  },
+  "global_boundaries": [
+    "未知值不能为了通过流程被编造或填零。",
+    "能力、业务策略和授权分别管理。",
+    "各平台使用原生对象模型，不强迫结构与枚举一一对应。",
+    "这些条目不能自动启用规则、发布广告、修改认证或发送消息。"
+  ],
+  "entries": [
+    {
+      "id": "EXP-001",
+      "stage": "discovery",
+      "title": "按当前工作流建立业务档案",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "产品、市场、Web/App、变现方式、目标和方法分别带来源、范围与版本；区分 confirmed、observed、hypothesis、unknown、conflict、stale。",
+      "verification_needed": [
+        "字段类型与来源",
+        "当前工作流依赖",
+        "过期或冲突信息"
+      ],
+      "automation_boundary": "未知 LTV 或结算价不阻断独立的资料整理、素材选择和学习预算测试；涉及价值判断时单独检查依赖。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-002",
+      "stage": "discovery",
+      "title": "发现、权限、能力与授权分离",
+      "target_layer": "platform_adapter",
+      "classification": "versioned_capability",
+      "principle": "工具可发现、账户可列出、读取成功、写能力和业务授权是不同状态。",
+      "verification_needed": [
+        "具体账户与动作",
+        "版本和验证时间",
+        "模拟与真实证据模式"
+      ],
+      "automation_boundary": "SDK 字段或方法存在不证明当前运行环境可写；历史经验与本契约不授权操作。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-003",
+      "stage": "discovery",
+      "title": "业务实体使用带证据的映射",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "以稳定产品标识、目的地链、事件引用和有效期间识别业务实体；名称、域名和单一追踪标识只作证据。",
+      "verification_needed": [
+        "映射生效时间",
+        "实际素材与目的地",
+        "一对多关系与冲突"
+      ],
+      "automation_boundary": "不按广告名称或共享域名自动归属产品。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-004",
+      "stage": "discovery",
+      "title": "机器证据优先，问题按依赖提出",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "连接状态、币种、能力和时间戳优先由已授权机器读取；向人询问目标、含义和偏好。",
+      "verification_needed": [
+        "缺口是否影响当前工作流",
+        "已有已问未答记录",
+        "来源是否可由机器补齐"
+      ],
+      "automation_boundary": "非依赖未知保留为缺口；不要求用户编造收入、检查时间或权限结论。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-005",
+      "stage": "planning",
+      "title": "方法是可选择模板",
+      "target_layer": "business_template",
+      "classification": "business_choice",
+      "principle": "测试结构、出价、受众、阈值、观察窗和预算阶梯均由当前业务问题与用户方法确定。",
+      "verification_needed": [
+        "所选方法的适用范围",
+        "平台产品能力",
+        "测试问题和风险边界"
+      ],
+      "automation_boundary": "不把一种获客、变现或投放结构作为三平台默认。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-006",
+      "stage": "planning",
+      "title": "金额携带完整单位契约",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "使用十进制字符串保存金额，并明确币种、周期、预算层级和适用对象；原生字段逐项记录换算依据。",
+      "verification_needed": [
+        "平台、操作、字段、币种、原生与连接器版本",
+        "原始值与规范值往返校验"
+      ],
+      "automation_boundary": "不统一乘除 100，不把所有整数当最小币种单位；未知单位阻断对应写入。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-007",
+      "stage": "planning",
+      "title": "预算所有权和容量分别核验",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "明确预算由哪个对象控制，以及支出限额、账单余额、已花金额分别代表什么。",
+      "verification_needed": [
+        "预算与时段读回",
+        "容量证据及时间",
+        "账户状态和费用边界"
+      ],
+      "automation_boundary": "余额不自动等于可用资金；账户额度与投放效率分开判断，缺证据不伪算剩余额度。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-008",
+      "stage": "planning",
+      "title": "阈值来自适用经济口径",
+      "target_layer": "business_template",
+      "classification": "business_choice",
+      "principle": "只有事件价值、有效率、费用和目标收入成本比定义一致时，才可推导目标成本。",
+      "verification_needed": [
+        "价值净额与币种",
+        "实际有效结果口径",
+        "目标 ROAS 与成本覆盖"
+      ],
+      "automation_boundary": "在同一口径且目标 ROAS 为正时，可用预期每次有效价值 ÷ 目标 ROAS 推导目标 CPA；它不是通用盈利线，也不能用某产品价值覆盖其他产品。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-009",
+      "stage": "planning",
+      "title": "硬限制、建议与偏好分开",
+      "target_layer": "platform_adapter",
+      "classification": "versioned_capability",
+      "principle": "预算最低值、素材数量、类别、身份、事件、受众和字段可改性按原生广告产品及版本验证。",
+      "verification_needed": [
+        "产品、地区、币种和对象层级",
+        "当前官方契约",
+        "账户能力与真实读回"
+      ],
+      "automation_boundary": "不把推荐数量写成硬限制，不由一次错误推断永久绑定，也不由字段存在推定创建后可改。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-010",
+      "stage": "asset_preparation",
+      "title": "文件指纹与平台对象身份分离",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "原文件 digest、平台 image_hash 或 video_id、creative_id、ad_id、帖子与展示身份引用分别存储。",
+      "verification_needed": [
+        "每层实际返回标识",
+        "账户与父对象归属",
+        "派生素材和对象 lineage"
+      ],
+      "automation_boundary": "本地字节变化不证明任何广告 ID 已变；换绑定不等于新广告，换广告不保证历史迁移。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-011",
+      "stage": "asset_preparation",
+      "title": "异步媒体必须读回就绪",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "上传回执、媒体处理完成、素材可引用、预览正常是不同阶段。",
+      "verification_needed": [
+        "处理状态与错误",
+        "时长、尺寸、画面和音频",
+        "实际版位预览"
+      ],
+      "automation_boundary": "拿到素材 ID 不能立即宣称 ready；超时保留未决，不能盲建依赖对象。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-012",
+      "stage": "asset_preparation",
+      "title": "素材与完整转化路径一致",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "将画面、音频、文案、身份、承诺、权利和实际跳转链一起检查。",
+      "verification_needed": [
+        "当前产品事实及使用依据",
+        "实际参数与中间跳转",
+        "平台可参与组合和目的地"
+      ],
+      "automation_boundary": "不能仅检查最终域名或文件名，也不能为补齐文案自行发明价格、资格、奖励或期限。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-013",
+      "stage": "asset_preparation",
+      "title": "选择依据和效果预测分开",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "保留候选素材的显式标签、限制、去重与历史使用证据；元数据匹配不是视觉理解或效果保证。",
+      "verification_needed": [
+        "原素材或已授权媒体观察",
+        "历史结果的时间与口径",
+        "候选和当前任务匹配"
+      ],
+      "automation_boundary": "没有读过媒体就不能宣称完成内容检查；未知特征不填零，历史跑好不保证当前有效。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-014",
+      "stage": "asset_preparation",
+      "title": "重传与正常修复有条件可用",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "定位编码、处理或引用错误后可选最小规格修复或重传；疑似误拒可进入有证据与边界的恢复路线。",
+      "verification_needed": [
+        "错误和内容证据",
+        "允许方法与对象范围",
+        "处理、审核、投放分别读回"
+      ],
+      "automation_boundary": "不一概排除重传；实质问题必须修正，有限恢复不保证过审或学习、互动保留。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-015",
+      "stage": "execution",
+      "title": "冻结计划与当前上下文绑定",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "计划指纹关联业务事实版本、目标范围、能力快照、预期差异和授权范围。",
+      "verification_needed": [
+        "执行前状态与冻结快照",
+        "当前上下文和账户范围",
+        "人或系统的并发变更"
+      ],
+      "automation_boundary": "实质变更需要重新评估计划；不得静默覆盖人工修改或用旧计划绕过新上下文。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-016",
+      "stage": "execution",
+      "title": "授权采用整批范围",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "账户、动作、预算、币种、时限与可恢复动作构成明确授权边界。",
+      "verification_needed": [
+        "批准计划指纹",
+        "当前任务范围",
+        "累计花费与尝试边界"
+      ],
+      "automation_boundary": "范围内无需逐步重复确认；发现工具或模拟批准不构成真实授权。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-017",
+      "stage": "execution",
+      "title": "创建可能直接带来花费",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "非暂停创建、换绑或启用可能在其他条件满足时产生投放；逐动作评估实际影响。",
+      "verification_needed": [
+        "创建状态和父级状态",
+        "预算与时段",
+        "审核和有效状态"
+      ],
+      "automation_boundary": "不能只在第二次启用时才检查授权；暂停状态也不代表无需审核。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-018",
+      "stage": "execution",
+      "title": "写入不确定先核对",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "稳定 operation_id、回执、原生对象和批次范围共同支持 resume；未知结果进入 reconciliation。",
+      "verification_needed": [
+        "已返回标识与父级归属",
+        "已授权活动证据",
+        "可用幂等能力与结果确定性"
+      ],
+      "automation_boundary": "异常不等于未发生；不全批重试，不靠切连接器清零操作或重建对象。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-019",
+      "stage": "execution",
+      "title": "连接器替换保留业务语义",
+      "target_layer": "connector_profile",
+      "classification": "versioned_capability",
+      "principle": "按字段、单位、默认值、分页和错误语义映射替代连接器，保持原生身份与业务 operation_id。",
+      "verification_needed": [
+        "输入输出契约指纹",
+        "能力范围和版本",
+        "重编译后的语义差异"
+      ],
+      "automation_boundary": "纯传输等价切换可沿用覆盖授权；实质差异重新评估，不猜工具名或擅自改认证。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-020",
+      "stage": "execution",
+      "title": "结构化解析错误与标识",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "依据声明的 envelope、字段类型、枚举和对象命名空间解析返回。",
+      "verification_needed": [
+        "结构化错误字段",
+        "原生 ID 与账户关联",
+        "逐项结果和原生读回"
+      ],
+      "automation_boundary": "不从任意长数字提取 ID，也不因业务文本含数字就分类为错误；HTTP 成功不等于任务完成。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-021",
+      "stage": "execution",
+      "title": "配置、审核和交付状态分列",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "requested、configured、effective、review、processing 以及业务效果各自保留原生值和观察时间。",
+      "verification_needed": [
+        "广告与父对象状态",
+        "审核理由",
+        "实际消耗与交付证据"
+      ],
+      "automation_boundary": "ACTIVE 不是永久通过或已投放；恢复旧绑定也是新的写入，不能撤销已花费或保证恢复旧学习状态。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-022",
+      "stage": "measurement",
+      "title": "分页与覆盖是结果的一部分",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "列表和报告声明请求范围、已覆盖实体、分页游标、权限缺口和完整性。",
+      "verification_needed": [
+        "请求与返回对象集合",
+        "下一页与状态过滤",
+        "批量逐项结果"
+      ],
+      "automation_boundary": "返回数量相等或总额相等不能单独证明完整；未覆盖对象不视为不存在或无消耗。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-023",
+      "stage": "measurement",
+      "title": "真实零和未知不得混合",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "区分 observed_value、explicit_null、not_returned、unsupported、permission_denied、not_applicable 与 undefined_denominator。",
+      "verification_needed": [
+        "输入覆盖",
+        "合法零是否被 fallback 丢弃",
+        "分子分母有效性"
+      ],
+      "automation_boundary": "零转化 CPA 使用 null 加原因；只有收入真实为零且消耗为正等前提满足时 ROAS 才为零。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-024",
+      "stage": "measurement",
+      "title": "事件别名按语义去重",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "先选本轮目标事件与业务定义，再用经验证的别名映射和去重键处理重复表示。",
+      "verification_needed": [
+        "原始事件行",
+        "事件是否真同义",
+        "跨源去重依据"
+      ],
+      "automation_boundary": "不将多个别名收入相加，不默认 purchase 优先于实际目标；恒定价值可能合理，不能仅凭常数判为假收入。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-025",
+      "stage": "measurement",
+      "title": "请求归因不等于生效归因",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "同时记录请求与实际生效的归因窗口、报告时间基础、设置生效期及转换延迟。",
+      "verification_needed": [
+        "当前对象设置",
+        "报告响应元数据",
+        "接口是否支持所请求参数"
+      ],
+      "automation_boundary": "不将未知归因补成默认值；不同口径分开呈现，不直接比较。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-026",
+      "stage": "measurement",
+      "title": "时间和粒度由返回验证",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "保留绝对时间边界、账户 IANA 时区、经营时区及实际数据粒度；跨账户本地日与统一日不同。",
+      "verification_needed": [
+        "返回行的日期和粒度",
+        "夏令时和窗口边界",
+        "缺天与重复键"
+      ],
+      "automation_boundary": "请求按天或按小时不代表实际返回该粒度；本机日期不能替代账户报告日。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-027",
+      "stage": "measurement",
+      "title": "收益与平台价值分开对账",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "成本、平台事件价值、已确认交易或广告收入、退款、有效率与结算分别标记口径和成熟度。",
+      "verification_needed": [
+        "业务适用收入来源",
+        "币种、归因与观察窗",
+        "退款、结算和成本覆盖"
+      ],
+      "automation_boundary": "平台 ROAS 不能自动当净利润；缺 LTV 不阻断基于可靠本轮价值的适用分析，不能倒推并伪造结算单价。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-028",
+      "stage": "measurement",
+      "title": "报告和缓存保留事实契约",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "合并、导出、缓存和渲染都保留实体映射、时间窗、币种、事件定义、覆盖与差异。",
+      "verification_needed": [
+        "重复键和过期缓存",
+        "必需列与渲染结果",
+        "可追溯汇总与比率重算"
+      ],
+      "automation_boundary": "合并比率应在同口径分子分母汇总后重算；导出成功或缓存命中不是数据完整的证据。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-029",
+      "stage": "diagnosis",
+      "title": "先验证可投放性与数据再解释效果",
+      "target_layer": "diagnostic_hypothesis",
+      "classification": "diagnostic_hypothesis",
+      "principle": "先查状态、覆盖和业务口径，再按问题分析结构、出价、漏斗、素材或分配。",
+      "verification_needed": [
+        "实际投放证据",
+        "数据延迟与完整性",
+        "当前真实对象组成"
+      ],
+      "automation_boundary": "零消耗不证明素材差，零转化还要看样本与延迟；共同异常只产生共同原因候选。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-030",
+      "stage": "diagnosis",
+      "title": "分析描述与因果判断分开",
+      "target_layer": "diagnostic_hypothesis",
+      "classification": "diagnostic_hypothesis",
+      "principle": "指标分解、增量成本、频次与表现共变、学习状态和预算估算可支持诊断，不能独立证明因果。",
+      "verification_needed": [
+        "观察窗与样本",
+        "混淆和对象组成变化",
+        "重大编辑与干预记录"
+      ],
+      "automation_boundary": "固定阈值、次数、天数或预算除以历史 CPA 都不保证学习完成、显著性或停止决策。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-031",
+      "stage": "diagnosis",
+      "title": "恢复案例按跨对象边界计数",
+      "target_layer": "business_template",
+      "classification": "business_choice",
+      "principle": "疑似误拒先记录支持与反对证据，再选当前支持的复核或有限资产、creative、绑定、广告恢复动作。",
+      "verification_needed": [
+        "案例 lineage",
+        "允许方法、尝试数、时间和花费",
+        "处理、审核、交付与效果各自结果"
+      ],
+      "automation_boundary": "换连接器或新建对象不重置计数；达到边界停止，重复拒登次数本身不证明内容级原因。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-032",
+      "stage": "diagnosis",
+      "title": "自动规则和后续动作也需验收",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "规则字段、窗口、触发逻辑、动作、状态和实际作用范围逐项比较，并区分提醒与写入。",
+      "verification_needed": [
+        "当前原生规则能力",
+        "启用状态与内容读回",
+        "实际执行者及活动覆盖"
+      ],
+      "automation_boundary": "规则数量相等不代表全部正确或已启用；历史阈值不直接继承，经验积累不自动创建调度或改变投放。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    }
+  ],
+  "documentation_refs": [
+    "connector-contract.json",
+    "creative-recovery.json",
+    "onboarding-extensions.json"
+  ]
+}

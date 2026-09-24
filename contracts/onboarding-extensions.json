@@ -1,0 +1,425 @@
+{
+  "format_version": "1.0",
+  "artifact_type": "design_only",
+  "runtime_loaded": false,
+  "enabled": false,
+  "execution_guarantee": false,
+  "status_note": "这些 JSON 是可评审的设计数据，不是可执行配置、JSON Schema、已实现能力或操作授权。",
+  "purpose": "业务初始化与持续补充信息的设计；应在部署后的连接发现基础上推进，不能由历史记录直接生成授权。",
+  "principle": "复用已观测事实，只询问当前工作流依赖的缺口，保留未知与冲突，按完整来源重新计算 readiness。",
+  "fact_contract": {
+    "fields": [
+      "value",
+      "status",
+      "source",
+      "observed_at",
+      "valid_until",
+      "scope"
+    ],
+    "statuses": [
+      "confirmed",
+      "observed",
+      "hypothesis",
+      "unknown",
+      "conflict",
+      "stale"
+    ],
+    "validation": "文本事实必须为非空文本，来源必须有可核实说明；false、空对象或数字不能冒充产品名称。结构字段按其声明类型验证。",
+    "source_is_not_authorization": true,
+    "history": "事实更新形成新业务版本，保留必要变更原因，不把历史方法当当前选择。"
+  },
+  "connection_snapshot": {
+    "fields": [
+      "platform",
+      "account_reference",
+      "ad_product_profile",
+      "connector_version",
+      "verification_mode",
+      "read_scope",
+      "write_scope",
+      "checked_at",
+      "valid_until",
+      "evidence_reference"
+    ],
+    "verification_modes": [
+      "simulation",
+      "live"
+    ],
+    "freshness": "使用明确 as_of 检查时间；未来检查时间无效，过期证据必须重新读取。",
+    "scope": "发现账户、验证读取和验证写入分开记录；验证必须与本轮平台、账户、产品和动作匹配。",
+    "simulation_boundary": "模拟 snapshot 只证明 fixture 或本地协议，不证明线上连接、权限、余额或可发布。"
+  },
+  "conditional_business_context": {
+    "product_surface": [
+      "web",
+      "app"
+    ],
+    "monetization": [
+      "iaa",
+      "iap",
+      "hybrid",
+      "subscription",
+      "ecommerce",
+      "leadgen",
+      "other"
+    ],
+    "app_only": [
+      "operating_systems",
+      "store_or_distribution_reference",
+      "measurement_stack"
+    ],
+    "measurement_stack_examples": [
+      "first_party_analytics",
+      "firebase",
+      "mmp",
+      "custom"
+    ],
+    "measurement_note": "这是候选类别，不要求每个 App 都使用商业 MMP；实际能力需按采用方案验证。",
+    "value_related_dependencies": {
+      "iaa": [
+        "ad_revenue_event",
+        "revenue_window",
+        "revenue_source"
+      ],
+      "iap": [
+        "transaction_revenue_basis",
+        "refund_basis",
+        "revenue_window"
+      ],
+      "hybrid": [
+        "ad_revenue_basis",
+        "transaction_revenue_basis",
+        "deduplication_basis",
+        "refund_basis",
+        "revenue_window"
+      ],
+      "other_models": "按实际收入、有效结果与成本口径声明依赖，不强制套固定结算模型。"
+    },
+    "value_basis": "本轮价值计算口径以及可观测交易或广告收入金额的依据，不等同于 LTV 预测模型。",
+    "value_window": "这些价值覆盖的时间范围、归因规则与数据成熟度。",
+    "ltv_policy": "未知 LTV 保持 unknown；只阻止依赖 LTV 的判断，不自动阻止基于可靠本轮价值的目标或有学习预算的素材测试。",
+    "extensibility": "不支持的 surface 或变现组合明确 unsupported；不能静默套入另一业务类型。"
+  },
+  "conversation_policy": {
+    "max_questions_per_round": 3,
+    "workflow_scoped": true,
+    "priority": [
+      "当前工作流必需事实的冲突",
+      "当前工作流必需事实的过期状态",
+      "当前工作流必需且未回答的缺口"
+    ],
+    "machine_actions_separate": true,
+    "asked_unanswered_state": "unresolved",
+    "repetition": "已问未答的同一问题保留 unresolved，不假装已掌握，也不在每轮自动重复；依赖变更或用户要求澄清时可再次提出。",
+    "progress_is_not_business_fact": "asked_questions 等对话进度不改变业务事实 hash。",
+    "no_global_questionnaire_gate": "资料整理与独立的素材选择可先开展；非依赖未知继续留在 gaps。"
+  },
+  "readiness_contract": {
+    "workflows": [
+      "discovery",
+      "material_selection",
+      "test_planning",
+      "publish"
+    ],
+    "derived_not_trusted": "从当前事实、来源、范围、时间和工作流依赖重新计算；不信输入 JSON 自报 ready。",
+    "discovery": "可整理现有事实与缺口，不要求所有业务细节齐全。",
+    "material_selection": "检查任务所需素材、产品匹配与限制；不能用缺少无关收入信息一律阻断。",
+    "test_planning": "需要明确测试目的、目标事件、账户范围、预算和必要测量口径；只增加当前目标真正依赖的价值事实。",
+    "publish": "除计划依赖外，必须检查适用配置、连接读写范围、授权、上下文绑定与当前状态。与发布依赖相关的冲突或过期事实阻断发布。",
+    "not_a_runtime_implementation": true
+  },
+  "context_binding": {
+    "content_fingerprint_includes": [
+      "business_version",
+      "workflow_relevant_facts_with_sources",
+      "selected_platform_and_account_scope",
+      "selected_method",
+      "connection_snapshot"
+    ],
+    "excludes": [
+      "asked_questions",
+      "presentation_order",
+      "conversation_progress"
+    ],
+    "plan_fields": [
+      "context_reference",
+      "context_fingerprint"
+    ],
+    "execution_check": "根据输入证据重新计算 hash，核对 brief 的平台/账户是否在档案范围内；变更后重新评估旧计划与授权覆盖。",
+    "hash_limit": "hash 只用于变化检测，不能证明来源真实性、身份或用户批准；不是数字签名。"
+  },
+  "method_template": {
+    "selection_state": "unselected",
+    "fields": [
+      "method_id",
+      "version",
+      "goal",
+      "applicability",
+      "fixed_variables",
+      "changed_variables",
+      "measurement_basis",
+      "decision_criteria",
+      "budget_bounds",
+      "observation_window",
+      "stop_conditions"
+    ],
+    "default_values": null,
+    "selection_rule": "由当前使用者与任务选择，不从示例、平台名称或目录条目继承特定业务策略。"
+  },
+  "groups": [
+    {
+      "id": "money_and_period",
+      "fields": [
+        "account_currency",
+        "business_amount_period",
+        "budget_scope",
+        "adapter_field_units",
+        "unit_contract_version"
+      ],
+      "machine_sources": [
+        "account metadata",
+        "versioned adapter field contract"
+      ],
+      "ask_when": "Business amount period or budget scope is ambiguous in the current task.",
+      "question": "这次说的预算或流水对应单日、整轮还是其他周期？作用于哪个产品和账户？",
+      "workflows": [
+        "test_planning",
+        "preflight",
+        "publish",
+        "analysis"
+      ],
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "metric_dictionary",
+      "fields": [
+        "business_result_definition",
+        "canonical_event",
+        "event_alias_map",
+        "deduplication_basis",
+        "revenue_basis",
+        "settlement_quality",
+        "cost_components"
+      ],
+      "machine_sources": [
+        "analytics",
+        "platform event mapping",
+        "authorized revenue or settlement summaries"
+      ],
+      "ask_when": "The business meaning of the event or financial result is unresolved and needed for the requested metric.",
+      "question": "本轮的有效结果怎么定义，平台回传与实际有效或结算结果之间有什么差别？",
+      "workflows": [
+        "conversion_setup",
+        "revenue_analysis",
+        "reporting"
+      ],
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "measurement_context",
+      "fields": [
+        "account_timezone",
+        "business_reporting_timezone",
+        "requested_attribution",
+        "effective_attribution",
+        "data_grain",
+        "conversion_delay",
+        "coverage",
+        "observation_window"
+      ],
+      "machine_sources": [
+        "account and ad object settings",
+        "report metadata",
+        "data source coverage"
+      ],
+      "ask_when": "The intended reporting day or comparison basis cannot be resolved from current confirmed context.",
+      "question": "这份比较按各账户本地日还是统一经营日看？无法对齐的数据是否分开呈现？",
+      "workflows": [
+        "reporting",
+        "test_analysis",
+        "cross_account_comparison"
+      ],
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "business_entity_map",
+      "fields": [
+        "product_id",
+        "product_variant_or_app_id",
+        "tracker_reference",
+        "destination_chain",
+        "platform_object_ids",
+        "mapping_valid_from",
+        "mapping_evidence",
+        "conflicts"
+      ],
+      "machine_sources": [
+        "stable tracker identifiers",
+        "approved product sources",
+        "actual creative destinations and event references"
+      ],
+      "ask_when": "Identifiers and content disagree, or a shared domain cannot determine the product uniquely.",
+      "question": "这条计划对应的产品归属在链接和旧名称中不一致，本轮以哪个已核实产品记录为准？",
+      "workflows": [
+        "material_selection",
+        "preflight",
+        "reporting",
+        "migration"
+      ],
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "account_capacity",
+      "fields": [
+        "account_status",
+        "spend_limit_basis",
+        "limit_value",
+        "spend_to_date",
+        "headroom_state",
+        "checked_at",
+        "balance_semantics"
+      ],
+      "machine_sources": [
+        "current authorized account state",
+        "timestamped limit evidence"
+      ],
+      "ask_when": "A planned launch or scale action needs unresolved business budget or capacity information.",
+      "question": "本轮允许投入的业务预算范围是什么？账户容量信息由已授权连接检查，无法读到时标记缺口。",
+      "workflows": [
+        "publish",
+        "scale_planning",
+        "delivery_diagnosis"
+      ],
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "native_template_capabilities",
+      "fields": [
+        "platform_product",
+        "api_version",
+        "connector_version",
+        "budget_level",
+        "identity_references",
+        "event_references",
+        "category_constraints",
+        "mutability_contract"
+      ],
+      "machine_sources": [
+        "account capability discovery",
+        "official versioned contract",
+        "existing readback"
+      ],
+      "ask_when": "The desired method conflicts with supported settings or a proposed change would require rebuilding objects.",
+      "question": "已验证的平台能力与本轮方法存在这些差异；哪些替代方案符合你的测试目的？",
+      "workflows": [
+        "preflight",
+        "migration",
+        "publish"
+      ],
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "change_and_experiment_history",
+      "fields": [
+        "experiment_id",
+        "cohort_or_launch_version",
+        "fixed_variables",
+        "changed_variables",
+        "observed_actor",
+        "change_timeline",
+        "interventions",
+        "comparison_eligibility"
+      ],
+      "machine_sources": [
+        "execution records",
+        "authorized activity history",
+        "test manifests",
+        "current object states"
+      ],
+      "ask_when": "An unresolved change reason affects interpretation of this comparison.",
+      "question": "比较窗口内发生了这项结构调整，当时要验证什么？这两段数据是否仍用于同一个测试问题？",
+      "workflows": [
+        "test_analysis",
+        "delivery_diagnosis"
+      ],
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "creative_usage_and_review",
+      "fields": [
+        "source_asset_identity",
+        "variant_relationship",
+        "claims_evidence",
+        "usage_basis",
+        "current_delivery_refs",
+        "historical_results",
+        "review_reason",
+        "review_observed_at"
+      ],
+      "machine_sources": [
+        "authorized media library",
+        "ad and creative readback",
+        "review and issue state"
+      ],
+      "ask_when": "Claims or rights cannot be verified, or a proposed creative change materially changes the agreed expression.",
+      "question": "该素材的关键承诺与现有产品资料不一致，是否有可核实的产品依据或需要改用其他表达？",
+      "workflows": [
+        "material_selection",
+        "creative_preparation",
+        "preflight",
+        "review_resolution"
+      ],
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "automation_scope",
+      "fields": [
+        "allowed_actions",
+        "scope_accounts",
+        "budget_bounds",
+        "stop_or_notify_policy",
+        "valid_until",
+        "batch_approval_reference",
+        "plan_fingerprint",
+        "context_fingerprint"
+      ],
+      "machine_sources": [
+        "current project authorization",
+        "confirmed method",
+        "approved batch plan"
+      ],
+      "ask_when": "Current action scope is missing or materially differs from the current authorized scope.",
+      "question": "哪些条件只提醒，哪些动作允许在整批授权范围内自动执行？暂停、恢复和调预算分别有哪些边界？",
+      "workflows": [
+        "publish",
+        "adjustment",
+        "monitoring_design"
+      ],
+      "historical_policy_is_current_authorization": false,
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    }
+  ],
+  "documentation_refs": [
+    "experience-catalog.json",
+    "connector-contract.json",
+    "acceptance-scenarios.json"
+  ]
+}

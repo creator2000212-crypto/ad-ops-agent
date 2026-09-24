@@ -1,0 +1,271 @@
+{
+  "format_version": "1.0",
+  "artifact_type": "design_only",
+  "runtime_loaded": false,
+  "enabled": false,
+  "execution_guarantee": false,
+  "status_note": "这些 JSON 是可评审的设计数据，不是可执行配置、JSON Schema、已实现能力或操作授权。",
+  "purpose": "使投放业务语义、平台适配和 API/MCP 传输可独立演进；连接器可以替换，但对象身份、授权和证据必须连续。",
+  "provider_policy": {
+    "required_provider": null,
+    "allowed_transport_families": [
+      "mcp",
+      "direct_api"
+    ],
+    "selection_basis": [
+      "本次平台与对象能力",
+      "已授权账户与动作",
+      "字段和单位语义",
+      "回执与读回质量",
+      "版本、配额和成本"
+    ],
+    "no_automatic_install_or_auth_change": true,
+    "capability_presence_is_not_user_authorization": true,
+    "provider_role": "replaceable_connector_implementation"
+  },
+  "layers": [
+    {
+      "name": "business_context",
+      "owns": [
+        "产品、国家、Web/App、变现",
+        "目标与归因口径",
+        "人群、素材、方法论",
+        "整批授权与尝试边界"
+      ]
+    },
+    {
+      "name": "operation_recipe",
+      "owns": [
+        "触发条件",
+        "读取证据",
+        "动作分支",
+        "成功条件与副作用",
+        "停止与恢复"
+      ]
+    },
+    {
+      "name": "platform_adapter",
+      "owns": [
+        "原生对象图",
+        "广告类型与目标约束",
+        "字段、金额、时区及状态语义",
+        "编译原生参数与对比读回"
+      ]
+    },
+    {
+      "name": "connector_binding",
+      "owns": [
+        "供应商和连接实例",
+        "MCP 工具名或 API 端点映射",
+        "工具输入输出结构、分页与错误包装",
+        "供应商版本、限流和传输能力"
+      ]
+    },
+    {
+      "name": "execution_evidence",
+      "owns": [
+        "跨连接器稳定的业务 operation_id",
+        "原生对象 ID",
+        "提交、异步处理、读回和差异",
+        "不确定结果的核对记录"
+      ]
+    }
+  ],
+  "operation_names_are_abstract_not_callable_tools": true,
+  "operation_vocabulary": [
+    "account.list",
+    "account.read_capabilities",
+    "asset.upload",
+    "asset.read_processing",
+    "ad.read",
+    "ad.read_review",
+    "ad.read_preview",
+    "creative.create",
+    "ad.create",
+    "ad.update_creative_binding",
+    "ad.update_status",
+    "review.request",
+    "insights.read"
+  ],
+  "capability_record_required_fields": [
+    "platform",
+    "native_api_version",
+    "ad_product_profile",
+    "native_account_id",
+    "connector_instance_id",
+    "connector_version",
+    "operation",
+    "input_schema_fingerprint",
+    "output_schema_fingerprint_or_explicit_absent",
+    "field_mapping_version",
+    "scope_status",
+    "checked_at",
+    "evidence_ref",
+    "support_status",
+    "valid_until",
+    "verification_mode"
+  ],
+  "capability_support_status": [
+    "supported",
+    "unsupported",
+    "unknown",
+    "stale"
+  ],
+  "normalized_object_identity": {
+    "key": [
+      "platform",
+      "native_account_id",
+      "object_type",
+      "native_id"
+    ],
+    "native_id_type": "string",
+    "provider_wrapped_id": "独立保存，绝不替代 native_id；不能从任意长数字推定身份。",
+    "same_entity_after_switch": "只有目标平台、账户、对象类型和原生 ID 一致，才可判同一对象。",
+    "platform_object_graph": "各平台保留原生层级；统一任务意图不等于 Meta、TikTok、Google Ads 的字段或对象一一对应。"
+  },
+  "normalization_contract": {
+    "money": "内部 Decimal 字符串 + 币种 + 周期；每个原生字段和连接版本声明单位，不猜分/元/micros。",
+    "time": "同时保留绝对时间、账户 IANA 时区、查询边界与归因口径；不靠本机时间推断报表日期。",
+    "missingness": [
+      "observed_value",
+      "explicit_null",
+      "not_returned",
+      "unsupported",
+      "permission_denied"
+    ],
+    "pagination": "记录查询范围、cursor/页覆盖与完成状态；部分结果不得伪装为全账户完整结果。",
+    "status": "保留 requested/configured/effective/review/processing 各自的原生值与归一值；缺失不得填 ACTIVE。",
+    "errors": [
+      "transport",
+      "connector_protocol",
+      "authorization",
+      "rate_limit",
+      "platform_validation",
+      "partial_failure",
+      "unknown_outcome"
+    ],
+    "readback": "按批准字段比较期望值与平台读回；提交回执和对象读回分开记录。",
+    "async": "上传返回 ID、处理完成、创建成功、审核结果及实际投放分别建状态。"
+  },
+  "frozen_plan_bindings": [
+    "context_reference",
+    "context_fingerprint",
+    "business_context_version",
+    "recipe_version",
+    "target_scope",
+    "operation_id",
+    "platform_adapter_version",
+    "native_payload_fingerprint",
+    "capability_snapshot_fingerprint",
+    "connector_binding_version",
+    "expected_diff",
+    "authorization_scope_ref"
+  ],
+  "connector_switch_rules": [
+    {
+      "case": "read_only",
+      "action": "在已有授权内，使用语义一致的来源继续读取；记录来源变化和字段覆盖，无法归一的字段保持 unknown。"
+    },
+    {
+      "case": "mutation_not_submitted",
+      "action": "重新编译并比较语义；字段、默认值、目标、权限或副作用变化时形成差异计划，判断既有整批授权是否覆盖。纯等价传输切换不要求重复批准。"
+    },
+    {
+      "case": "mutation_submitted_or_unknown",
+      "action": "保留原 operation_id，先依据回执、原生对象及活动证据核对；另一连接器只可辅助读取，不能盲目重新创建。"
+    },
+    {
+      "case": "write_confirmed",
+      "action": "以原生对象 ID 继续读回或后续动作；不迁移广告对象，不重置尝试次数。"
+    },
+    {
+      "case": "capability_gap",
+      "action": "切换已有且获授权的等价能力，或标记该动作不可用；不凭工具名猜字段，不自动安装或扩大权限。"
+    }
+  ],
+  "illustrative_bindings": [
+    {
+      "fictional": true,
+      "binding_id": "example_mcp_a",
+      "transport": "mcp",
+      "operation": "ad.read",
+      "provider_call": "illustrative_read_ad",
+      "argument_mapping": {
+        "native_id": "ad_id",
+        "requested_fields": "fields"
+      },
+      "result_mapping": {
+        "native_id": "structuredContent.ad.id",
+        "configured_status": "structuredContent.ad.configured_status",
+        "effective_status": "structuredContent.ad.effective_status"
+      },
+      "note": "工具名与包装字段均为虚构；真实映射必须读取具体连接器结构。",
+      "executable": false
+    },
+    {
+      "fictional": true,
+      "binding_id": "example_direct_b",
+      "transport": "direct_api",
+      "operation": "ad.read",
+      "provider_call": "illustrative_sdk_read",
+      "argument_mapping": {
+        "native_id": "object_id",
+        "requested_fields": "field_selection"
+      },
+      "result_mapping": {
+        "native_id": "id",
+        "configured_status": "configured_status",
+        "effective_status": "effective_status"
+      },
+      "note": "抽象示例，无 URL、凭据或可执行请求；与上一绑定读取同一原生对象。",
+      "executable": false
+    }
+  ],
+  "capability_evidence_policy": {
+    "declaration_is_not_verification": true,
+    "sdk_field_presence_is_not_runtime_write_support": true,
+    "discovered_account_is_not_writable_account": true,
+    "verification_scope": [
+      "platform",
+      "account",
+      "ad_product_profile",
+      "operation",
+      "native_api_version",
+      "connector_version"
+    ],
+    "freshness": "记录 checked_at、适用范围和有效期；过期、未来时间或缺少验证证据不能升级为 supported。",
+    "verification_modes": [
+      "simulation",
+      "live_read_observation",
+      "documented_contract",
+      "authorized_live_operation"
+    ],
+    "mode_boundary": "模拟只能验证本地协议行为；文档或读取成功不证明写入可用。是否允许执行仍由独立任务授权判断。",
+    "support_status_scope": "supported 必须同时带验证模式、账户、操作和版本；模拟 supported 不能用于判断 live 支持。"
+  },
+  "authorization_contract": {
+    "required_scope": [
+      "plan_fingerprint",
+      "context_fingerprint",
+      "accounts",
+      "actions",
+      "budget_bounds",
+      "currency",
+      "valid_until"
+    ],
+    "batch_scope": "已确认整批计划中的动作可在有效授权范围内自动继续；实质改变目标、预算、身份或预期效果时重新评估覆盖。",
+    "not_granted_by": [
+      "tool_discovery",
+      "source_code",
+      "historical_notes",
+      "this_contract",
+      "simulation_approval"
+    ],
+    "live_execution": "必须由未来运行时实现并验证真实授权、前置状态和能力；本契约不授予发布权限。"
+  },
+  "documentation_refs": [
+    "README.md",
+    "creative-recovery.json",
+    "acceptance-scenarios.json"
+  ]
+}

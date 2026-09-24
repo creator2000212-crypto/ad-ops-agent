@@ -1,0 +1,180 @@
+{
+  "format_version": "1.0",
+  "artifact_type": "design_only",
+  "runtime_loaded": false,
+  "enabled": false,
+  "execution_guarantee": false,
+  "status_note": "这些 JSON 是可评审的设计数据，不是可执行配置、JSON Schema、已实现能力或操作授权。",
+  "purpose": "用于未来实现的验收设计；这些场景没有因本文件存在而成为运行时测试。",
+  "executed_as_runtime_tests": false,
+  "implementation_requirement": "实现者应将适用场景转换为独立测试，并记录实现版本、测试范围、fixture 与结果。任何现有测试通过都不能替代真实平台能力验证。",
+  "scenarios": [
+    {
+      "id": "ALT-01",
+      "title": "改用另一 MCP 读取同一广告",
+      "given": "供应商包装 ID 不同，原生平台/账户/ad_id 相同。",
+      "expected": "识别同一对象；保留来源和字段覆盖差异，不复制广告。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "ALT-02",
+      "title": "A 创建广告超时，准备切 B",
+      "given": "A 的结果为 unknown_outcome。",
+      "expected": "B 可辅助读回；未证明未创建前不重试创建，保留同一 operation_id。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "ALT-03",
+      "title": "连接器预算字段单位不同",
+      "given": "语义目标相同但输入单位/默认值发生变化。",
+      "expected": "按版本映射重编译、比对金额和币种；未知单位阻断该写动作，纯等价切换不重复审批。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "REC-01",
+      "title": "改本地文件并重新上传",
+      "given": "得到一个素材引用，但尚未创建 creative/ad。",
+      "expected": "只能报告素材上传/处理状态；不能报告 ad_id 已更新。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "REC-02",
+      "title": "疑似误拒且已批准有限尝试",
+      "given": "内容核验记录、允许方法、尝试次数、时限、账户与对象范围、花费边界均在当前批次授权内。",
+      "expected": "按选定路线执行，在范围内不重复问；提交、审核和投放结果分开记录。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "REC-03",
+      "title": "同一案例换连接器后继续尝试",
+      "given": "之前失败次数已经达到项目边界。",
+      "expected": "仍停止该案例尝试；换供应商或新建对象不得清零计数。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "REC-04",
+      "title": "广告目标素材换绑成功",
+      "given": "ad_id 相同、creative_id 已变；学习状态无证据。",
+      "expected": "报告绑定恢复，学习与互动标为未验证，不宣告无影响。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "REC-05",
+      "title": "视频上传拿到 ID 但仍处理",
+      "given": "processing 状态未 ready。",
+      "expected": "待处理或调查错误，不创建依赖未就绪素材的后续动作；超时保留未决状态。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "CTX-01",
+      "title": "Web 素材测试且 LTV 未知",
+      "given": "测试预算和目标已选，未知 LTV 与该任务无直接依赖。",
+      "expected": "保留未知，允许准备素材测试；不把所有初始化问题设为全局必填。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "CTX-02",
+      "title": "人工在批准后更改了素材绑定",
+      "given": "当前绑定偏离执行前快照。",
+      "expected": "保留人工变更，重新比较差异和授权覆盖；不静默覆盖。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "EVI-01",
+      "title": "恢复后只有零消耗",
+      "given": "审核通过，父级暂停或交付数据尚未形成。",
+      "expected": "报告审核恢复与交付待核对；不能宣告素材效果失效。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "CAP-01",
+      "title": "SDK 字段存在但写能力未验证",
+      "given": "源码或发现结果列出某字段，当前账户的该写操作没有范围匹配的能力证据。",
+      "expected": "标为 unknown 或待验证；不得宣称支持真实发布，也不通过未经授权的写入试探。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "CAP-02",
+      "title": "能够列出账户但不可写",
+      "given": "连接发现成功，只读验证通过，写权限缺失或过期。",
+      "expected": "允许已授权的读取与离线准备；发布保持 blocked，连接成功不等于发布就绪。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "NUM-01",
+      "title": "合法零与未知值同时存在",
+      "given": "一个指标是有完整证据的零，另一字段未返回，另一个比率分母为零。",
+      "expected": "保留真实零；未返回标记 missing；无定义比率使用 null 和 reason，不用 truthy fallback 或统一填零。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "NUM-02",
+      "title": "同义事件重复返回",
+      "given": "同一事件由经验证的别名重复表示，同时存在不同业务事件。",
+      "expected": "按语义映射和去重依据计算目标事件；不重复相加别名，也不吞并不同事件。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "DATA-01",
+      "title": "列表只返回第一页",
+      "given": "调用成功但仍有下一页或无法证明覆盖完整。",
+      "expected": "继续已授权的分页读取或报告 partial；不得将未返回对象视为不存在。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "DATA-02",
+      "title": "归因请求与返回口径不一致",
+      "given": "请求指定窗口或日级粒度，但实际生效设置或返回粒度不符。",
+      "expected": "保存请求与实际口径，标记不可直接比较；不能通过补默认值隐藏差异。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "REC-06",
+      "title": "真实格式错误需要重传",
+      "given": "已定位编码或引用问题，当前批次授权允许正常修复与重新上传。",
+      "expected": "可按技术恢复路线执行最小修复；保存原件与派生关系，验证处理和引用，不因包含重传就一律排除。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "REC-07",
+      "title": "已确认内容存在实质问题",
+      "given": "证据表明实际表达或目的地违反适用要求。",
+      "expected": "先修改实际内容或使用适用复核渠道；不能只改变身份或字节并把它描述为合规修复。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "PLAN-01",
+      "title": "业务档案发生实质变化",
+      "given": "当前业务事实、目标或账户范围与冻结计划的 context_fingerprint 不同。",
+      "expected": "旧计划重新评估并生成可审阅差异；旧批准不能静默覆盖新上下文。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "PLAN-02",
+      "title": "没有选择业务方法",
+      "given": "未明确本轮出价、结构、阈值或测试问题。",
+      "expected": "只整理候选方法和相关缺口，不继承任何特定获客或变现模式的默认打法。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "EXEC-01",
+      "title": "非暂停创建具备实际投放条件",
+      "given": "父级、审核、时段等条件满足，计划拟创建可启用广告。",
+      "expected": "创建前即检查动作与预算授权；不能把创建当作无花费影响的本地准备。",
+      "status": "design_scenario_not_executed"
+    },
+    {
+      "id": "ERR-01",
+      "title": "业务文本包含错误码样式数字",
+      "given": "响应未提供相应结构化错误，但名称或提示中包含数字。",
+      "expected": "按约定 envelope、字段和类型解析，不从任意长数字推断对象 ID，也不按业务文本子串判定平台错误。",
+      "status": "design_scenario_not_executed"
+    }
+  ],
+  "documentation_refs": [
+    "connector-contract.json",
+    "creative-recovery.json",
+    "experience-catalog.json",
+    "onboarding-extensions.json"
+  ]
+}

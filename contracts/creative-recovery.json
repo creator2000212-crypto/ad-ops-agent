@@ -1,0 +1,245 @@
+{
+  "format_version": "1.0",
+  "artifact_type": "design_only",
+  "runtime_loaded": false,
+  "enabled": false,
+  "execution_guarantee": false,
+  "status_note": "这些 JSON 是可评审的设计数据，不是可执行配置、JSON Schema、已实现能力或操作授权。",
+  "recipe_id": "meta-creative-recovery",
+  "title": "高价值素材故障修复与疑似误拒的有限恢复尝试",
+  "platforms": [
+    "meta"
+  ],
+  "intent": "保存有效创意及证据，恢复可用资产/广告路径，并分别验证审核、投放和效果。",
+  "evidence_classes": {
+    "case_observation": "审核或交付结果可能在素材版本、对象绑定或时间改变后不同；只有具备记录的观察才能进入具体案例，相关性不证明原因。",
+    "documented_object_structure": "素材、creative、ad 和帖子引用属于不同对象层级；当前可读写能力仍需按版本、账户与广告产品验证。",
+    "engineering_design": "以下分诊、编排、计数和预算控制是设计要求，尚未由运行时加载，也不是平台保证。"
+  },
+  "trigger": [
+    "素材上传或处理失败",
+    "素材引用或预览异常",
+    "曾有效的广告被拒且需要判断是否可恢复"
+  ],
+  "initial_reads": [
+    "原生账户/campaign/adset/ad/creative/素材/post 引用及读回时间",
+    "原文件指纹与衍生版本、投放实际文案/封面/音频/目的地",
+    "处理状态、configured/effective 状态、拒登理由及可得的问题字段",
+    "账户/身份/落地页/追踪权限或状态的相关变化",
+    "有效表现的日期、花费、事件与归因口径；历史跑好不是当前内容或未来效果的保证",
+    "已有提交/复核/重试及不确定操作；同一案例的尝试次数跨连接器累计"
+  ],
+  "identity_dimensions": [
+    {
+      "key": "source_file_digest",
+      "meaning": "本地文件字节身份，不是 Meta 对象 ID"
+    },
+    {
+      "key": "image_hash_or_video_id",
+      "meaning": "平台素材引用，不是 ad_id"
+    },
+    {
+      "key": "creative_id",
+      "meaning": "创意对象及其素材/文案/身份/链接组合"
+    },
+    {
+      "key": "ad_id",
+      "meaning": "广告对象及其投放归属"
+    },
+    {
+      "key": "object_story_id_or_effective_object_story_id",
+      "meaning": "帖子关联；用于判断所展示帖及互动归属，不代表学习状态"
+    },
+    {
+      "key": "instagram_identity_or_media_reference",
+      "meaning": "适用时记录 Instagram 身份或媒体引用；不能由 Facebook 帖子 ID 推定其互动归属。"
+    }
+  ],
+  "routes": [
+    {
+      "route_id": "technical_asset_repair",
+      "when": "有处理、编码、引用或预览错误的证据",
+      "sequence": [
+        "核对处理状态及具体错误",
+        "选择最小必要动作，例如重新上传、正常格式重导出或更正引用",
+        "验证新素材处理完成与各版位预览",
+        "如需改变广告绑定，再按批次范围执行独立动作"
+      ],
+      "success": "目标技术错误消失且素材/引用读回符合预期；不据此宣告审核或效果恢复"
+    },
+    {
+      "route_id": "suspected_false_rejection",
+      "when": "内容、实际展示组合和目的地已经核对，存在误拒疑点；仍保留原因不确定性",
+      "sequence": [
+        "记录支持与反对误拒的证据",
+        "核对当前复核渠道及可用能力",
+        "按项目选择的策略，使用复核或限定的重传/新 creative/重绑/新 ad 尝试",
+        "一次明确改变的对象层级，并记录同期其他变化",
+        "分别等待对象、审核、投放与数据结果"
+      ],
+      "success": "分别报告技术恢复、审核通过、实际投放与效果观察状态；一次通过不能证明哈希是拒登原因",
+      "policy_required": [
+        "allowed_methods",
+        "max_attempts",
+        "case_time_window",
+        "spend_scope",
+        "object_change_scope",
+        "stop_conditions"
+      ]
+    },
+    {
+      "route_id": "substantive_issue",
+      "when": "证据指向文案、画面、承诺、目的地、授权资产或账户状态中的实质问题",
+      "sequence": [
+        "定位需要改变的实际问题",
+        "修正文案/内容/链接/权限等对应项或使用适用的复核渠道",
+        "按新内容版本重新检查与提交"
+      ],
+      "success": "实质问题已处理且当前审核/交付状态重新验证；文件或 ID 改变不被当作问题已经修复"
+    },
+    {
+      "route_id": "insufficient_evidence",
+      "when": "缺拒登原因、内容或对象关系，不能合理分诊",
+      "sequence": [
+        "通过已授权连接读取缺失证据",
+        "无法获得时输出有证据边界的候选分支及缺口"
+      ],
+      "success": "证据补足后重新分诊；不靠连续重提充当诊断"
+    }
+  ],
+  "action_options": [
+    {
+      "id": "reupload_asset",
+      "action": "重新上传现有文件或经正常规格修复的派生版本",
+      "expected_identity_effect": "平台返回素材引用；可能去重或复用，不能预填一定是新 image_hash/video_id",
+      "does_not_imply": [
+        "新的 ad_id",
+        "审核自动恢复",
+        "学习状态或互动不变"
+      ],
+      "verification": [
+        "实际返回素材引用",
+        "处理 ready",
+        "素材质量与预览",
+        "后续广告引用是否确实改变"
+      ]
+    },
+    {
+      "id": "create_creative",
+      "action": "按平台支持的素材、身份、文案与目的地组合创建 creative",
+      "expected_identity_effect": "读取实际 creative_id；广告只有另行创建或换绑后才引用它",
+      "does_not_imply": [
+        "新的 ad_id",
+        "旧帖互动沿用",
+        "审核通过"
+      ],
+      "verification": [
+        "creative_id",
+        "实际素材及帖子引用",
+        "对应版位预览"
+      ]
+    },
+    {
+      "id": "rebind_existing_ad",
+      "action": "当该对象和接口支持时，将现有 ad 绑定到目标 creative",
+      "expected_identity_effect": "广告对象仍应是目标原 ad_id；读回确认 creative 引用改变",
+      "does_not_imply": [
+        "不会重新审核",
+        "学习、互动或表现得到保证"
+      ],
+      "verification": [
+        "变更前后 ad_id 与 creative_id",
+        "期望字段差异",
+        "审核/effective 状态及实际展示"
+      ]
+    },
+    {
+      "id": "create_replacement_ad",
+      "action": "在已确认目标广告组中创建替代广告，记录与原广告的 lineage",
+      "expected_identity_effect": "经平台回执与读回确认新的 ad_id；不覆盖旧 ad 的历史",
+      "does_not_imply": [
+        "继承旧广告历史",
+        "复制前后具备因果可比性",
+        "原素材过审就保证新组合过审"
+      ],
+      "verification": [
+        "新 ad_id、creative、父级对象",
+        "预算与时段",
+        "新旧对象同时投放范围",
+        "审核与交付"
+      ]
+    },
+    {
+      "id": "review_request",
+      "action": "通过当前平台支持且具备权限的渠道请求复核",
+      "expected_identity_effect": "通常处理既有审核事项；以实际回执为准",
+      "does_not_imply": [
+        "连接器一定提供此能力",
+        "提交复核等于通过"
+      ],
+      "verification": [
+        "复核事项与目标对应",
+        "提交回执",
+        "最终处理状态"
+      ]
+    }
+  ],
+  "project_policy_template": {
+    "status": "unselected_not_authorized",
+    "allowed_methods": null,
+    "max_attempts": null,
+    "case_time_window": null,
+    "spend_scope": null,
+    "object_change_scope": null,
+    "selection_note": "由项目选择策略并关联具体批次授权；范围内自动继续。设计文件、历史成功或模拟批准均不授权真实账户操作或花费。",
+    "avoid_universal_defaults": [
+      "固定尝试次数证明拒登原因",
+      "跨账户、身份或目的地重建作为默认恢复手段",
+      "固定预算增幅或观察时长"
+    ]
+  },
+  "stop_conditions": [
+    "达到该案例批准的尝试次数/时间/花费边界",
+    "出现账户限制、扩大问题范围或新证据表明需要实质修正",
+    "上一次写入结果不确定，尚未完成核对",
+    "人修改了相关对象，当前状态偏离批准前提",
+    "能力/权限不满足，或计划需要改变账户、身份、事件、目的地等未覆盖事项"
+  ],
+  "recovery_and_rollback": [
+    "保留原素材、旧对象及引用快照；不要为尝试删除历史记录。",
+    "失败时停止后续尝试，记录新对象状态；只有已授权且平台支持的暂停/恢复动作才执行。",
+    "恢复旧绑定也是新的写操作，要读回并检查当前可用性；不能承诺恢复旧学习状态或撤销已花费用。",
+    "暂停创建只在平台能力与方案支持时使用，不把 PAUSED 等同于无需审核。"
+  ],
+  "result_dimensions": [
+    "asset_processing",
+    "object_configuration",
+    "review_state",
+    "delivery_state",
+    "measurement_validity",
+    "business_performance"
+  ],
+  "documentation_refs": [
+    "../docs/meta-creative-recovery.md",
+    "connector-contract.json"
+  ],
+  "authorization_fields": [
+    "case_id",
+    "plan_fingerprint",
+    "allowed_methods",
+    "account_scope",
+    "object_change_scope",
+    "max_attempts",
+    "case_time_window",
+    "spend_scope",
+    "stop_conditions"
+  ],
+  "causal_and_policy_boundary": [
+    "正常格式修复、资产排障和有证据支持的疑似误拒恢复可以进入受控候选路线，不能把所有重传一概排除。",
+    "已知内容、目的地、身份或权限存在实质问题时先修正问题，不以隐匿违规内容、换身份或反复变体绕过审核为目的。",
+    "改变文件字节、平台素材引用、creative 或 ad 是不同动作；不得将任意一项变化称为全部身份都已改变。",
+    "重新上传可能被去重；以实际回执和读回确认返回对象，不预设必然获得新标识。",
+    "复核、上传、审核通过和实际投放分别报告；成功一次不证明指纹导致拒登，也不保证学习或互动延续。",
+    "任何非暂停创建或重新启用，都可能在其他条件满足时产生投放和花费；创建操作本身需要预算与动作授权。"
+  ]
+}
