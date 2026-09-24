@@ -2,7 +2,7 @@
 
 [简体中文](build-from-zero.zh-CN.md) · [See the runnable account-review demo](../demo/README.md)
 
-This agent aims to connect account setup, business context, asset selection, configuration and result checks, leaving media buyers more time for analysis and decisions. A concrete example shows what each step involves.
+This agent connects account setup, business context, asset selection, configuration and result checks, leaving media buyers more time for analysis and decisions. It comes from advertising workflows already used in WorkBuddy. Others can load the instructions in their own host and work with tools they have connected and authorized. A fictional example shows how to assemble the work and hand it over.
 
 ## Meet the example
 
@@ -16,7 +16,7 @@ Build the workflow in this order:
 
 **Connect accounts → Understand the business → Agree on a method → Handle daily work → Retain confirmed experience.**
 
-The conversations and handoffs below describe the intended experience. The final section explains what the repository currently implements.
+The example explains how a host organizes a task. Actual reading, media inspection and publishing depend on that host's tools, accounts and authorization, which the deployer must verify. The final section separately describes the Python offline programs. These conversations and figures are not evidence of a live deployment.
 
 ## 1. Connect accounts: establish what is available
 
@@ -26,7 +26,7 @@ The agent first checks account identity, access to ads and data, configuration c
 
 **The output should be specific:** “This task uses course account A only. Ad reading is available, but a required configuration permission is missing. Resolve that before continuing.” An installed tool does not prove account access, and a lengthy business questionnaire is not the next step while access remains unresolved.
 
-Put connection checks at the entrance to the workflow. When accounts or platforms change, check the new scope without restarting the entire business interview.
+Put connection checks at the entrance when setting up a complete advertising workflow. When accounts or platforms change, check the new scope without restarting the entire business interview. If the current task only needs a daily report, sufficient read access is enough; publishing permission is not a prerequisite.
 
 ## 2. Understand the business: make ‘I want leads’ precise
 
@@ -52,21 +52,23 @@ You supply the videos and production notes:
 
 **For a newcomer:** the agent offers two concrete candidates: compare A with B to examine different openings, or compare A with C to explore two content directions. It explains what stays fixed and what each comparison can address, then asks you to choose.
 
-**For an experienced buyer:** you can say, “Use my existing method: compare content directions first, keep the booking page fixed and use A as the reference.” The agent organizes an A/C plan and checks the metric and observation window. If your method also requires unsupported actions such as automatic budget increases, those requirements stay visible rather than being silently removed.
+**For an experienced buyer:** you can say, “Use my existing method: compare content directions first, keep the booking page fixed and use A as the reference.” The agent organizes an A/C plan and checks the metric and observation window. If you also require a budget increase under certain conditions, specify its trigger, limit and authorization scope, then check whether this host can carry it out. Keep any capability gap visible; do not silently remove the requirement to fit a template.
 
-The rest of this example follows the user's confirmed A/B choice. **The selection explanation is:** A is your explicit reference, B meets the opening-only condition, and C is excluded because its concept also differs. An A/C choice would follow the same later steps, with selection based on comparing content directions. The basis is your confirmed production notes, not a claim that the program understood the videos.
+The rest of this example follows the user's confirmed A/B choice. **The selection explanation is:** A is your explicit reference, B meets the opening-only condition, and C is excluded because its concept also differs. An A/C choice would follow the same later steps, with selection based on comparing content directions. This example relies on your confirmed production notes. If the host actually inspected frames or videos, record what it inspected and found separately. Notes alone do not support a claim that the media was viewed.
 
-You confirm adoption of the method. Selection does not mean the assets have been proven to perform well.
+You confirm adoption of the method. Selection does not mean the assets have been proven to perform well. These comparisons are options for this example; the host workflow does not restrict users to them. The Python compiler currently supports only these two structured templates, so other requirements remain visible for the host to handle according to its capabilities.
 
 ## 4. Handle daily work: separate preparation, decisions and checks
 
 First prepare a batch review:
 
 - Use course account A only, target the United States, and use assets A and B with the same booking page.
-- Put one asset in each test unit, sharing the account's $60 budget for this round. Do not promise that each receives half the spend.
+- Put one asset in each test unit and keep the round within the user's $60 total. Explain which native object owns the budget, whether it is daily or lifetime, and whether it is shared. Do not promise that each asset receives half the spend.
 - Track cost per form submission and retain sales-confirmed booking counts. Review after three days without automatically declaring a winner when the date arrives.
 
-**Your decision is to confirm or revise this concrete plan.** The agent then handles configuration within the permitted scope, checks results and retains incomplete items. Live publishing remains a separate operation requiring integration and authorization.
+**Your decision is to confirm or revise this concrete plan.** After checking account and tool capabilities and recording the batch authorization, the host carries out the permitted configuration and publishing steps. Creating paused objects is also a write and must be covered. Unchanged mechanical steps already authorized do not need repeated approval. If a required capability is missing, deliver the preparation and state the gap; do not treat a local simulation as publishing.
+
+A handoff such as “A and B were created and their configuration checked; A has passed review, while B is still pending review” needs the corresponding objects, check times and read results. Record enabled configuration, review approval and observed delivery separately instead of assigning one success label to the whole batch.
 
 Suppose a later day's supplied figures look like this. They are still fictional observations:
 
@@ -77,7 +79,9 @@ Suppose a later day's supplied figures look like this. They are still fictional 
 
 The agent can organize the conclusion: “A had a lower form-submission cost that day. Valid-booking results are incomplete, so these figures do not establish that A deserves more budget.” It brings the data, gaps and recommendation together. You decide whether to observe longer or change direction; “looks promising” does not become an automatic budget increase.
 
-Before a configuration change, a current budget that differs from the previous record should prompt a comparison. If the resulting value differs from the plan, retain the discrepancy instead of marking the work complete based only on a success message.
+Before a configuration change, a current budget that differs from the previous record should prompt a comparison. If the resulting value differs from the plan, retain the discrepancy instead of marking the work complete based only on a success message. Observed receipt status must come from a read result, never from the target value or a hardcoded `ACTIVE`.
+
+Later, when you ask for yesterday's course report, the agent reuses the agreed definitions and checks the date, time zone, accounts and data coverage. It does not repeat the A/B planning interview. At the start of a new account review, it first rechecks relevant outstanding items from the previous round.
 
 ## 5. Retain experience: reuse what you confirm
 
@@ -87,16 +91,20 @@ The agent turns that into a proposed working agreement, identifying the course p
 
 If the next round changes from comparing openings to comparing content directions, the agent should explain the difference: A/B becomes A/C, and the constants and test question change with it. You confirm the revised method before a new plan is prepared.
 
-Experience accumulates through observations, candidates, confirmation and later reuse or revision. One result does not automatically become a rule for every product. The program does not learn and promote lessons by itself.
+Experience accumulates through observations, candidates, confirmation and later reuse or revision. Adopting an agreement and proving its effectiveness are separate. One result does not automatically become a rule for every product or expand the agent's execution authority. The Python program does not learn and promote lessons by itself.
 
 ## How the repository fits this workflow
 
-Today, the repository can store business inputs and private records offline, propose limited methods, prepare tests from declared asset differences, and run analysis and reconciliation examples on supplied data. Conversation is handled by a host such as Codex; the components still have separate entry points.
+| Layer | How it relates to this example |
+|---|---|
+| Historical WorkBuddy business practice | Saved records cover media inspection, campaign building, reporting and account reviews; see the [case studies](case-studies.md). This course example remains fictional |
+| Reusable host workflow | The host handles conversation and uses connected, authorized tools to read, inspect media, configure and verify. The deployer validates the specific environment |
+| Public Python programs | They store business inputs/private records offline, propose two method types, prepare tests from declared differences, analyze snapshots and simulate recovery. They do not call platforms, understand media or learn automatically |
 
-There are no live platform writes, automatic media understanding or automatic learning. This guide illustrates how to assemble the work; its conversations and fictional figures are not evidence of a verified live workflow.
+Start with the [host workflow](workflow.md) and [task template](../templates/task-record.md) for your own task. Use Python when you want to validate supported structured plans; reports, troubleshooting and migrations do not all need to become creative tests in `task.py`. See the [capability boundaries](capability-status.md) for limits and acceptance criteria.
 
 The reusable parts are business context, confirmed methods, preparation and result checks. The user chooses the product, countries, budgets and practices. Keeping connection handling, business methods and execution records separate makes them easier to update without imposing one advertising strategy on everyone.
 
-Read more: [module responsibilities](architecture.md) · [the daily operating loop](operating-loop.md) · [methods and test plans](method-planning.md).
+Read more: [module responsibilities](architecture.md) · [offline review fields and commands](operating-loop.md) · [Python methods and test plans](method-planning.md).
 
 Back to the [project home](../README.md).

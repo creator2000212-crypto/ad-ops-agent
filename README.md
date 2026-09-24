@@ -1,190 +1,115 @@
 # Ad Ops Agent
 
-**A provider-neutral foundation for advertising agents across Meta, TikTok and Google Ads.**
+### Let the agent handle ad operations. Keep media buyers focused on analysis and decisions.
 
-[简体中文](README.zh-CN.md) · [Documentation](docs/index.md) · [Roadmap](docs/roadmap.md) · [MIT license](LICENSE)
+**An open-source agent workflow distilled from advertising work carried out in WorkBuddy, designed for different businesses, methods and connection tools.**
 
-Let media buyers focus on understanding the business, interpreting results and deciding what to test next. Let an agent prepare assets, assemble configurations, build experiments, execute approved batches and explain what actually happened.
+The working practice includes creative selection, campaign preparation, account and configuration diagnosis, reporting, recurring reviews and retrospectives. This project organizes business context, method confirmation, tool use and result checks so other buyers can bring their own products and practices.
 
-**Current release: an executable offline Python prototype plus a product and integration blueprint.** It does not connect to ad accounts, upload media, call an LLM, inspect images, publish ads or change budgets. The three platform names are simulation adapters using `generic_draft`; `native_payload` is always `null` and live mode is rejected. Design contracts are not loaded by the runtime.
+[简体中文](README.zh-CN.md) · [Cases from practice](docs/case-studies.md) · [Use the workflow](docs/workflow.md) · [Run the public demo](#run-the-public-demo-without-an-account) · [Documentation](docs/index.md)
 
-## Use with Codex and other agent clients
+> **Three distinct materials:** cases summarize anonymized historical records; the host workflow requires connected, verified tools for the task; public Python programs provide offline demonstrations and validation. A checkout does not grant ad-account access. [Full capability status](docs/capability-status.md)
 
-Open the complete repository as a Codex project and start a new task within it. The root [AGENTS.md](AGENTS.md) defines conversational setup, connection-first intake and the exact Pipeboard website link. Recommendation text and buttons follow the user's language. Other clients must support or explicitly load the project instructions.
+## Take an advertising task through to handoff
 
-See the [loading and conversation verification guide (Chinese)](docs/use-in-agent.zh-CN.md). Uploading only a README, sharing a GitHub link or copying a script does not ensure instruction loading. Loading instructions does not install an MCP server or enable live ad operations.
+A user might ask:
 
-## The intended workflow
+> “Prepare the next test from these videos using our confirmed product context and method. Show me the asset choices, configuration and budget first. After confirmation, proceed and tell me what completed and what still needs attention.”
+
+The agent checks task accounts and tools, then reuses relevant business context. It checks assets against the destination, explains selection and exclusion, and prepares a batch. You choose the test direction and execution scope. After confirmation, the agent uses authorized host tools, reads actual configuration and separately hands off pending review, failures and unknown states.
 
 ```mermaid
 flowchart LR
-    A[Verify selected account read and write access] --> B[Set collaboration needs and understand the business]
-    B --> C[Prepare assets and test plan]
-    C --> D[Review the whole batch]
-    D --> E[Execute within approved scope]
-    E --> F[Read back objects and collect results]
-    F --> G[Human analysis and next decision]
-    G --> C
+    A["Check task scope and connection"] --> B["Understand business and user method"]
+    B --> C["Prepare assets, configuration and batch"]
+    C --> D["User confirms execution scope"]
+    D --> E["Host tools execute and read back"]
+    E --> F["Hand off results, gaps and open items"]
+    F --> G["Human analyzes, corrects and decides"]
+    G --> B
 ```
 
-First verify that the chosen MCP, API or SDK provides the necessary read and write access for the selected accounts. Then establish the user's experience on the selected platform, preferred level of guidance and current need. Only after that does intake gather the business facts and methodology required by the task. A connection gap keeps intake at setup; supplied business facts can be retained without opening a business questionnaire. There is no requirement to connect all three platforms.
+The next review first establishes whether previous recommendations were executed and configuration took effect. **People own goals and direction. The agent organizes evidence, prepares plans and completes authorized operations.**
 
-The execution layer is replaceable: you can use official APIs, SDKs or MCP servers for each platform, or a managed connector. An API provides access to platform objects; an SDK wraps that API in code; an MCP server exposes supported operations as tools to an agent. None of them grants account access or publishing permission by itself. Native platform semantics remain in platform adapters.
+## What the working records taught us
 
-### Recommended first connection: Pipeboard
+These are anonymized summaries of reviewed historical material. They preserve the problem and its completion boundary. Original accounts, media, conversations and commercial figures remain private.
 
-**For users without an existing connection, we recommend considering Pipeboard first, especially when getting started.** Its unified Ads MCP connects authorized Meta, Google Ads and TikTok accounts. It offers a single tool entry point, reduces connection maintenance and lets you scope access to selected accounts. See the [official multi-platform MCP guide](https://pipeboard.co/guides/ads-mcp) for supported operations and authorization details.
+| Work encountered | How the buyer and agent collaborated | Reusable mechanism |
+|---|---|---|
+| A video batch contained mismatched content, technical limitations and reusable assets | The agent organized assets and exclusions; the buyer clarified product and test constraints | Check content, specifications, prior use and method fit separately |
+| A TikTok multi-product plan needed revised creative sets and status checks | The user changed asset constraints; the agent adjusted the sets. Saved records showed some objects eligible and another in review | Hand off each object rather than declaring the whole batch live |
+| A daily report lacked one platform's data | Retain available data and mark source gaps; the user supplies material or restores access | Missing is not zero, and stale data is not fresh retrieval |
+| Renaming changed a report's business mapping | Trace structure, destination and rename history | Verify relationships; treat names as supporting labels |
+| A receipt claimed activation while saved reads still showed paused or processing state | Inspect how the report was generated and preserve the conflict | Actual results must come from readback, not planned values |
+| A recurring review encountered last round's problem again | Check adoption and execution before discussing the outcome | Separate unexecuted work, changes that did not take effect and immature outcomes |
 
-**[Visit Pipeboard to connect your ad accounts](https://pipeboard.co/#via=tian)**
+[Read six cases and their evidence limits](docs/case-studies.md). The records establish use in actual tasks; they do not justify invented efficiency gains, advertising returns or a claim that every batch succeeded.
 
-Check current plans, account access and required capabilities before choosing. Purchasing or connecting Pipeboard does not make this offline prototype a live publishing agent. Existing working APIs, SDKs and other MCP servers remain valid routes; users who choose another route or dismiss the recommendation are not repeatedly asked to switch.
+## One workflow for newcomers and experienced buyers
 
-Read-only access can help diagnose a connection, but this agent's operational setup gate also requires the necessary write capabilities before collaboration and business intake continue. Passing that gate does not authorize publishing or spending. M2 proposes two bounded test methods from structured answers or explicitly labelled SOP lines, requires adoption, and compiles declared asset identities into test units. The host handles natural-language conversation and prepares inputs; the local program has no LLM. Platform experience and explanation preferences do not change permissions.
+**A product owner new to advertising:** after connection setup, start with the product, market, conversion journey and budget boundary. The agent explains a few candidate methods, such as comparing two video openings or two content directions, and lets the user choose.
 
-Start with the [first-run guide (Chinese)](docs/first-run.zh-CN.md). For source-linked self-managed Meta, TikTok and Google Ads access routes, see the [integration guide (Chinese)](docs/platform-connectivity.zh-CN.md).
+**A buyer with an established method:** bring the SOP, constraints and current goal. The agent extracts constants, variables, observation conditions and execution scope while preserving conflicts and unsupported requirements. Adopting the author's strategy is not required.
 
-## What runs today
+[Follow a concrete business and creative example](docs/build-from-zero.md) · [Organize and confirm methods](docs/method-planning.md)
 
-| Capability | Implementation status |
-|---|---|
-| Connection-first setup and collaboration guidance | Offline gate, route recommendation and rule-based questions; `setup.json` / `setup.md`, no UI or real configuration |
-| Business facts with source/status and conditional workflow dependencies | Offline JSON input and readiness evaluation |
-| Web/App and monetization-dependent questions | Structured rules; no conversational LLM |
-| Connection discovery, scope and freshness | Fictional snapshots only; no actual permission check |
-| Asset selection | Explicit metadata filters plus adopted method constraints on component identities; anchor and input-order selection, no media inspection, model recommendation or performance ranking |
-| Budget allocation and batch review | Decimal arithmetic, frozen plan hash, Markdown review |
-| Contextual advertising knowledge | Runtime catalog retrieval, applicability/evidence/source review, intake and plan integration; advisory only |
-| Private product methods and notes | Local SQLite records, versions, idempotent writes, history and revocation; scoped reuse in intake, plans and knowledge assessment |
-| Method proposal and test compilation | Two offline templates, explicit adoption, component-identity checks, one asset per unit and a shared target budget; no media understanding or randomized A/B execution |
-| **Recurring operating loop** | **Executable offline: settled-window classification against a declared ladder, multi-stage cost attribution, sample gating, creative circuit breaker and fatigue rules, a five-outcome write gate, write-back reconciliation, an append-only ledger and a one-page report. Reads declared JSON only; no platform connection** |
-| Unified task flow | `task.py` manages private task copies, versioned method files, plan outputs and simulation recovery; host conversational extraction is separate |
-| Execution and recovery | Local SQLite simulation, readback comparison, resume in the same state directory |
-| Real Meta/TikTok/Google operations | Planned; not implemented |
-| Additional operational recipes and design contracts | Human-readable guides and unloaded design JSON; separate from the runtime knowledge catalog |
+## Reuse the workflow; choose your own strategy
 
-The simulation authorization file is an unsigned test artifact, not authentication or a user's real publishing approval. Recovery is scoped to the same frozen plan and local state directory; it is not a distributed or cross-provider exactly-once guarantee.
+| What changes | What to update | What remains reusable |
+|---|---|---|
+| Product, Web/App journey or monetization | Business facts, events, revenue and quality definitions | Intake, preparation, review and result checks |
+| Test method | Question, constants, variables, budget and observation conditions | Plan versions, user confirmation, execution records and review |
+| Platform or connection tool | Capabilities, native fields, object relationships, permissions and readback | Business context, user methods, tasks and historical evidence |
 
-## Quick start
+This describes workflow reuse, not complete implementation of every advertising product. Public Python supports two limited method templates. A host can discuss other methods; execution depends on available tools and a confirmed plan. Historical Meta/TikTok use is also distinguished from Google's design and simulation coverage. [Capability matrix](docs/capability-status.md)
 
-Python 3.9+ with an IANA timezone database. The prototype uses the standard library; no advertising credentials or package installation are needed. Commands below assume a shell with `python3` (use your Python command on other systems).
+## Use it in your agent environment
+
+1. Open the full repository as a project and confirm that the host loads [AGENTS.md](AGENTS.md).
+2. Check the task's platforms and accounts. Existing MCP, API or SDK connections remain valid. Read-only work needs the relevant reads; publishing also needs write and readback capabilities.
+3. Describe your product, method and current task. Reuse known information before asking for gaps.
+4. Follow the [host workflow](docs/workflow.md) and retain a [task record](templates/task-record.md) in a private directory.
+
+With usable host tools and user authorization, real tasks can proceed through those tools without first converting the offline Python program into a production executor. Without a connection, follow the [connection guide](docs/platform-connectivity.md), covering self-managed and hosted routes including optional Pipeboard.
+
+[First setup](docs/first-run.md) · [Loading and validation](docs/use-in-agent.md) · [Platform connections](docs/platform-connectivity.md)
+
+## Run the public demo without an account
+
+Requires Python 3.9+ and system IANA timezone data. Only the standard library is used.
 
 ```bash
 git clone https://github.com/creator2000212-crypto/ad-ops-agent.git
 cd ad-ops-agent
-python3 scripts/demo.py
+python3 demo/run_demo.py
 ```
 
-The demo writes a new, uniquely named directory under `runs/` and verifies:
+The example reviews 3 fictional Meta accounts and 10 ad sets. Both a2 and a3 have no conversions: a2 has only 180 impressions and needs observation; a3 meets the example's sample and stop-loss conditions. A changed current budget holds up a9, while a6 remains open because the target differs from the preset later-state file.
 
-1. A fresh fictional business profile and connection snapshot produce a ready context.
-2. A frozen plan creates three local simulated drafts.
-3. Resuming the same state creates no duplicates.
-4. An intentionally interrupted write is reconciled before remaining operations continue.
+[Full walkthrough](demo/README.md) · [Output report (Chinese)](demo/expected/report.md)
 
-It prints the output directory, `review.md` location and the expected object counts. All accounts and assets are fictional; fixture timestamps are refreshed only in a new copy. The demo never makes a network request.
-
-### Walk through a specific ad review
-
-Both a2 and a3 have no conversions. With only 180 impressions, a2 needs more observation. With 15.30 in spend and 420 impressions, a3 meets this example's pause-and-review conditions. The agent shows the evidence, checks current state, then hands you proposed changes and unresolved questions.
-
-[Read the worked example](demo/README.md) · [See the data report (Chinese)](demo/expected/report.md) · [How to build it](docs/build-from-zero.md)
-
-The example uses fictional data and makes no real account changes.
-
-To try the private method store with fictional data:
+Additional examples:
 
 ```bash
-python3 scripts/demo_private_memory.py
+python3 scripts/demo.py                 # Batch plans, simulated execution and recovery
+python3 scripts/demo_private_memory.py  # Private record versions and conditional reuse
+python3 scripts/demo_methods.py         # Six fictional inputs and method revisions
 ```
 
-The local store isolates records by workspace and product, preserves changes and revocations, and reuses matching user-confirmed methods alongside public knowledge. An `active` record means the user has adopted it, not that its performance has been verified. It fills a missing or unknown methodology for the current evaluation; differing existing methods produce a conflict. It never silently edits the source profile or a budget. See the [private memory guide (Chinese)](docs/private-memory.zh-CN.md) for configuration, scope and manual commands. This is local logical isolation, not multi-tenant authentication; no automatic learning, live APIs or performance evaluation is included.
+These commands make no live platform calls and incur no ad spend. Native platform execution, real approval and network calls are outside the current Python implementation. Simulation results cannot authorize host account operations. [Detailed scope and checks](docs/capability-status.md)
 
-To try guided and existing-method workflows across six fictional business scenarios:
+## What the project develops
 
-```bash
-python3 scripts/demo_methods.py
-```
+- **Business and methods:** turn “follow my process” into sourced, scoped and revisable task conditions.
+- **Execution workflow:** connect asset/configuration preparation with batch review, state checks, partial-failure recovery and the next review.
+- **Shared knowledge and private experience:** share reusable checks while keeping product data and user methods private; confirm new observations before reuse.
+- **Inspectable implementation:** use offline code to check inputs, plan consistency, method changes, recovery and records, then add integration evidence for specific live capabilities.
 
-See the [method and task guide](docs/method-planning.md) for the complete English workflow. The demonstration interrupts, resumes and repeats each initial plan, then adopts a corrected method, rejects the old plan and prepares a new one. **Revised plans stop at review; they are not automatically simulated.** The host organizes the user's answers so the user does not need to edit JSON. The program supports `single_variable` hook comparisons and `concept_exploration`, not arbitrary natural-language SOP interpretation. M1 text methods remain context; a structured MethodSpec needs separate adoption before it constrains asset selection. Examples are not cross-host usability evidence or live deployment tests.
+Models and connection tools supply understanding and operations. This project organizes advertising experience into a workflow that people can review, execute and trace. Historical practice does not automatically become everyone's strategy.
 
-Run the checks:
-
-```bash
-python3 -m unittest discover -s tests -v
-python3 scripts/check_repository.py
-```
-
-## Use the individual CLI steps
-
-To see the first-run connection guidance without a configured connection:
-
-```bash
-python3 onboarding.py --input examples/onboarding-setup-required.json --out runs/setup
-```
-
-Exit code `2` is expected for this deliberately incomplete fixture. Read `runs/setup/setup.md`, `setup.json` and the `connection_gate` / `guidance` fields in `context.json`; business questions wait for a ready connection gate. This is an offline simulation, not an MCP installer or a real account check.
-
-Use a new output directory for each new frozen plan. For an existing run, resume it without rebuilding its source profile.
-
-```bash
-python3 onboarding.py --input examples/onboarding-learning.json --out runs/manual/profile.json --refresh-simulation-fixture
-python3 onboarding.py --input runs/manual/profile.json --out runs/manual/context
-python3 adops.py plan --brief examples/brief.json --candidates examples/candidates.json --context runs/manual/context/context.json --out runs/manual/plan
-python3 adops.py authorize-simulation --plan runs/manual/plan/plan.json --out runs/manual/simulation-authorization.json
-python3 adops.py execute --plan runs/manual/plan/plan.json --authorization runs/manual/simulation-authorization.json --state runs/manual/state
-python3 adops.py resume --plan runs/manual/plan/plan.json --authorization runs/manual/simulation-authorization.json --state runs/manual/state
-```
-
-`authorize-simulation` does not approve real spending. Readiness checks return their state in JSON; a successful onboarding command can still report missing prerequisites. Plans and execution re-read the original business-profile source to detect drift. Unsupported native advertising settings are rejected rather than silently discarded.
-
-For an incomplete App + hybrid monetization example, replace the onboarding input with `examples/onboarding-app-hybrid-discovery.json` and write to another output directory. It illustrates focused gaps and conflicting information, not a publish-ready setup.
-
-## Operational knowledge included
-
-- [Runtime knowledge base (Chinese)](docs/knowledge-base.zh-CN.md): source-linked knowledge with platform and business conditions, evidence gaps and review dates. `knowledge.py` supports deterministic search and assessment; onboarding and plan reviews use the same catalog without granting execution permissions.
-- [Private methods and observations (Chinese)](docs/private-memory.zh-CN.md): opt-in, local product records used by onboarding, plans and knowledge assessment. Candidates remain unconfirmed; operational notes remain advisory. Matching active changes invalidate dependent plans.
-- [Methods, task commands and test plans](docs/method-planning.md): guided candidates, labelled SOP input, explicit adoption, declared component identities and reproducible offline compilation.
-- Sixteen [operation cards](docs/operations.md): media readiness, duplicate versus variant selection, existing posts, placement previews, tracking, parent status, copy defaults, budget ownership, concurrent human edits, timezone boundaries, attribution maturity, testing observations, Spark, RSA and ValueTrack.
-- [Meta creative recovery](docs/meta-creative-recovery.md): separate local hashes, media references, creative IDs, ad IDs and post identities; distinguish technical repair, suspected false rejection and content revision.
-- [Connector contract](contracts/connector-contract.json): native identity, capability/version records, normalization, uncertainty reconciliation and equivalent provider switching.
-- [Google Ads API application guide (Chinese)](docs/google-ads-api-application.zh-CN.md): Cloud project setup, Test-to-production access upgrades, OAuth, brand verification and readback checks.
-- [Experience catalog](contracts/experience-catalog.json) and [onboarding extensions](contracts/onboarding-extensions.json): reusable candidates with scope and evidence boundaries.
-- [Acceptance scenarios](contracts/acceptance-scenarios.json): specifications for future implementation, separate from executable tests.
-
-Try a knowledge lookup or an assessment using fictional observations:
-
-```bash
-python3 knowledge.py search --query 'tracker' --stage measurement --platform meta
-python3 knowledge.py assess --profile examples/onboarding-learning.json --observations examples/knowledge-observations.json --stage diagnosis --out runs/knowledge-review
-```
-
-The assessment writes `report.json` and `review.md`. Results distinguish applicable knowledge from missing context, missing evidence and sources requiring review. They remain advisory: the engine does not fetch ad data, prove causes or execute recommendations. Catalog changes invalidate frozen plans, requiring a new plan review and simulation authorization.
-
-## Repository map
-
-```text
-adops.py                 Offline plan, simulated authorization, execution and resume
-task.py                  Unified private task flow and simulation recovery
-methodology.py           Bounded method candidates, adoption and scope validation
-planning.py              Test units from adopted methods and declared asset identities
-onboarding.py            Connection gate, collaboration guidance and business readiness
-knowledge.py             Deterministic knowledge search and advisory assessment
-memory_store.py          Local private records, versions, history and revocation
-personalization.py       Product-scoped private methods and advisory notes
-operating_rules.py       Pure decision layer for the recurring operating loop
-operating_loop.py        Loop orchestration, ledger, report and CLI
-demo/                    Five-step walkthrough and reproducible offline report sample
-knowledge/               Runtime knowledge catalog with sources and conditions
-examples/                Fictional JSON inputs (examples/operating/ for the loop)
-tests/                   Executable offline contract tests
-scripts/                 Demonstration and repository checks
-docs/                    Product, architecture, onboarding and operational guides
-contracts/               Unloaded design contracts and candidate knowledge
-.github/workflows/        Offline CI
-```
-
-See the [documentation index](docs/index.md) for a reading path and the [roadmap](docs/roadmap.md) for integration milestones. Contributions should preserve the distinction between observed evidence, proposed behavior and implemented functionality. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+[Product design (Chinese)](docs/product.md) · [Architecture (Chinese)](docs/architecture.md) · [Knowledge base (Chinese)](docs/knowledge-base.zh-CN.md) · [Roadmap (Chinese)](docs/roadmap.md) · [Contributing](CONTRIBUTING.md)
 
 ## License and provenance
 
-MIT. This project develops the reusable workflow direction of `ads-ops-playbook`; its existing copyright notice is retained. Public examples are fictional. Private campaign records, credentials and generated execution state are not distributed. See [NOTICE.md](NOTICE.md) and [SECURITY.md](SECURITY.md).
+[MIT](LICENSE). The project develops the workflow-building direction of `ads-ops-playbook` and retains its original notices. Cases are anonymized summaries; original conversations, customer data, credentials, media and runtime databases are not distributed. [Provenance](NOTICE.md) · [Security](SECURITY.md)

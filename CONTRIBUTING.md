@@ -16,6 +16,14 @@ python3 scripts/check_repository.py
 
 Use fictional fixtures and keep generated state under the ignored `runs/` directory. Never include credentials, raw customer data, account exports or private campaign/media files in a commit, issue or pull request.
 
+## Workflow and case contributions
+
+Keep three scopes explicit: historical business use, host execution with verified tools, and public Python behavior. A Python limitation does not prove a host lacks a tool; a historical success does not prove another host or account is ready. Do not weaken simulation checks to make a live-use claim.
+
+Case narratives should identify the task, human decisions, work performed, retained evidence and remaining uncertainty. Publish anonymized summaries only; keep raw conversations, native account IDs, media and commercial data private. A report with a hard-coded success value is not readback evidence. Configuration, review status, delivery and performance require separate support. Use the [task record](templates/task-record.md) for a new host validation.
+
+For documentation-only changes, check local links, language alignment, evidence scope and `git diff --check`; run `scripts/check_repository.py`. Broaden runtime tests when a changed command, fixture or implementation warrants them.
+
 ## Useful contributions
 
 - A platform adapter for a clearly defined advertising product and operation.

@@ -2,6 +2,8 @@
 
 [简体中文](README.zh-CN.md) · [Project home](../README.md)
 
+For use in actual business tasks, see the [anonymized working cases](../docs/case-studies.md). This page explains the runnable fictional example.
+
 **You give it a task. The agent turns ad data into recommendations with reasons, then lists the decisions and follow-ups that remain.**
 
 This walkthrough uses the repository's runnable fictional example: **3 Meta accounts and 10 ad sets, reviewing delivery on September 23, 2026.** Ad set names are shortened to a1, a2 and so on. Amounts use the sample account's currency units.

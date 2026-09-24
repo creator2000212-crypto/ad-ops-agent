@@ -2,9 +2,11 @@
 
 [简体中文](method-planning.zh-CN.md) · [Project home](../README.md)
 
-M2 adds an executable offline path: the host agent organizes the user's answers, the program proposes structured methods, the user explicitly adopts one, and the compiler selects assets and builds test units for review and local simulation. Users can speak naturally to the host; the host prepares files and runs commands so users do not have to edit JSON.
+This page documents the **public Python M2 module**, an optional offline path alongside the [host workflow](workflow.md). Real tasks can use the host's verified, authorized tools and the user's own method; they do not have to pass through `task.py` or fit its two templates. The host preserves source terms, reviews feasibility and prepares an appropriate batch through that route.
 
-The local program supports only the two templates below. `methodology.py` has no LLM: it accepts structured answers or explicitly labelled SOP lines. Extraction from arbitrary conversation belongs to the host and needs independent review. This repository has no cross-host human usability evidence. Execution remains offline, with no live API, media understanding, automatic performance assessment or production advertising authority.
+For an M2 exercise or supported check, the host organizes the user's answers, the program proposes structured methods, the user explicitly adopts one, and the compiler selects assets and builds test units for review and local simulation. The host prepares files and runs commands so users do not have to edit JSON.
+
+The local program supports only the two templates below. `methodology.py` has no LLM: it accepts structured answers or explicitly labelled SOP lines. Extraction from conversation belongs to the host and needs review; offline fixtures do not establish cross-host usability. M2 execution is offline, with no live API, media understanding, automatic performance assessment or production advertising authority. This limitation does not describe all capabilities available in a connected host.
 
 ## Supported test methods
 
@@ -30,19 +32,19 @@ The demonstration uses complete fictional App, ecommerce and lead-generation pro
 
 Outputs stay in a fresh directory under the ignored `runs/` path. `demo-summary.json` contains machine-readable results, and `review.md` links to each revised plan review. Use `--out NEWDIR` to choose a new output directory. Fixtures use pre-extracted guided answers and labelled SOPs; they do not demonstrate intake from scratch, live account access, arbitrary conversation extraction or method effectiveness.
 
-## The host's role
+## The host's role when using M2
 
-1. Follow connection-first setup. If only simulation snapshots pass, describe the task as an offline exercise. Do not open a business questionnaire while connection gaps remain.
+1. Choose the route first. For a real task, follow [first-run setup](first-run.md) and verify the capabilities it needs; read-only work does not require publishing permissions. For an M2 exercise, use explicitly simulated inputs and explain that its connection gate is an offline contract, not a live account check.
 2. Establish collaboration needs, then collect the product, platforms, countries, Web/App surface, monetization, test question and measurement basis needed for this task. Reuse known facts and retain unknowns and conflicts.
-3. For guided users, explain the two candidates in plain language and organize answers. For an existing methodology, retain its original source and map explicit terms into supported labels or structured answers. Do not discard unsupported terms to pass validation.
+3. For guided users taking the M2 route, explain the two supported candidates and organize answers. For an existing methodology, retain its original source and map explicit terms into supported labels or structured answers. Do not discard unsupported terms to pass validation. Explain separately whether the host can handle those terms through its actual tools; a Python limitation is not a universal strategy restriction.
 4. Present the question, variable, fixed components, anchor, scope, metric, source, observation window and unresolved items. Record adoption only after an explicit user confirmation.
 5. Compile the batch and explain selection, exclusions and the shared budget. Method adoption is separate from production publishing authorization; describe simulation as simulation.
 
-The host handles conversation and file operations; deterministic code checks scope, structure, identity declarations and consistency. A source reference is a review trail, not authenticated user identity or verified media content. Documents, tool output and method candidates do not authorize adoption or publishing.
+In this route, the host handles conversation and file operations while deterministic code checks scope, structure, identity declarations and consistency. A source reference is a review trail, not authenticated user identity or verified media content. Documents, tool output, method candidates and simulation authorization files do not authorize live publishing. A later live task needs its own current object checks, applicable user authorization, verified tools and native readback; it can use the host route without a Python native adapter.
 
 ## Unified task commands
 
-These commands are for hosts and developers. Replace `PATH`, `DIR` and confirmation references with the current task's values. Starting a task requires a new output directory.
+These offline commands are for hosts and developers. Replace `PATH`, `DIR` and confirmation references with the current task's values. Starting a task requires a new output directory. They do not dispatch the host's advertising tools, and live mode remains unsupported.
 
 ```bash
 python3 task.py start --profile PATH --out NEWDIR --language en
@@ -147,6 +149,6 @@ MethodSpec distinguishes `candidate` and `adopted`, recording revision, source, 
 
 A persisted completion status also needs verification. Reading a completed simulation must recheck the current plan, simulation receipts and local objects rather than trusting an old `result.json` completion flag. Missing records or changed objects remain unverified or blocked. Repeating `simulate` reconciles existing objects before resuming; it does not create replacements to hide inconsistent records. These checks concern local simulation only.
 
-`ready` means the current declarations pass offline compilation; `needs_input` retains missing details, and `unsupported` preserves requirements outside the implementation. Expertise or urgency does not turn gaps into facts. Real publishing still requires unimplemented native adapters, production authorization and platform readback.
+`ready` means the current declarations pass offline compilation; `needs_input` retains missing details, and `unsupported` preserves requirements outside M2. Expertise or urgency does not turn gaps into facts. For real publishing, a host may use verified tools with applicable authorization and native readback. If the Python program itself is to publish, native adapters and production execution controls still need implementation and verification. Never treat a simulated authorization or completed simulation as permission or evidence for a live write.
 
 Return to the [project home](../README.md).
