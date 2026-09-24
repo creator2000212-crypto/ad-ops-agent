@@ -6,9 +6,25 @@ These cases were reconstructed on September 25, 2026 from local records of the m
 
 Labels such as `WB-01` correspond to the maintainer's private source index. The original records are not public, and the labels do not provide access to them. This is not a check of current advertising accounts. The cases explain why the project needs these working practices; **importing the project does not provide the same tools, authorization or execution capabilities**, and the cases do not establish that the offline Python runtime performed these live operations.
 
-## WB-01 · A file in the creative library is not necessarily ready to advertise
+## WB-01 · Creative selection and campaign preparation
 
 Historical records: September 22–23, 2026. Record types: local creative audit, launch plan and candidate list.
+
+These materials include separately preserved Meta candidate plans and a TikTok creative audit. Frame inspection belongs to the TikTok task and is not evidence of the same activity in the Meta batch.
+
+<a id="meta-task"></a>
+
+### Facebook (Meta) preparation: turn assets and a method into a reviewable plan
+
+**Inputs:** Two business lines in a single task on September 22, 2026, local creatives, existing account assets and prior-use records, and the user's chosen testing method.
+
+**Agent deliverables:** A launch plan, 20 proposed ad entries and 20 sets of ad copy. The checklist records selection reasons, visual hooks, media details, prior-use indicators and setup fields. Each copy set includes three body texts, four headlines, one description and a CTA. These counts belong to this task, not a universal setup requirement.
+
+**Buyer decisions:** Review the creatives and plan, confirm budget scope and attribution settings, and decide whether to pause older structures. Open questions in the plan remain open; they are not evidence of approval.
+
+**Evidence scope:** Preserved outputs include HTML/Markdown plans, a CSV launch checklist and per-entry copy. All 20 checklist entries are marked as awaiting creation. The count is proposed entries, not successful publications or unique media files; prior-use indicators reflect only the account library and local records available at the time. Publication, final effective state and performance require separate verification.
+
+### Checks drawn from the two preparation tasks
 
 - **Input:** Local videos, the product version to promote, previously used creatives and a proposed test structure.
 - **Human decision:** Whether previously used creatives are acceptable, whether new files are needed and whether content made for another product version can be reused. The plans leave these choices unresolved; they do not establish agreement.
@@ -48,7 +64,9 @@ Historical records: September 22–24, 2026. Record types: channel reports, mapp
 - **What the evidence establishes:** One day's missing-source notice explicitly says Meta data is present and TikTok data is absent. Another daily report says its source differs from the previous day's, limiting direct row-by-row comparison. The ownership audit identifies a rename affecting the mapping, but did not change advertising settings and does not prove all subsequent reports were repaired.
 - **Reusable mechanism:** Attach date, time zone, account coverage, sources, missing data and mapping evidence to each report. Keep stable object identity separate from editable names. A partial report can be useful while remaining explicitly partial.
 
-## WB-04 · Automatic rules need field-specific units and a verifiable repair
+<a id="meta-rule-check"></a>
+
+## WB-04 · Meta automatic rules need field-specific units and a verifiable repair
 
 Historical records: September 22–23, 2026. Record types: incident report, monetary-filter repair script, rule snapshots and activity records.
 

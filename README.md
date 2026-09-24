@@ -10,7 +10,19 @@ The working practice includes creative selection, campaign preparation, account 
 
 > This project includes a workflow drawn from advertising practice and runnable offline examples. Real operations require connected, verified and authorized host tools. [Capability status](docs/capability-status.md)
 
-## A real task: TikTok setup and handoff across three business lines
+## Tasks from practice: Facebook and TikTok
+
+### Facebook (Meta): from a creative library to a reviewable campaign plan
+
+**Task:** For two business lines, use product requirements, existing assets and past advertising records to prepare creative sets, copy and a campaign plan following the user's chosen testing method.
+
+![Historical Facebook (Meta) task: the agent delivers 20 proposed ad entries, 20 sets of copy and draft settings; the buyer reviews creatives, budget, attribution and treatment of old structures.](docs/assets/meta-task.en.svg)
+
+**Delivery:** A launch plan, **20 proposed ad entries and 20 sets of ad copy**. Each candidate includes selection reasons, prior-use indicators and draft settings. Budget scope, attribution settings and whether to pause older structures remain decisions for the buyer.
+
+The diagram is an anonymized reconstruction of a single task from September 22, 2026, not an agent UI screenshot. It shows preparation outputs; checklist entries are awaiting creation. [Read the Meta task and its evidence](docs/case-studies.md#meta-task) · [More Facebook work: rule diagnosis and state checks](docs/case-studies.md#meta-rule-check)
+
+### TikTok: setup and status handoff across three business lines
 
 **Task:** Revise the campaign plan and creative sets for three business lines using existing assets and account settings, handle older structures and deliver an itemized status report.
 

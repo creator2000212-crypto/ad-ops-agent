@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="548" viewBox="0 0 1040 548" role="img" aria-labelledby="title desc">
+  <title id="title">FB（Meta）：从素材库到可审阅方案</title>
+  <desc id="desc">历史记录整理，非界面截图。根据产品、现有素材与投放记录，Agent 按方法整理素材候选，记录选材理由和历史使用情况，并准备文案与配置草案。投手审阅素材与方案，确认预算、归因及旧结构处理。交付包括 20 条建单候选、20 套文案与配置草案和待确认项。这是方案准备成果，不证明已发布、当前有效状态或投放效果。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M1 1 L6 4 L1 7" fill="none" stroke="#788ca3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif; }
+      .title { font-size: 29px; font-weight: 750; fill: #152d46; }
+      .subtitle { font-size: 16px; fill: #52667e; }
+      .heading { font-size: 22px; font-weight: 700; fill: #152d46; }
+      .body { font-size: 19px; fill: #41556d; }
+      .number { font-size: 13px; font-weight: 700; fill: #3154bf; }
+      .code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; fill: #52667e; }
+      .line { font-size: 18px; font-weight: 650; fill: #344b62; }
+      .status { font-size: 23px; font-weight: 750; }
+      .foot { font-size: 16px; fill: #52667e; }
+    </style>
+  </defs>
+  <rect width="1040" height="548" rx="20" fill="#f4f7fb"/>
+  <text x="32" y="47" class="title">FB（Meta）：从素材库到可审阅方案</text>
+  <text x="32" y="77" class="subtitle">历史记录整理 · 非界面截图</text>
+
+  <g>
+    <rect x="32" y="104" width="304" height="180" rx="14" fill="#fff" stroke="#ccd8e5"/>
+    <circle cx="64" cy="136" r="15" fill="#edf1ff"/>
+    <text x="64" y="141" class="number" text-anchor="middle">01</text>
+    <text x="90" y="144" class="heading">任务输入</text>
+    <text x="54" y="185" class="body">两条业务线与测试方法</text>
+    <text x="54" y="216" class="body">现有素材与投放记录</text>
+    <text x="54" y="247" class="body">账户和测量条件</text>
+  </g>
+  <path d="M344 194 H358" fill="none" stroke="#788ca3" stroke-width="2" marker-end="url(#arrow)"/>
+  <g>
+    <rect x="368" y="104" width="304" height="180" rx="14" fill="#fff" stroke="#ccd8e5"/>
+    <circle cx="400" cy="136" r="15" fill="#edf1ff"/>
+    <text x="400" y="141" class="number" text-anchor="middle">02</text>
+    <text x="426" y="144" class="heading">Agent 准备</text>
+    <text x="390" y="185" class="body">按方法整理素材候选</text>
+    <text x="390" y="216" class="body">记录选材理由与使用史</text>
+    <text x="390" y="247" class="body">准备文案和配置草案</text>
+  </g>
+  <path d="M680 194 H694" fill="none" stroke="#788ca3" stroke-width="2" marker-end="url(#arrow)"/>
+  <g>
+    <rect x="704" y="104" width="304" height="180" rx="14" fill="#fff" stroke="#ccd8e5"/>
+    <circle cx="736" cy="136" r="15" fill="#edf1ff"/>
+    <text x="736" y="141" class="number" text-anchor="middle">03</text>
+    <text x="762" y="144" class="heading">投手审阅</text>
+    <text x="726" y="185" class="body">审阅素材与预算范围</text>
+    <text x="726" y="216" class="body">归因设置与旧结构处理</text>
+    <rect x="726" y="235" width="224" height="29" rx="7" fill="#fff2cf"/>
+    <text x="738" y="255" font-size="16" font-weight="600" fill="#805300">待确认，不代替批准</text>
+  </g>
+  <path d="M856 291 V307" fill="none" stroke="#788ca3" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="32" y="316" width="976" height="150" rx="14" fill="#fff" stroke="#bdccdc"/>
+  <text x="54" y="349" font-size="21" font-weight="700" fill="#152d46">交付｜可审阅的方案</text>
+  <text x="986" y="349" font-size="18" font-weight="650" fill="#344b62" text-anchor="end">准备完成 · 发布另需验证</text>
+  <g>
+    <rect x="52" y="365" width="300" height="81" rx="10" fill="#edf2fc"/>
+    <text x="70" y="395" font-size="21" font-weight="700" fill="#284d9a">候选清单</text>
+    <text x="70" y="427" font-size="23" font-weight="600" fill="#344b62">20 条建单候选</text>
+  </g>
+  <g>
+    <rect x="370" y="365" width="300" height="81" rx="10" fill="#edf2fc"/>
+    <text x="388" y="395" font-size="21" font-weight="700" fill="#284d9a">文案与配置草案</text>
+    <text x="388" y="427" font-size="17" font-weight="600" fill="#344b62">20 套逐条文案</text>
+  </g>
+  <g>
+    <rect x="688" y="365" width="300" height="81" rx="10" fill="#fff3d9"/>
+    <text x="706" y="395" font-size="21" font-weight="700" fill="#805300">待确认清单</text>
+    <text x="706" y="427" font-size="17" font-weight="600" fill="#344b62">预算 / 归因 / 旧结构</text>
+  </g>
+  <text x="32" y="499" class="foot">方案已准备；素材、预算、归因和旧结构处理仍由投手审阅。</text>
+  <text x="32" y="525" class="foot">此图仅呈现历史准备成果，发布、有效状态与效果需另行验证。</text>
+</svg>
