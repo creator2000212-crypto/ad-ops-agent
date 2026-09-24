@@ -23,9 +23,13 @@ flowchart LR
 
 Before operational work starts, the agent should understand the product, countries, languages, audience, target platforms, Web/App journey, IAA/IAP/hybrid monetization, measurement stack, creative direction and the team's testing methodology. Read what integrations can establish, ask focused questions for human decisions, preserve unknowns and reuse the resulting context.
 
-The execution layer is replaceable: Pipeboard is one possible connector, alongside other MCP services and direct APIs. Native platform semantics belong in platform adapters. Business context and operational methods do not depend on a vendor's tool names.
+The execution layer is replaceable: you can use official APIs, SDKs or MCP servers for each platform, or a managed connector. An API provides access to platform objects; an SDK wraps that API in code; an MCP server exposes supported operations as tools to an agent. None of them grants account access or publishing permission by itself. Native platform semantics remain in platform adapters.
 
-If you want to use Pipeboard, visit the [Pipeboard website](https://pipeboard.co/#via=tian) to explore plans and subscribe.
+**Pipeboard** is an optional managed connection layer for Meta, TikTok, Google Ads and other supported platforms. After you authorize selected ad accounts, its MCP connection lets a compatible assistant discover reporting tools and supported ad operations without building every platform transport yourself. See its [multi-platform MCP guide](https://pipeboard.co/guides/ads-mcp) and [Codex setup guide](https://pipeboard.co/guides/codex). If you want to get a connected AI workflow running sooner, visit the [Pipeboard website](https://pipeboard.co/#via=tian) to review its free and paid plans. Account authorization, plan limits and platform-specific capabilities still apply. Purchasing a connector does not turn this repository's offline prototype into a live publishing agent.
+
+A practical starting point is to connect selected accounts with read-only access, inspect spend, conversions and status for a defined date range, then verify which asset and campaign tools are available for approved write workflows. The future agent layer in this repository will add business intake, cross-platform planning, batch review and native readback around those connections.
+
+For a detailed, source-linked route through self-managed Meta, TikTok and Google Ads API / SDK / MCP access, see the [Chinese integration guide](docs/platform-connectivity.zh-CN.md).
 
 ## What runs today
 
