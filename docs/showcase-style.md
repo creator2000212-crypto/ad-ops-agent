@@ -29,4 +29,16 @@
 
 ## 更新检查
 
-修改首页或案例时，检查中英文含义一致、全部相对链接有效、图片变体齐全、浅色/深色与桌面/手机端可读。合并前在 GitHub 实际预览中再核对 `<picture>` 选择和 Markdown 排版。
+[`assets/showcase/content.json`](assets/showcase/content.json) 集中记录公开展示的事实与文字：`facts` 保存 Meta 数量、日期，以及 TikTok 日期、逐项状态；中英文模板保留不同宽度的表达与证据边界，明暗主题共用一组文字。它是经人工审阅的内容基准，不是新的历史证据。
+
+维护顺序：
+
+1. 先核对事实来源与证据范围，再修改 `facts` 或相应中英文模板。不得为了通过检查删除未知项、待办或“准备不等于发布”“可投不等于消耗或效果”等边界。
+2. 同步对应 SVG 和两份 README 的案例正文、日期说明、替代文字。文案重写也要显式更新模板，不使用自动接受当前文件的快照更新流程。
+3. 运行 `python3 scripts/showcase_content.py`、`python3 scripts/check_repository.py`，以及 `python3 -m unittest discover -s tests -p 'test_showcase_content.py' -v`。
+4. 重新导出受影响的 PNG，目视核对中英文、明暗、宽窄版本的文字、截断、留白和可读性。现有 PNG 与 SVG 分别提供，尚无可复现的 PNG 导出流水线，也不宣称二者像素一致。
+5. 合并前在 GitHub 实际预览中再核对 `<picture>` 选择和 Markdown 排版。
+
+自动内容检查逐项比较 32 个 SVG 的 `<text>` 序列，并定点比较两份 README 的 Meta/TikTok 案例段、紧随其后的日期与证据段、四张图的 alt 和 `<picture>` 图片选择关系。单处数字、状态、日期或语言变动都会要求审阅；不把其他正文中的任意数字当作案例事实。空白变化不影响结果，缺失或无效 manifest 会报错。
+
+自动文本检查覆盖 SVG 与 Markdown，不读取 PNG 图中文字，也不验证 SVG 的渲染、布局或无障碍描述。PNG 仅检查文件齐全、签名和尺寸范围，仍需重新导出与目视检查；独立分享预览及其他文档不在这份文字契约范围内。历史结论是否成立、中英文语义是否准确仍由维护者结合来源审阅。

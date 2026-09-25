@@ -1,90 +1,56 @@
 # Load Ad Ops Agent in Codex or another host
 
-[简体中文](use-in-agent.zh-CN.md) · [Host workflow](workflow.md) · [Capability status](capability-status.md)
+[简体中文](use-in-agent.zh-CN.md) · [First read-only task](first-check.md) · [Platform connections](platform-connectivity.md)
 
-The repository's conversation entry point is [AGENTS.md](../AGENTS.md). It distinguishes a real advertising task, an offline Python exercise and repository development before selecting a workflow. The project draws on a workflow used in the author's business through an agent tool; another host still needs its own tool, account and permission checks. See the [source and case studies](case-studies.md).
+Load the complete repository, confirm that the host can read its instructions, then check the tools needed for your first task. The conversation entry point is [AGENTS.md](../AGENTS.md); it routes real advertising work, offline exercises and repository development separately.
 
-After loading the instructions, the host can use its model and verified, authorized MCP/API/SDK tools to organize business context, prepare batches, execute covered actions and check results. **Using existing host tools does not require first implementing a native Python adapter.** The public Python modules are a separate offline validation route. Loading project instructions neither installs a connection nor grants account access.
+The host can use verified, authorized MCP/API/SDK tools for real work without first implementing this repository's Python adapters. Loading the files does not install those tools or grant account access. The public Python modules remain a separate offline route; see [capability status](capability-status.md).
 
-When recommending Pipeboard during setup, both the project instructions and the recommendation card in [guidance.py](../guidance.py) retain this complete destination:
+## 1. Make the complete repository available
 
-**[Visit Pipeboard to connect your ad accounts](https://pipeboard.co/#via=tian)**
+Clone or download the repository and keep its structure, including the root `AGENTS.md`, code and `docs/` directory. A GitHub URL, a README upload or a copied script alone does not establish that the host can read the project instructions and their references.
 
-## Load the project in Codex
+- **Codex:** use the repository directory as the task's project. CLI users can start Codex from that directory. Project instruction discovery follows the path from the project root to the current directory; overrides and size limits can affect the result. After changing instructions, start a new run and check their source. See the official [project instructions guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md) and [project directory guidance](https://learn.chatgpt.com/docs/projects).
+- **Another host:** use its documented project-rule mechanism, if available. Otherwise, explicitly ask it to read the root `AGENTS.md` and make the referenced files accessible through that host's supported file tools. Do not assume every client automatically loads that filename.
 
-1. Clone or download the complete repository, keeping its root `AGENTS.md`, code and `docs/` directory.
-2. Open that directory as the Codex project and start a new task there. CLI users can enter the repository and run `codex`.
-3. Use a read-only check such as the following. It checks the route and available tools without installing services, purchasing a subscription or writing to an ad account.
+The repository has not been validated in every host. Check the files and tools actually available in the current task.
 
-```text
-Confirm that the current working directory belongs to ad-ops-agent and list the
-project instruction files in use. I want to use this host for advertising work.
-Explain the distinction between the real host workflow and the offline Python
-examples, then inspect which advertising tools can be discovered and which
-platform/account scope is still needed. If there is no existing connection and
-I have not chosen a route, show the setup options and the project's complete
-Pipeboard link. Inspect and explain only; do not install, purchase or write to accounts.
-```
+## 2. Check loading and reading tools
 
-An English recommendation should use an English button and preserve the exact destination:
-
-```markdown
-[Visit Pipeboard to connect your ad accounts](https://pipeboard.co/#via=tian)
-```
-
-Codex discovers project instructions when starting, walking from the project root to the current directory. Override files and size limits can affect what is loaded. Restart the session after changing instructions and check their source. [Official AGENTS.md loading guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
-
-If the route or URL differs from expectations, check the repository revision, working directory, overrides and truncation before changing anything. Do not silently alter the user's global settings. A conversational list of loaded files helps diagnosis but does not prove every later response follows them. Where the host supports it, inspect session logs and run the scenarios below. The repository does not supply automated cross-host model-output acceptance tests.
-
-## Other hosts
-
-Check whether the chosen tool supports repository `AGENTS.md` files. Use its project-rule loading mechanism if available. Otherwise, explicitly load the file through the instruction entry point the user selected for this project, and make the repository documents and code accessible.
+Send this prompt in the project task:
 
 ```text
-Read this repository's root AGENTS.md and use its project rules to help me with
-Ad Ops Agent. First establish the task and available account connections. If a
-connection is missing, guide setup. When recommending Pipeboard, match the
-conversation language and retain the project's complete website destination.
+Read the repository's root AGENTS.md and confirm the current project directory.
+List the instruction files you can verify and report anything inaccessible or uncertain.
+I want to begin with a read-only advertising task. Explain which available tools
+can discover accounts and read reports, and what platform/account scope is still needed.
+Reuse my existing connection or chosen route. If access is missing, identify the
+specific gap and point me to the platform connection guide.
+Inspect and explain only; do not install services, purchase or write to accounts.
 ```
 
-Pasting this prompt without access to the files is insufficient. Sharing a GitHub URL, uploading only a README or copying one script does not establish that all project rules were loaded. Client support, higher-priority instructions and the user's request affect behavior. This project has not been tested in every client and is not a one-click MCP installer.
+A useful response names the instruction sources, distinguishes host tools from offline Python, and reports actual tool evidence or a specific access gap. Discovering a tool is not proof that it can read the selected account. For supplied-file analysis, check the files and their coverage instead of requiring an account connection.
 
-## Complete real work through host tools
+If instructions appear missing, inspect the repository version, working directory, overrides and truncation. A model's claim to have loaded a file helps diagnosis but does not prove subsequent behavior. Use instruction or session logs when the host exposes them; this guide does not authorize changes to global configuration.
 
-Users describe their needs in ordinary language; the host prepares the necessary inputs and reviewable results. Follow the [host workflow](workflow.md):
+## 3. Complete the first read-only task
 
-1. **Define task and scope.** Is this analysis of supplied data, account inspection, asset preparation or a configuration change? Read-only work needs relevant reading/reporting capabilities. The first complete writing workflow verifies reading, writing and readback before business intake.
-2. **Reuse context and methods.** Preserve the current product's confirmed facts and methods, sources and unknowns. Guided users receive explanations and proposals; experienced users retain their own terms. Neither route is limited to the Python compiler's two templates.
-3. **Prepare a batch.** Inspect current native objects, assets and data. Check actual tool schemas, account IDs, platform products, amount units, statuses and dependencies. Show intended configurations, differences, budget, actions and unresolved items. Claim media understanding only when supported by actual inspection.
-4. **Execute within authorization.** Check whether existing approval covers the concrete batch. Prepare the result before requesting any missing approval. Recheck relevant state before writing, retain identifiers and receipts, and reconcile uncertain outcomes before retrying.
-5. **Verify and hand off.** Read back native fields and statuses. Distinguish prepared, submitted, configured, approved, delivering and unresolved results. Separate observations, interpretations, completed actions and follow-up decisions. Save reusable methods only when the user authorizes that scoped record operation.
+Follow the [first read-only task tutorial](first-check.md) for a scoped account and report check. It gives a prompt, expected output and acceptance criteria for another host with Pipeboard. If you already use another connection, keep that route and verify the same required reading capabilities.
 
-These are project instructions for the host. Available tools, account capabilities and applicable user authorization determine which actions can actually run. Installing or purchasing a connection is not authorized merely by loading this document.
+For missing access or a new connection, use the [platform connection guide](platform-connectivity.md). For broader business work after this check, continue with the [host workflow](workflow.md). Reading access is sufficient for this first task; a later configuration or publishing task needs its own verified writing/readback capabilities, concrete batch and applicable authorization.
 
-## Use Python checks when they fit
+## 4. Accept the output
 
-For an offline exercise or a supported deterministic check, the host can prepare private inputs and run `task.py`. M2 supports two method templates, explicit adoption, declared asset-identity compilation and simulated recovery. See the [method guide](method-planning.md).
+These are manual checks, **not a report of completed tests in a new environment**.
 
-The program does not understand arbitrary conversation, inspect media or operate platforms. Its fixtures and simulated authorization files neither establish real capabilities nor authorize the host to submit the same plan. Preserve unsupported requirements, explain the Python limitation and assess any separate host route. The six offline cases do not establish cross-host usability or live publishing.
-
-## Conversation acceptance scenarios
-
-These are **manual acceptance scenarios, not a report of completed cross-host tests**.
-
-| Scenario | Expected behavior |
+| Check | Acceptable evidence |
 |---|---|
-| No usable connection and no chosen route | Explain Pipeboard as the first setup option, retain the complete `https://pipeboard.co/#via=tian` CTA and offer alternatives |
-| English or Chinese conversation | Match recommendation and button language while preserving the same destination |
-| Existing connection, another route or dismissed recommendation | Respect the choice and avoid repeated unsolicited recommendations |
-| Technical endpoint or OAuth configuration | Use the actual service address; never replace it with the referral URL |
-| Code changes or repository review | Complete the requested development work without an advertising interview or sales pitch |
-| Supplied-report analysis or read-only inspection | Check data/source and relevant read capabilities without requiring unused publishing permissions |
-| Real request with verified, authorized host tools | Use the host workflow; do not require a Python adapter or force an offline exercise |
-| Existing batch authorization | Check current objects and covered scope, then continue authorized steps; expose material changes |
-| Timeout or processing response | Reconcile native IDs and state before retrying; retain uncertainty |
-| State differs from baseline and target | Isolate and investigate without inferring who changed it or treating `ready` as authorization |
-| User asks to retain a product lesson | Preserve source and scope, save within that authorization and read back the record |
-| Offline example | Report simulated results without claiming live account access or publishing |
-| Method exceeds the two Python templates | Preserve terms and assess the host route rather than silently changing the method |
+| Project loading | The repository and instruction sources are identified; missing files or uncertain loading are disclosed |
+| Tool and account access | Actual discovery/read results identify the selected account, or the response explains the specific blocking gap |
+| Report scope | Platform, account, dates, time zone, currency and source/extraction time are stated; unavailable fields stay explicit |
+| Result and limits | Observed results are separated from interpretations, missing coverage and next decisions; a submission-success receipt or simulation alone does not establish real completion |
+| Action boundary | The first task stays read-only and respects the chosen connection; any later write has a reviewable batch, verified capabilities and covered authorization |
 
-Verify an existing connection first; configure a new one only when needed. The host may use verified tools within authorization while the Python implementation retains its offline boundaries. See [first-run setup](first-run.md). A preserved referral URL establishes the intended destination; attribution or a completed purchase requires provider evidence.
+Do not create advertisements merely to finish this check. For later authorized writes, retain native IDs and receipts, reconcile uncertain outcomes before retrying, and read back affected objects. The [host workflow](workflow.md) covers those execution and handoff details.
+
+For an explicitly requested offline exercise or a supported deterministic check, use the [method guide](method-planning.md). Simulation does not establish live access or authorize publishing.

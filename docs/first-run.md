@@ -2,6 +2,8 @@
 
 [简体中文](first-run.zh-CN.md) · [Host workflow](workflow.md)
 
+**Start with a concrete task:** follow the [agent tool + Pipeboard first read-only check](first-check.md) for one Meta account. This page then covers collaboration preferences, business context and subsequent workflows.
+
 Begin with the task, selected platforms and accounts. A complete configuration/publishing workflow follows **connection → verification of necessary reading, writing and readback → collaboration preferences → business context and methods → preparation, review and execution**. Connecting all three platforms is unnecessary. Read-only analysis needs the relevant reading/reporting access; analysis of supplied reports does not require advertising write permissions.
 
 **The host workflow and public Python modules are separate routes.** The original workflow has been used in the author's business through an agent tool. In a new host, verify its available tools and account scope. A host can use verified, authorized tools without first implementing Python adapters. Public Python modules evaluate structured inputs and simulated snapshots, compile two bounded method templates and exercise local recovery; they do not connect to real platforms. `ready_simulation` is not proof of live access. See [capability status](capability-status.md).

@@ -75,7 +75,7 @@ Newcomers can start with a few candidate methods; experienced buyers can bring t
 
 ## Choose a starting point
 
-**Already connected? Start a task.** Open the full repository in your Agent environment and confirm that [AGENTS.md](AGENTS.md) is loaded. Check the selected accounts, tools and authorization scope, then use the known product context and method. [First setup](docs/first-run.md) · [Loading and validation](docs/use-in-agent.md)
+**Already connected? Start a task.** Open the full repository in your Agent environment and confirm that [AGENTS.md](AGENTS.md) is loaded. Check the selected accounts, tools and authorization scope, then use the known product context and method. [First read-only check: an agent tool + Pipeboard](docs/first-check.md) · [First setup](docs/first-run.md) · [Loading and validation](docs/use-in-agent.md)
 
 <details>
 <summary><strong>Copy a read-only task to try the workflow</strong></summary>

@@ -1,0 +1,306 @@
+{
+  "version": 1,
+  "facts": {
+    "meta": {
+      "date": "2026-09-22",
+      "candidates": 20,
+      "copy_sets": 20,
+      "business_lines": 2
+    },
+    "tiktok": {
+      "start": "2026-09-22",
+      "end": "2026-09-23",
+      "states": {
+        "A": "eligible",
+        "B": "eligible",
+        "C": "in_review"
+      }
+    }
+  },
+  "languages": {
+    "en": {
+      "number_words": [
+        "zero",
+        "one",
+        "two",
+        "three"
+      ],
+      "status_labels": {
+        "eligible": "Eligible",
+        "in_review": "In review"
+      },
+      "svg": {
+        "hero": {
+          "wide": [
+            "OPEN-SOURCE / ADVERTISING WORKFLOW",
+            "Ad Ops Agent",
+            "Your method. A reusable workflow.",
+            "Keep people in charge of decisions.",
+            "01",
+            "METHOD",
+            "02",
+            "WORKFLOW",
+            "03",
+            "TOOLS",
+            "FROM PRACTICE / BRING YOUR METHOD / CHOOSE YOUR TOOLS"
+          ],
+          "narrow": [
+            "OPEN-SOURCE / ADVERTISING WORKFLOW",
+            "Ad Ops Agent",
+            "Your method. A reusable workflow.",
+            "Keep people in charge of decisions.",
+            "FROM PRACTICE · BRING YOUR METHOD"
+          ]
+        },
+        "meta": {
+          "wide": [
+            "01 / META",
+            "{meta_date_svg}",
+            "From assets to a reviewable plan",
+            "Product × assets × use history × user method",
+            "{meta_candidates}",
+            "Creation candidates",
+            "{meta_copy_sets}",
+            "Copy sets",
+            "Historical preparation: plan, candidate list, copy and draft settings.",
+            "Prepared ≠ published"
+          ],
+          "narrow": [
+            "01 / META",
+            "{meta_date_svg}",
+            "From assets to a reviewable plan",
+            "{meta_lines_title} business lines · One preparation task",
+            "{meta_candidates}",
+            "Creation candidates",
+            "{meta_copy_sets}",
+            "Copy sets",
+            "Plan, candidate list, copy and draft settings.",
+            "Historical preparation · Not published ads"
+          ]
+        },
+        "tiktok": {
+          "wide": [
+            "02 / TIKTOK",
+            "{tiktok_date_svg}",
+            "Build the batch. Hand off each status.",
+            "Revised plan · creation records · status and open items",
+            "A",
+            "{status_A}",
+            "B",
+            "{status_B}",
+            "C",
+            "{status_C}",
+            "Historical receipt: {eligible_word} eligible, {review_word} in review; follow-up stays open.",
+            "Eligibility ≠ performance"
+          ],
+          "narrow": [
+            "02 / TIKTOK",
+            "{tiktok_date_svg}",
+            "Build the batch. Hand off each status.",
+            "{tiktok_lines_title} business lines · Itemized checks",
+            "A",
+            "{status_A}",
+            "B",
+            "{status_B}",
+            "C",
+            "{status_C}",
+            "Historical receipt: {eligible_word} eligible, {review_word} in review.",
+            "Eligibility ≠ spend or performance"
+          ]
+        },
+        "workflow": {
+          "wide": [
+            "THE REUSABLE WORKFLOW",
+            "Reuse the workflow. Keep your strategy.",
+            "1",
+            "Understand",
+            "2",
+            "Prepare",
+            "3",
+            "Confirm scope",
+            "4",
+            "Execute",
+            "5",
+            "Verify results",
+            "6",
+            "Review",
+            "Change product, method or tools. People own goals and execution scope."
+          ],
+          "narrow": [
+            "THE REUSABLE WORKFLOW",
+            "Reuse the workflow. Keep your strategy.",
+            "1",
+            "Understand",
+            "2",
+            "Prepare",
+            "3",
+            "Confirm scope",
+            "4",
+            "Execute",
+            "5",
+            "Verify results",
+            "6",
+            "Review",
+            "Different products, methods and tools.",
+            "Workflow concept · Verify actual capabilities"
+          ]
+        }
+      },
+      "readme": {
+        "alt": {
+          "hero": "Ad Ops Agent: let the agent handle ad operations while media buyers focus on analysis and decisions.",
+          "meta": "Historical Meta preparation: {meta_candidates} ad-creation candidates and {meta_copy_sets} copy sets. These were pending candidates, not published ads.",
+          "tiktok": "Historical TikTok handoff across {tiktok_lines_word} business lines: {eligible_word} eligible to deliver and {review_word} under review. This does not establish spend or performance.",
+          "workflow": "Reusable workflow: understand the business, prepare a plan, confirm the batch, execute authorized actions, verify results and review. Actual capabilities require task-specific validation."
+        },
+        "cases": {
+          "meta": "**Meta · Preparation delivered.** Across {meta_lines_word} business lines, the task produced **{meta_candidates} ad-creation candidates and {meta_copy_sets} individual copy sets**, with selection reasons, usage records and configuration drafts. The candidates were pending creation; the media buyer still had to review assets, budgets, attribution and the previous structure. [Full case →](docs/case-studies.md#meta-task)",
+          "tiktok": "**TikTok · Status handed off.** The task revised the plan, built ads and checked statuses object by object. Historical receipts recorded **{eligible_word} business lines eligible to deliver and {review_word} under review**, along with the previous-line handling and unresolved items. These statuses do not establish spend or performance. [Full case →](docs/case-studies.md#tiktok-task)"
+        },
+        "evidence": "These images summarize anonymized historical tasks; they are not screenshots of an Agent interface. Meta: {meta_date_md}; TikTok: {tiktok_date_md}. Original private material is not public."
+      }
+    },
+    "zh-CN": {
+      "number_words": [
+        "零",
+        "一",
+        "两",
+        "三"
+      ],
+      "status_labels": {
+        "eligible": "可投",
+        "in_review": "审核中"
+      },
+      "svg": {
+        "hero": {
+          "wide": [
+            "OPEN-SOURCE / ADVERTISING WORKFLOW",
+            "Ad Ops Agent",
+            "让 Agent 处理投放操作，",
+            "让投手专注分析与决策。",
+            "01",
+            "METHOD",
+            "02",
+            "WORKFLOW",
+            "03",
+            "TOOLS",
+            "真实业务来源 / 方法由用户决定 / 连接方式可替换"
+          ],
+          "narrow": [
+            "OPEN-SOURCE / ADVERTISING WORKFLOW",
+            "Ad Ops Agent",
+            "让 Agent 处理投放操作，",
+            "让投手专注分析与决策。",
+            "真实业务来源 · 方法由用户决定"
+          ]
+        },
+        "meta": {
+          "wide": [
+            "01 / META",
+            "{meta_date_svg}",
+            "从素材库，到可审阅方案",
+            "产品 × 素材 × 使用记录 × 用户方法",
+            "{meta_candidates}",
+            "建单候选",
+            "{meta_copy_sets}",
+            "逐条文案",
+            "历史准备成果：方案、候选清单、文案与配置草案。",
+            "待建 ≠ 已发布"
+          ],
+          "narrow": [
+            "01 / META",
+            "{meta_date_svg}",
+            "从素材库，到可审阅方案",
+            "{meta_lines_word}条业务线 · 一次准备任务",
+            "{meta_candidates}",
+            "建单候选",
+            "{meta_copy_sets}",
+            "逐条文案",
+            "交付：方案、清单、文案与配置草案",
+            "历史准备成果 · 状态为待建，不是发布量"
+          ]
+        },
+        "tiktok": {
+          "wide": [
+            "02 / TIKTOK",
+            "{tiktok_date_svg}",
+            "完成搭建，逐项交接状态",
+            "修订方案 · 建单记录 · 状态与待办",
+            "A",
+            "{status_A}",
+            "B",
+            "{status_B}",
+            "C",
+            "{status_C}",
+            "历史回执：{eligible_word}条可投，{review_word}条仍在审核，保留后续检查。",
+            "可投 ≠ 消耗或效果"
+          ],
+          "narrow": [
+            "02 / TIKTOK",
+            "{tiktok_date_svg}",
+            "完成搭建，逐项交接状态",
+            "{tiktok_lines_word}条业务线 · 按对象核对结果",
+            "A",
+            "{status_A}",
+            "B",
+            "{status_B}",
+            "C",
+            "{status_C}",
+            "历史回执：{eligible_count} 条可投，{review_count} 条审核中。",
+            "可投 ≠ 已有消耗或效果"
+          ]
+        },
+        "workflow": {
+          "wide": [
+            "THE REUSABLE WORKFLOW",
+            "通用的是流程，不是固定投法",
+            "1",
+            "理解业务",
+            "2",
+            "准备方案",
+            "3",
+            "整批确认",
+            "4",
+            "授权执行",
+            "5",
+            "结果核对",
+            "6",
+            "复盘迭代",
+            "产品、用户方法与可用工具可更换；目标和执行范围由人决定。"
+          ],
+          "narrow": [
+            "THE REUSABLE WORKFLOW",
+            "通用的是流程，不是固定投法",
+            "1",
+            "理解业务",
+            "2",
+            "准备方案",
+            "3",
+            "整批确认",
+            "4",
+            "授权执行",
+            "5",
+            "结果核对",
+            "6",
+            "复盘迭代",
+            "更换产品、方法或连接方式，继续复用。",
+            "流程示意 · 具体能力以工具与验收为准"
+          ]
+        }
+      },
+      "readme": {
+        "alt": {
+          "hero": "Ad Ops Agent：让 Agent 处理投放操作，让投手专注分析与决策。",
+          "meta": "Meta 历史准备任务：{meta_candidates} 条建单候选、{meta_copy_sets} 套逐条文案；候选状态为待建，不是发布量。",
+          "tiktok": "TikTok 历史任务：{tiktok_lines_word}条业务线的状态交接；回执记录{eligible_word}条可投、{review_word}条审核中，不代表实际消耗或效果。",
+          "workflow": "通用工作流：理解业务、准备方案、整批确认、授权执行、结果核对、复盘迭代；具体能力取决于本次工具与验收。"
+        },
+        "cases": {
+          "meta": "**Meta · 准备成果。** {meta_lines_word}条业务线，交付 **{meta_candidates} 条建单候选与 {meta_copy_sets} 套逐条文案**，附选材理由、使用记录和配置草案。状态为待建；素材、预算、归因和旧结构处理由投手审阅。[完整案例 →](docs/case-studies.zh-CN.md#meta-task)",
+          "tiktok": "**TikTok · 状态交接。** 修订方案、建单并逐项核对状态。历史回执记录 **{eligible_count} 条业务线可投、{review_count} 条审核中**，保留旧线处理结果及待确认项；不据此推断消耗或效果。[完整案例 →](docs/case-studies.zh-CN.md#tiktok-task)"
+        },
+        "evidence": "以上为历史任务的脱敏整理图，不是 Agent 界面截图。Meta：{meta_date_md}；TikTok：{tiktok_date_md}。原始私有资料不公开。"
+      }
+    }
+  }
+}

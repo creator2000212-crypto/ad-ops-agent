@@ -10,6 +10,8 @@ Start with the [Meta preparation](case-studies.md#meta-task) and [TikTok status 
 
 ## Start a task
 
+For a first task, follow the [agent tool + Pipeboard Meta read-only tutorial](first-check.md): open the project, check the connection, select one account, then produce and verify a report. It distinguishes reviewed official setup information from the live validation still required.
+
 [First setup](first-run.md) → [Load and validate](use-in-agent.md) → [Host workflow](workflow.md) → [Task record](../templates/task-record.md). Confirm this task's account scope, tools and authorization; reuse known product context and methods, and ask about missing items.
 
 ## Run the public code
@@ -32,6 +34,7 @@ Start with the [Meta preparation](case-studies.md#meta-task) and [TikTok status 
 
 | Question | Read |
 | --- | --- |
+| Follow one route to a first read-only deliverable | [First read-only check](first-check.md) |
 | Configure the project for the first time | [First setup](first-run.md) |
 | Verify that the host loaded project instructions | [Loading and validation](use-in-agent.md) |
 | Explore Meta, TikTok and Google connection routes | [Platform connectivity](platform-connectivity.md) |

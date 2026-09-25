@@ -49,3 +49,32 @@ Performance observation: [comparability, maturity, findings and limits; unexecut
 - Next-check conditions: [needed data; schedule only with user authorization]
 - Candidate learning: [product, conditions, source, candidate or adopted state]
 - Persistence authorization and version: [without a save request, retain only this task's record]
+
+<a id="first-use-validation"></a>
+
+## First independent use validation
+
+Use this section for a trial of the [first-use tutorial](../docs/first-check.md). The owner may invite 2–3 external users who did not build the project, keeping one private copy per participant. This is a blank template: no complete run of that tutorial or independent-user trial is recorded here. It sends no invitations. Mark unrelated publishing sections above as not applicable for the read-only trial.
+
+- Anonymous participant reference / category: [alias; relevant role and experience, no name or contact details]
+- Participated in building this project: [yes / no / unknown; explain involvement if relevant]
+- Repository revision: [commit SHA and any local changes]
+- Host / version / connector: [actual client, version, connector and checked date]
+- Platform / read-only scope: [selected account alias, period, reporting level and allowed reads; distinguish requested scope from enforced restrictions]
+
+| Stage | Observed result and private evidence reference | First blocker | Elapsed time, if measured |
+| --- | --- | --- | --- |
+| Load project instructions | [complete / partial / blocked / not attempted; source] | [observed issue / none observed] | [measurement or not measured] |
+| Discover connector tools | [status; actual tools and source] | [observed issue / none observed] | [measurement or not measured] |
+| Read selected account and data | [status; identity, coverage and source] | [observed issue / none observed] | [measurement or not measured] |
+| Produce report and check a sample | [status; deliverable and comparison source] | [observed issue / none observed] | [measurement or not measured] |
+
+- First point of friction overall: [stage, what the participant tried and what happened]
+- Author interventions: [count / not tracked; for each, record stage and exact help, including any author takeover; do not infer zero from silence]
+- Total elapsed time: [only if measured; start/end, timezone and treatment of pauses, otherwise not measured]
+- Actual output / reproducible private evidence: [report or gap report, tool/read timestamps, sampled comparison and private references sufficient for an authorized reviewer to repeat the check]
+- Outcome: [complete / partial / blocked, with evidence and remaining work; complete requires the tutorial's report and sample checks, not just connection or tool success]
+- Can the participant explain the result's limits: [yes / partly / no / not checked; their own explanation of coverage, attribution, missing backend data or other actual limits]
+- Next fix / owner: [specific change tied to the observed blocker; conditions for a retest]
+
+Keep real account IDs, commercial data, raw outputs and evidence in the participant's authorized private location; never retain credentials or secrets. Before any public sharing, remove identifying data and obtain participant consent. A template, an author-assisted run and an independently completed run are distinct evidence; record assistance even when the final result is complete.

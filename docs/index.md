@@ -10,6 +10,8 @@
 
 ## 开始用 / 完成一项任务
 
+第一次可从[Agent 工具 + Pipeboard 的 Meta 只读检查教程](first-check.zh-CN.md)开始：打开项目、核对连接、选择一个账户，再交付并核对第一份报告。页面分别记录官方资料核对与尚待完成的实测范围。
+
 [首次配置](first-run.zh-CN.md) → [加载与验收](use-in-agent.zh-CN.md) → [宿主工作流](workflow.zh-CN.md) → [任务记录模板](../templates/task-record.zh-CN.md)。先核对本次任务的账户、工具及授权，沿用已知业务资料和方法，再补缺项。
 
 ## 看实现 / 运行公开代码
@@ -32,6 +34,7 @@
 
 | 你要解决的问题 | 文档 |
 | --- | --- |
+| 跟着一条路线拿到第一份只读结果 | [首次只读检查](first-check.zh-CN.md) · [English](first-check.md) |
 | 尚未接入，或第一次配置 | [首次配置](first-run.zh-CN.md) · [English](first-run.md) |
 | 确认宿主加载了项目指令 | [加载与对话验收](use-in-agent.zh-CN.md) · [English](use-in-agent.md) |
 | 了解 Meta、TikTok、Google 连接路线 | [平台接入](platform-connectivity.zh-CN.md) · [English](platform-connectivity.md) |

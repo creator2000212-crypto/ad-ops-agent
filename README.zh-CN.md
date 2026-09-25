@@ -75,7 +75,7 @@
 
 ## 选一个起点
 
-**已有连接，开始一项任务。** 在 Agent 环境打开完整仓库，确认加载 [AGENTS.md](AGENTS.md)；核对本次账户、工具及授权范围，沿用已确认的产品与方法。[首次配置](docs/first-run.zh-CN.md) · [加载与验收](docs/use-in-agent.zh-CN.md)
+**已有连接，开始一项任务。** 在 Agent 环境打开完整仓库，确认加载 [AGENTS.md](AGENTS.md)；核对本次账户、工具及授权范围，沿用已确认的产品与方法。[第一次只读检查：Agent 工具 + Pipeboard](docs/first-check.zh-CN.md) · [首次配置](docs/first-run.zh-CN.md) · [加载与验收](docs/use-in-agent.zh-CN.md)
 
 <details>
 <summary><strong>复制一条只读任务，作为第一次体验</strong></summary>
