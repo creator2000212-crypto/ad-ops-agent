@@ -1,78 +1,80 @@
-# Ad Ops Agent
+<picture>
+  <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/hero.zh-CN.dark.narrow.png">
+  <source media="(max-width: 640px)" srcset="docs/assets/showcase/hero.zh-CN.light.narrow.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/showcase/hero.zh-CN.dark.wide.png">
+  <img src="docs/assets/showcase/hero.zh-CN.light.wide.png" alt="Ad Ops Agent：让 Agent 处理投放操作，让投手专注分析与决策。" width="1200">
+</picture>
 
-### 让 Agent 处理投放操作，让投手专注分析与决策。
+[真实案例](#从实际工作中来) · [通用工作流](#带上你的方法复用这套流程) · [开始使用](#选一个起点) · [文档导航](docs/index.md) · [English](README.md)
 
-**从 Agent 工具中实际使用的投放工作流，提炼面向不同业务、不同方法和不同接入方式的开源 Agent。**
+**源于真实投放业务，面向不同产品、投放方法与接入方式复用的开源 AI 工作流。**
 
-实际工作涉及素材筛选、广告搭建、账户与配置排查、日报对账、周期巡检和复盘。本项目把这些工作中的业务理解、方法确认、工具协作和结果核对组织成可复用流程，让其他投手带着自己的产品和方法开始使用。
+将素材筛选、广告搭建、数据巡检与结果核对组织成可复用流程。使用者带着自己的产品和方法开始，而不是照搬作者的固定投法。
 
-[English](README.md) · [看真实工作案例](docs/case-studies.zh-CN.md) · [使用工作流](docs/workflow.zh-CN.md) · [运行公开示例](#无需账户先运行公开示例) · [文档导航](docs/index.md)
+> 真实操作依赖已连接、已验证并获授权的宿主工具；公开 Python 提供离线演示与验证。[查看能力范围](docs/capability-status.zh-CN.md)。
 
-> 本项目包含源于实际业务的 Agent 工作流与可运行的离线示例；真实操作依赖已连接、已验证并获授权的宿主工具。[能力范围](docs/capability-status.zh-CN.md)
+## 从实际工作中来
 
-## 真实任务：FB 与 TikTok
+<picture>
+  <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/meta.zh-CN.dark.narrow.png">
+  <source media="(max-width: 640px)" srcset="docs/assets/showcase/meta.zh-CN.light.narrow.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/showcase/meta.zh-CN.dark.wide.png">
+  <img src="docs/assets/showcase/meta.zh-CN.light.wide.png" alt="Meta 历史准备任务：20 条建单候选、20 套逐条文案；候选状态为待建，不是发布量。" width="1200">
+</picture>
 
-### FB（Meta）：从素材库到可审阅的投放方案
+**Meta · 准备成果。** 两条业务线，交付 **20 条建单候选与 20 套逐条文案**，附选材理由、使用记录和配置草案。状态为待建；素材、预算、归因和旧结构处理由投手审阅。[完整案例 →](docs/case-studies.zh-CN.md#meta-task)
 
-**任务：**为两条业务线结合产品要求、现有素材与历史投放记录，按用户选择的测试方法整理素材组合、文案和搭建方案。
+<picture>
+  <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/tiktok.zh-CN.dark.narrow.png">
+  <source media="(max-width: 640px)" srcset="docs/assets/showcase/tiktok.zh-CN.light.narrow.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/showcase/tiktok.zh-CN.dark.wide.png">
+  <img src="docs/assets/showcase/tiktok.zh-CN.light.wide.png" alt="TikTok 历史任务：三条业务线的状态交接；回执记录两条可投、一条审核中，不代表实际消耗或效果。" width="1200">
+</picture>
 
-![FB（Meta）历史任务整理图：Agent 交付 20 条建单候选、20 套文案及配置草案，投手审阅素材并确认预算、归因和旧结构处理。](docs/assets/meta-task.zh-CN.svg)
+**TikTok · 状态交接。** 修订方案、建单并逐项核对状态。历史回执记录 **2 条业务线可投、1 条审核中**，保留旧线处理结果及待确认项；不据此推断消耗或效果。[完整案例 →](docs/case-studies.zh-CN.md#tiktok-task)
 
-**交付：**一份投放方案、**20 条建单候选和 20 套逐条文案**。每条候选附选材理由、历史使用标记和配置草案；预算范围、归因设置及是否暂停旧结构仍由投手确认。
+以上为历史任务的脱敏整理图，不是 Agent 界面截图。Meta：2026-09-22；TikTok：2026-09-22—23。原始私有资料不公开。
 
-图按 2026-09-22 的单次任务记录脱敏整理，并非 Agent 界面截图；展示准备成果，清单中的状态为待建。[查看 Meta 任务与交付依据](docs/case-studies.zh-CN.md#meta-task) · [其他 FB 实践：规则排查与状态核对](docs/case-studies.zh-CN.md#meta-rule-check)
+<details>
+<summary><strong>另外四类问题，怎样变成可复用的检查</strong></summary>
 
-### TikTok：三条业务线的搭建与状态交接
+| 实际问题 | 工作流中的处理 |
+| --- | --- |
+| 素材文件存在，但不一定匹配产品 | 分别检查内容、规格、使用历史和方法要求 |
+| 报表缺源或改名导致归属漂移 | 标注数据覆盖；用对象关系核对，不把缺数写成零 |
+| 回执写着启用，但读取状态不一致 | 依据对应时点的实际读取交接，保留未知与冲突 |
+| 上一轮建议再次出现 | 先核对采用、执行与生效情况，再评价后续结果 |
 
-**任务：**根据已有素材和账户配置，调整三条业务线的投放方案与素材组合，处理旧结构，并交付逐项状态。
+[六个案例及证据范围](docs/case-studies.zh-CN.md) · [Meta 规则排查](docs/case-studies.zh-CN.md#meta-rule-check)
+</details>
 
-![TikTok 历史任务整理图：输入素材和账户配置，投手审阅方案，Agent 调整组合、建单和读取状态；回执记录两条可投、一条审核中。](docs/assets/tiktok-task.zh-CN.svg)
+## 带上你的方法，复用这套流程
 
-**交付：**修订方案、建单记录、旧线暂停结果、逐对象状态和待确认清单。历史回执记录两条业务线为 `AD_STATUS_DELIVERY_OK`（可投），一条为 `AD_STATUS_AUDIT`（审核中）；后续仍需检查待审对象，并确认结算口径、可用额度和部分素材规则。
+<picture>
+  <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/workflow.zh-CN.dark.narrow.png">
+  <source media="(max-width: 640px)" srcset="docs/assets/showcase/workflow.zh-CN.light.narrow.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/showcase/workflow.zh-CN.dark.wide.png">
+  <img src="docs/assets/showcase/workflow.zh-CN.light.wide.png" alt="通用工作流：理解业务、准备方案、整批确认、授权执行、结果核对、复盘迭代；具体能力取决于本次工具与验收。" width="1200">
+</picture>
 
-图按 2026-09-22—23 的历史记录脱敏整理，并非 Agent 界面截图；可投状态不代表已产生消耗或效果。[查看完整任务、人的决策与证据](docs/case-studies.zh-CN.md#tiktok-task)
+| 更换什么 | 使用者定义什么 | 继续复用什么 |
+| --- | --- | --- |
+| 产品与业务 | Web/App、事件、收入与质量口径 | 需求整理、准备、审阅和核对 |
+| 投放方法 | 测试问题、固定项、变量与观察条件 | 方案版本、确认、记录与复盘 |
+| 平台与工具 | 原生字段、权限、对象关系与读取能力 | 业务资料、用户方法与任务流程 |
 
-**人决定目标、方法与执行范围；Agent 整理依据、准备方案、执行获准操作并核对结果。**[查看可复用工作流](docs/workflow.zh-CN.md)
+新手可以从候选方法开始；熟手可以带入自己的 SOP。Agent 只补与本次任务有关的缺项，不强制采用作者的策略。
 
-## 从实际工作里提炼了什么
+[工作流说明](docs/workflow.zh-CN.md) · [方法确认](docs/method-planning.zh-CN.md) · [能力矩阵](docs/capability-status.zh-CN.md)
 
-以下是历史材料复核后的脱敏摘要。它们保留实际问题和完成边界，原始账户、素材、对话与商业数据不公开。
+## 选一个起点
 
-| 实际遇到的工作 | Agent 与投手怎样协作 | 沉淀到公共流程的机制 |
-|---|---|---|
-| 一批视频里有内容不符、技术条件不足和可复用素材 | Agent 整理素材及排除理由，投手补充产品和测试条件 | 内容、规格、历史使用和方法要求分别检查 |
-| 日报缺少平台数据，或改名造成业务归属漂移 | 标明缺失与来源差异，结合结构、目的地和改名记录追查 | 缺数不写成零，归属不只看名称 |
-| 回执写着启用，独立保存的状态却还在暂停或处理中 | 复核生成方式与读取记录，保留证据冲突 | 实际结果必须来自读回，不能从计划值生成 |
-| 周期巡检又看到上一轮的问题 | 先查建议是否被采用、动作是否执行，再讨论结果 | 未执行、执行未生效、效果尚待观察分别记录 |
+**已有连接，开始一项任务。** 在 Agent 环境打开完整仓库，确认加载 [AGENTS.md](AGENTS.md)；核对本次账户、工具及授权范围，沿用已确认的产品与方法。[首次配置](docs/first-run.zh-CN.md) · [加载与验收](docs/use-in-agent.zh-CN.md)
 
-[查看全部六个案例及证据](docs/case-studies.zh-CN.md)。
+<details>
+<summary><strong>复制一条只读任务，作为第一次体验</strong></summary>
 
-## 新手和熟手，使用同一套工作流
-
-**有产品但不懂投放：**接入完成后，从产品、市场、转化方式和资金边界开始。Agent 解释少量候选方法，例如比较两个视频开头或两种内容方向；说明各自能回答什么，再由用户选择。
-
-**已有成熟方法：**提供现有 SOP、约束和本轮目标。Agent 提取固定项、变化项、观察条件和执行范围，保留冲突与不支持项；不要求使用者改用作者的投法。
-
-[看一个从业务到选材的具体例子](docs/build-from-zero.zh-CN.md) · [方法怎样组织与确认](docs/method-planning.zh-CN.md)
-
-## 通用的是流程，具体投法由用户决定
-
-| 你要更换什么 | 需要更新什么 | 可以继续复用什么 |
-|---|---|---|
-| 产品、Web/App 或变现方式 | 业务资料、事件、收入与质量口径 | 需求整理、准备、审阅、结果核对 |
-| 测试方法 | 测试问题、固定项、变量、预算与观察条件 | 方案版本、用户确认、执行记录与复盘 |
-| 平台或连接工具 | 所需能力、原生字段、对象关系、权限与读回验证 | 业务资料、用户方法、任务与历史证据 |
-
-平台覆盖、宿主使用条件与公开代码的实现范围见[能力矩阵](docs/capability-status.zh-CN.md)。
-
-## 放进自己的 Agent 环境
-
-1. 将完整仓库作为项目打开，确认宿主加载了 [AGENTS.md](AGENTS.md)。
-2. 检查本次平台与账户的连接。已有 MCP、API 或 SDK 可以继续使用；只读任务先验证所需读取能力，发布任务还需写入和读回能力。
-3. 说明产品、已有方法和当前任务。Agent 先复用已知信息，再问缺项。
-4. 按[宿主工作流](docs/workflow.zh-CN.md)形成方案与交接，用[任务模板](templates/task-record.zh-CN.md)在私有目录保留记录。
-
-想先体验一项只读任务，可以复制下面这段，再补充要检查的平台与账户：
+补充需要检查的平台和账户后，将下列内容发给已加载项目的 Agent：
 
 ```text
 请对我选定的平台和账户做一次只读投放检查。
@@ -82,14 +84,11 @@
 输出数据质量问题、需要关注的对象、建议和待确认项；缺失数据不要写成零。
 本次暂不修改账户、预算或素材，也不创建或发布广告。
 ```
+</details>
 
-尚未接入时，先完成[接入指南](docs/platform-connectivity.zh-CN.md)；其中介绍自建和托管连接方式，包括可选的 Pipeboard。
+**尚未接入，先配置工具。** 可继续使用已有 MCP、API 或 SDK；自建与托管方案见[平台接入指南](docs/platform-connectivity.zh-CN.md)。
 
-[首次配置](docs/first-run.zh-CN.md) · [加载与验收](docs/use-in-agent.zh-CN.md) · [平台接入](docs/platform-connectivity.zh-CN.md)
-
-## 无需账户，先运行公开示例
-
-需要 Python 3.9+ 与系统 IANA 时区数据库；只使用标准库。
+**不接账户，先运行公开示例。** 需要 Python 3.9+ 与系统 IANA 时区数据；仅用标准库。
 
 ```bash
 git clone https://github.com/creator2000212-crypto/ad-ops-agent.git
@@ -97,35 +96,23 @@ cd ad-ops-agent
 python3 demo/run_demo.py
 ```
 
-示例检查虚构的 3 个 Meta 账户、10 个广告组。例如，同样是零转化，a2 只有 180 次展示，先观察；a3 达到本例的样本和止损条件，提出暂停复核；a9 当前预算与原记录不同，先查差异；a6 的目标预算与预设结果文件不一致，保留待办。
+示例检查虚构的 **3 个 Meta 账户、10 个广告组**，输出分析、待审差异与快照对照。不连接广告平台，不产生广告消耗。
 
-[看完整示例](demo/README.zh-CN.md) · [看输出报告](demo/expected/report.md)
+[示例说明](demo/README.zh-CN.md) · [输出报告](demo/expected/report.md) · [更多验证命令](docs/capability-status.zh-CN.md#离线验证入口)
 
-还可以运行：
+## 继续深入
 
-```bash
-python3 scripts/demo.py                 # 批次计划、模拟执行和恢复
-python3 scripts/demo_private_memory.py  # 私有经验的版本与条件复用
-python3 scripts/demo_methods.py         # 六个虚构业务输入与方法修订
-```
+| 你关心什么 | 从这里阅读 |
+| --- | --- |
+| 业务与方法 | [具体搭建例子](docs/build-from-zero.zh-CN.md) · [方法与测试计划](docs/method-planning.zh-CN.md) |
+| 执行与核对 | [工作流](docs/workflow.zh-CN.md) · [任务记录模板](templates/task-record.zh-CN.md) |
+| 知识与私有经验 | [知识库](docs/knowledge-base.zh-CN.md) · [产品私有方法库](docs/private-memory.zh-CN.md) |
+| 代码与实现范围 | [架构](docs/architecture.md) · [能力矩阵](docs/capability-status.zh-CN.md) · [贡献](CONTRIBUTING.md) |
 
-这些示例使用虚构数据，不调用广告平台、不产生广告消耗，也不授予真实操作权限。[其他验证入口](docs/capability-status.zh-CN.md#离线验证入口)
+[完整文档导航 →](docs/index.md)
 
-## 这个项目持续沉淀什么
+### 作者与项目来源
 
-- **业务与方法：**把“按我的方式做”转成有来源、有适用范围、可修订的任务条件。
-- **执行流程：**从素材与配置准备，到整批确认、状态核对、部分失败恢复和下轮回验。
-- **公共知识与私有经验：**通用检查可共享，产品数据和用户方法留在各自环境；新观察经用户确认后再复用。
-- **可检查的实现：**用离线代码验证输入、计划一致性、方法变更、恢复和记录逻辑，再为明确需要的真实能力补集成证据。
+维护者负责业务方法梳理、Agent 工作流与任务规范设计、Python 验证模块开发维护及业务迭代。模型理解由宿主模型提供；平台操作通过宿主工具和外部 MCP、API 或 SDK 完成。
 
-模型和连接工具提供理解与操作能力；项目的工作是把投放经验组织为可审阅、可执行、可追溯的协作流程。
-
-[产品设计](docs/product.md) · [架构](docs/architecture.md) · [知识库](docs/knowledge-base.zh-CN.md) · [开发路线](docs/roadmap.md) · [贡献说明](CONTRIBUTING.md)
-
-## 作者与项目来源
-
-维护者负责梳理实际业务中的投放方法，设计 Agent 工作流与任务规范，开发和维护 Python 验证模块，并根据业务使用中发现的问题持续迭代。模型理解由宿主使用的模型提供，平台操作通过宿主已有工具及外部 MCP、API 或 SDK 连接完成。
-
-## 许可证与来源
-
-[MIT](LICENSE)。项目延续 `ads-ops-playbook` 的工作流搭建方向，保留原有版权与来源说明。历史案例仅公开匿名整理，原始对话、客户数据、凭据、媒体与运行数据库不随仓库发布。[来源说明](NOTICE.md) · [安全说明](SECURITY.md)
+[MIT](LICENSE)。项目延续 `ads-ops-playbook` 的工作流方向并保留原有来源说明。原始对话、客户数据、凭据、媒体与运行数据库不随仓库发布。[NOTICE](NOTICE.md) · [SECURITY](SECURITY.md)

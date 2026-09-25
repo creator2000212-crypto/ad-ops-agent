@@ -4,6 +4,7 @@ import ast
 import json
 from pathlib import Path
 import re
+import struct
 import sys
 from urllib.parse import unquote, urlsplit
 
@@ -13,6 +14,10 @@ SKIP = {'.git', '__pycache__', '.venv', 'venv', 'runs', '.direct-work'}
 # than a single component. It is gitignored; this keeps the source check honest
 # about not reading it in the meantime.
 SKIP_PREFIXES = {('demo', 'out')}
+SHOWCASE_KINDS = ('hero', 'meta', 'tiktok', 'workflow')
+SHOWCASE_LANGUAGES = ('zh-CN', 'en')
+SHOWCASE_THEMES = ('light', 'dark')
+SHOWCASE_WIDTHS = ('wide', 'narrow')
 REQUIRED = [
     'README.md', 'README.zh-CN.md', 'AGENTS.md', 'LICENSE', 'NOTICE.md', 'CONTRIBUTING.md', 'SECURITY.md',
     'adops.py', 'onboarding.py', 'guidance.py', 'knowledge.py', 'knowledge/catalog.json',
@@ -62,6 +67,14 @@ def main():
     for name in REQUIRED:
         if not (ROOT / name).is_file():
             errors.append(f'missing required file: {name}')
+    showcase = ROOT / 'docs/assets/showcase'
+    for kind in SHOWCASE_KINDS:
+        for language in SHOWCASE_LANGUAGES:
+            for theme in SHOWCASE_THEMES:
+                for width in SHOWCASE_WIDTHS:
+                    filename = f'{kind}.{language}.{theme}.{width}.png'
+                    if not (showcase / filename).is_file():
+                        errors.append(f'missing showcase image: {filename}')
     for path in sorted(ROOT.rglob('*')):
         relative = path.relative_to(ROOT)
         if any(part in SKIP for part in relative.parts) or not path.is_file():
@@ -70,10 +83,19 @@ def main():
             continue
         if path.name == '.DS_Store' or path.suffix in {'.pyc', '.pyo'}:
             continue
-        files.append(path)
         if path.name == '.env' or (path.name.startswith('.env.') and path.name != '.env.example') or path.suffix in {'.sqlite3', '.db', '.pem', '.key'}:
             errors.append(f'private/runtime file in public source: {relative}')
             continue
+        if path.suffix == '.png' and relative.parts[:3] == ('docs', 'assets', 'showcase'):
+            data = path.read_bytes()
+            if len(data) < 24 or data[:8] != b'\x89PNG\r\n\x1a\n':
+                errors.append(f'invalid showcase PNG: {relative}')
+                continue
+            width, height = struct.unpack('>II', data[16:24])
+            if not (300 <= width <= 2048 and 120 <= height <= 2048):
+                errors.append(f'unexpected showcase image dimensions: {relative}')
+            continue
+        files.append(path)
         try:
             text = path.read_text(encoding='utf-8')
         except UnicodeError:
@@ -97,7 +119,7 @@ def main():
             except (ValueError, AttributeError):
                 errors.append(f'invalid JSON object: {relative}')
         if path.suffix == '.md':
-            for target in re.findall(r'\]\(([^)\s]+)\)', text):
+            for target in re.findall(r'\]\(([^)\s]+)\)', text) + re.findall(r'(?:src|srcset)="([^"]+)"', text):
                 parsed = urlsplit(target)
                 if parsed.scheme or parsed.netloc or not parsed.path:
                     continue

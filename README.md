@@ -1,95 +1,94 @@
-# Ad Ops Agent
+<picture>
+  <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/hero.en.dark.narrow.png">
+  <source media="(max-width: 640px)" srcset="docs/assets/showcase/hero.en.light.narrow.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/showcase/hero.en.dark.wide.png">
+  <img src="docs/assets/showcase/hero.en.light.wide.png" alt="Ad Ops Agent: let the agent handle ad operations while media buyers focus on analysis and decisions." width="1200">
+</picture>
 
-### Let the agent handle ad operations. Keep media buyers focused on analysis and decisions.
+[Real work](#from-actual-advertising-work) · [Reusable workflow](#bring-your-method-reuse-the-workflow) · [Get started](#choose-a-starting-point) · [Documentation](docs/index.md) · [简体中文](README.zh-CN.md)
 
-**An open-source agent workflow distilled from advertising work carried out in an agent tool, designed for different businesses, methods and connection tools.**
+**An open-source AI workflow drawn from actual advertising work, reusable across products, methods and connection routes.**
 
-The working practice includes creative selection, campaign preparation, account and configuration diagnosis, reporting, recurring reviews and retrospectives. This project organizes business context, method confirmation, tool use and result checks so other buyers can bring their own products and practices.
+It organizes creative selection, ad setup, data checks and result verification into a repeatable process. Bring your own product and method; you do not have to copy the maintainer's buying strategy.
 
-[简体中文](README.zh-CN.md) · [Cases from practice](docs/case-studies.md) · [Use the workflow](docs/workflow.md) · [Run the public demo](#run-the-public-demo-without-an-account) · [Documentation](docs/index.md)
+> Real operations require connected, verified and authorized host tools. The public Python code provides offline demos and validation. [See the capability scope](docs/capability-status.md).
 
-> This project includes a workflow drawn from advertising practice and runnable offline examples. Real operations require connected, verified and authorized host tools. [Capability status](docs/capability-status.md)
+## From actual advertising work
 
-## Tasks from practice: Facebook and TikTok
+<picture>
+  <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/meta.en.dark.narrow.png">
+  <source media="(max-width: 640px)" srcset="docs/assets/showcase/meta.en.light.narrow.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/showcase/meta.en.dark.wide.png">
+  <img src="docs/assets/showcase/meta.en.light.wide.png" alt="Historical Meta preparation: 20 ad-creation candidates and 20 copy sets. These were pending candidates, not published ads." width="1200">
+</picture>
 
-### Facebook (Meta): from a creative library to a reviewable campaign plan
+**Meta · Preparation delivered.** Across two business lines, the task produced **20 ad-creation candidates and 20 individual copy sets**, with selection reasons, usage records and configuration drafts. The candidates were pending creation; the media buyer still had to review assets, budgets, attribution and the previous structure. [Full case →](docs/case-studies.md#meta-task)
 
-**Task:** For two business lines, use product requirements, existing assets and past advertising records to prepare creative sets, copy and a campaign plan following the user's chosen testing method.
+<picture>
+  <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/tiktok.en.dark.narrow.png">
+  <source media="(max-width: 640px)" srcset="docs/assets/showcase/tiktok.en.light.narrow.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/showcase/tiktok.en.dark.wide.png">
+  <img src="docs/assets/showcase/tiktok.en.light.wide.png" alt="Historical TikTok handoff across three business lines: two eligible to deliver and one under review. This does not establish spend or performance." width="1200">
+</picture>
 
-![Historical Facebook (Meta) task: the agent delivers 20 proposed ad entries, 20 sets of copy and draft settings; the buyer reviews creatives, budget, attribution and treatment of old structures.](docs/assets/meta-task.en.svg)
+**TikTok · Status handed off.** The task revised the plan, built ads and checked statuses object by object. Historical receipts recorded **two business lines eligible to deliver and one under review**, along with the previous-line handling and unresolved items. These statuses do not establish spend or performance. [Full case →](docs/case-studies.md#tiktok-task)
 
-**Delivery:** A launch plan, **20 proposed ad entries and 20 sets of ad copy**. Each candidate includes selection reasons, prior-use indicators and draft settings. Budget scope, attribution settings and whether to pause older structures remain decisions for the buyer.
+These images summarize anonymized historical tasks; they are not screenshots of an Agent interface. Meta: 2026-09-22; TikTok: 2026-09-22–23. Original private material is not public.
 
-The diagram is an anonymized reconstruction of a single task from September 22, 2026, not an agent UI screenshot. It shows preparation outputs; checklist entries are awaiting creation. [Read the Meta task and its evidence](docs/case-studies.md#meta-task) · [More Facebook work: rule diagnosis and state checks](docs/case-studies.md#meta-rule-check)
+<details>
+<summary><strong>Four more problems that became reusable checks</strong></summary>
 
-### TikTok: setup and status handoff across three business lines
+| Actual problem | Workflow response |
+| --- | --- |
+| A creative file exists but may not fit the product | Check content, specs, usage history and method requirements separately |
+| A report lacks a source or a rename shifts attribution | Mark data coverage and verify object relationships; missing is not zero |
+| A receipt says enabled but readback disagrees | Hand off the observed state at the right time and preserve conflicts |
+| A previous recommendation appears again | Check adoption, execution and configuration before evaluating results |
 
-**Task:** Revise the campaign plan and creative sets for three business lines using existing assets and account settings, handle older structures and deliver an itemized status report.
+[All six cases and evidence boundaries](docs/case-studies.md) · [Meta rule diagnosis](docs/case-studies.md#meta-rule-check)
+</details>
 
-![Historical TikTok task: existing assets and account settings, buyer review, agent preparation, creation and status reads; the receipt records two lines eligible and one in review.](docs/assets/tiktok-task.en.svg)
+## Bring your method. Reuse the workflow.
 
-**Delivery:** A revised plan, creation records, old-line pause results, per-object status and an unresolved-items list. The historical receipt records two lines as `AD_STATUS_DELIVERY_OK` (eligible) and one as `AD_STATUS_AUDIT` (in review). Follow-up still includes checking the review outcome and confirming settlement definitions, available account capacity and some creative rules.
+<picture>
+  <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/workflow.en.dark.narrow.png">
+  <source media="(max-width: 640px)" srcset="docs/assets/showcase/workflow.en.light.narrow.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/showcase/workflow.en.dark.wide.png">
+  <img src="docs/assets/showcase/workflow.en.light.wide.png" alt="Reusable workflow: understand the business, prepare a plan, confirm the batch, execute authorized actions, verify results and review. Actual capabilities require task-specific validation." width="1200">
+</picture>
 
-The diagram is an anonymized reconstruction of September 22–23, 2026 records, not an agent UI screenshot. Eligibility does not establish spend or performance. [Read the full task, human decisions and evidence](docs/case-studies.md#tiktok-task)
+| What changes | What you define | What remains reusable |
+| --- | --- | --- |
+| Product and business | Web/App, events, revenue and quality definitions | Intake, preparation, review and verification |
+| Buying method | Test question, constants, variables and observation rules | Plan versions, confirmation, records and review |
+| Platform and tools | Native fields, permissions, object relationships and read capability | Business context, user methods and task workflow |
 
-**People choose goals, methods and execution scope. The agent organizes evidence, prepares plans, carries out authorized operations and checks results.** [Follow the reusable workflow](docs/workflow.md)
+Newcomers can start with a few candidate methods; experienced buyers can bring their own SOP. The agent asks only for information missing from the current task and does not impose the maintainer's strategy.
 
-## What the working records taught us
+[Host workflow](docs/workflow.md) · [Method confirmation](docs/method-planning.md) · [Capability matrix](docs/capability-status.md)
 
-These are anonymized summaries of reviewed historical material. They preserve the problem and its completion boundary. Original accounts, media, conversations and commercial figures remain private.
+## Choose a starting point
 
-| Work encountered | How the buyer and agent collaborated | Reusable mechanism |
-|---|---|---|
-| A video batch contained mismatched content, technical limitations and reusable assets | The agent organized assets and exclusions; the buyer clarified product and test constraints | Check content, specifications, prior use and method fit separately |
-| A report lacked platform data or renaming changed its business mapping | Mark source gaps and differences; trace structure, destination and rename history | Missing is not zero; names alone do not establish ownership |
-| A receipt claimed activation while saved reads still showed paused or processing state | Inspect how the report was generated and preserve the conflict | Actual results must come from readback, not planned values |
-| A recurring review encountered last round's problem again | Check adoption and execution before discussing the outcome | Separate unexecuted work, changes that did not take effect and immature outcomes |
+**Already connected? Start a task.** Open the full repository in your Agent environment and confirm that [AGENTS.md](AGENTS.md) is loaded. Check the selected accounts, tools and authorization scope, then use the known product context and method. [First setup](docs/first-run.md) · [Loading and validation](docs/use-in-agent.md)
 
-[Read all six cases and their evidence](docs/case-studies.md).
+<details>
+<summary><strong>Copy a read-only task to try the workflow</strong></summary>
 
-## One workflow for newcomers and experienced buyers
-
-**A product owner new to advertising:** after connection setup, start with the product, market, conversion journey and budget boundary. The agent explains a few candidate methods, such as comparing two video openings or two content directions, and lets the user choose.
-
-**A buyer with an established method:** bring the SOP, constraints and current goal. The agent extracts constants, variables, observation conditions and execution scope while preserving conflicts and unsupported requirements. Adopting the author's strategy is not required.
-
-[Follow a concrete business and creative example](docs/build-from-zero.md) · [Organize and confirm methods](docs/method-planning.md)
-
-## Reuse the workflow; choose your own strategy
-
-| What changes | What to update | What remains reusable |
-|---|---|---|
-| Product, Web/App journey or monetization | Business facts, events, revenue and quality definitions | Intake, preparation, review and result checks |
-| Test method | Question, constants, variables, budget and observation conditions | Plan versions, user confirmation, execution records and review |
-| Platform or connection tool | Capabilities, native fields, object relationships, permissions and readback | Business context, user methods, tasks and historical evidence |
-
-See the [capability matrix](docs/capability-status.md) for platform coverage, host requirements and the public code's implementation scope.
-
-## Use it in your agent environment
-
-1. Open the full repository as a project and confirm that the host loads [AGENTS.md](AGENTS.md).
-2. Check the task's platforms and accounts. Existing MCP, API or SDK connections remain valid. Read-only work needs the relevant reads; publishing also needs write and readback capabilities.
-3. Describe your product, method and current task. Reuse known information before asking for gaps.
-4. Follow the [host workflow](docs/workflow.md) and retain a [task record](templates/task-record.md) in a private directory.
-
-For an optional first read-only task, copy this prompt and specify the platforms and accounts you want reviewed:
+Add the platform and accounts you want to inspect, then send this to the Agent after loading the project:
 
 ```text
-Please run a read-only advertising review for my selected platforms and accounts.
-First verify the account scope and available reading tools, and explain any missing access.
-Reuse the business context, confirmed method and related open items already available; ask only for missing information.
-Review the most recent complete advertising day in each account's own time zone. State the dates, time zones and data cutoff.
-Report data-quality problems, objects needing attention, recommendations and unresolved questions. Keep missing data distinct from zero.
-For this task, do not change accounts, budgets or creatives, or create or publish ads.
+Run a read-only advertising check for the platform and accounts I select.
+First verify the account scope and available read tools. State which capabilities are missing.
+Reuse known business context, confirmed methods and relevant open items; ask only for missing information.
+Review the latest complete delivery day in each account's timezone. State the dates, timezones and data cutoff times.
+Report data-quality issues, objects needing attention, suggestions and unresolved questions. Missing data is not zero.
+Do not modify accounts, budgets or assets, and do not create or publish ads.
 ```
+</details>
 
-Without a connection, follow the [connection guide](docs/platform-connectivity.md), covering self-managed and hosted routes including optional Pipeboard.
+**Not connected? Set up tools first.** Existing MCP, API and SDK connections remain valid. See the [platform connection guide](docs/platform-connectivity.md) for self-managed and hosted routes.
 
-[First setup](docs/first-run.md) · [Loading and validation](docs/use-in-agent.md) · [Platform connections](docs/platform-connectivity.md)
-
-## Run the public demo without an account
-
-Requires Python 3.9+ and system IANA timezone data. Only the standard library is used.
+**No account needed? Run the public example.** Requires Python 3.9+ and system IANA timezone data; standard library only.
 
 ```bash
 git clone https://github.com/creator2000212-crypto/ad-ops-agent.git
@@ -97,35 +96,23 @@ cd ad-ops-agent
 python3 demo/run_demo.py
 ```
 
-The example reviews 3 fictional Meta accounts and 10 ad sets. Both a2 and a3 have no conversions: a2 has only 180 impressions and needs observation; a3 meets the example's sample and stop-loss conditions. A changed current budget holds up a9, while a6 remains open because the target differs from the preset later-state file.
+The example checks **three fictional Meta accounts and ten ad sets**, producing analysis, proposed differences and snapshot comparisons. It makes no ad-platform calls and incurs no ad spend.
 
-[Full walkthrough](demo/README.md) · [Output report (Chinese)](demo/expected/report.md)
+[Walkthrough](demo/README.md) · [Output report (Chinese)](demo/expected/report.md) · [More validation commands](docs/capability-status.md#offline-validation-entry-points)
 
-Additional examples:
+## Explore further
 
-```bash
-python3 scripts/demo.py                 # Batch plans, simulated execution and recovery
-python3 scripts/demo_private_memory.py  # Private record versions and conditional reuse
-python3 scripts/demo_methods.py         # Six fictional inputs and method revisions
-```
+| Your question | Start here |
+| --- | --- |
+| Business and methods | [Build from an example](docs/build-from-zero.md) · [Method and test planning](docs/method-planning.md) |
+| Execution and checks | [Workflow](docs/workflow.md) · [Task record template](templates/task-record.md) |
+| Knowledge and private experience | [Knowledge (Chinese)](docs/knowledge-base.zh-CN.md) · [Private methods (Chinese)](docs/private-memory.zh-CN.md) |
+| Code and implementation scope | [Architecture](docs/architecture.md) · [Capabilities](docs/capability-status.md) · [Contributing](CONTRIBUTING.md) |
 
-These examples use fictional data, make no ad-platform calls, incur no ad spend and grant no live-operation authority. [Other validation entry points](docs/capability-status.md#offline-validation-entry-points)
+[Complete documentation index →](docs/index.md)
 
-## What the project develops
+### Author and provenance
 
-- **Business and methods:** turn “follow my process” into sourced, scoped and revisable task conditions.
-- **Execution workflow:** connect asset/configuration preparation with batch review, state checks, partial-failure recovery and the next review.
-- **Shared knowledge and private experience:** share reusable checks while keeping product data and user methods private; confirm new observations before reuse.
-- **Inspectable implementation:** use offline code to check inputs, plan consistency, method changes, recovery and records, then add integration evidence for specific live capabilities.
+The maintainer organizes business methods, designs the Agent workflow and task specifications, develops and maintains the Python validation modules, and iterates from operational use. Host models provide understanding; host tools and external MCP, API or SDK connections provide platform operations.
 
-Models and connection tools supply understanding and operations. This project organizes advertising experience into a workflow that people can review, execute and trace.
-
-[Product design (Chinese)](docs/product.md) · [Architecture (Chinese)](docs/architecture.md) · [Knowledge base (Chinese)](docs/knowledge-base.zh-CN.md) · [Roadmap (Chinese)](docs/roadmap.md) · [Contributing](CONTRIBUTING.md)
-
-## Author and project background
-
-The maintainer organizes methods used in the business, designs the agent workflow and task specifications, develops and maintains the Python validation modules, and iterates on them using problems observed in actual work. Language-model understanding comes from the host's model; platform operations use its available tools and external MCP, API or SDK connections.
-
-## License and provenance
-
-[MIT](LICENSE). The project develops the workflow-building direction of `ads-ops-playbook` and retains its original notices. Cases are anonymized summaries; original conversations, customer data, credentials, media and runtime databases are not distributed. [Provenance](NOTICE.md) · [Security](SECURITY.md)
+[MIT](LICENSE). This project continues the workflow-building direction of `ads-ops-playbook` and retains its original notices. Original conversations, customer data, credentials, media and runtime databases are not distributed. [NOTICE](NOTICE.md) · [SECURITY](SECURITY.md)
