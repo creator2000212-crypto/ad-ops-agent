@@ -1,5 +1,7 @@
 # Ad Ops Agent
 
+### 🌐 [简体中文](README.zh-CN.md) · English
+
 <picture>
   <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/hero.en.dark.narrow.png">
   <source media="(max-width: 640px)" srcset="docs/assets/showcase/hero.en.light.narrow.png">
@@ -7,7 +9,7 @@
   <img src="docs/assets/showcase/hero.en.light.wide.png" alt="Ad Ops Agent: let the agent handle ad operations while media buyers focus on analysis and decisions." width="1200">
 </picture>
 
-[Real work](#from-actual-advertising-work) · [Reusable workflow](#bring-your-method-reuse-the-workflow) · [Get started](#choose-a-starting-point) · [Documentation](docs/index.en.md) · [简体中文](README.zh-CN.md)
+[Real work](#from-actual-advertising-work) · [Reusable workflow](#bring-your-method-reuse-the-workflow) · [Get started](#choose-a-starting-point) · [Documentation](docs/index.en.md)
 
 **An open-source AI workflow drawn from actual advertising work, reusable across products, methods and connection routes.**
 

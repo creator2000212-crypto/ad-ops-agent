@@ -1,5 +1,7 @@
 # Ad Ops Agent
 
+### 🌐 简体中文 · [English](README.md)
+
 <picture>
   <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/hero.zh-CN.dark.narrow.png">
   <source media="(max-width: 640px)" srcset="docs/assets/showcase/hero.zh-CN.light.narrow.png">
@@ -7,7 +9,7 @@
   <img src="docs/assets/showcase/hero.zh-CN.light.wide.png" alt="Ad Ops Agent：让 Agent 处理投放操作，让投手专注分析与决策。" width="1200">
 </picture>
 
-[真实案例](#从实际工作中来) · [通用工作流](#带上你的方法复用这套流程) · [开始使用](#选一个起点) · [文档导航](docs/index.md) · [English](README.md)
+[真实案例](#从实际工作中来) · [通用工作流](#带上你的方法复用这套流程) · [开始使用](#选一个起点) · [文档导航](docs/index.md)
 
 **源于真实投放业务，面向不同产品、投放方法与接入方式复用的开源 AI 工作流。**
 
