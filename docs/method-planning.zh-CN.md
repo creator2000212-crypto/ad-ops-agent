@@ -1,6 +1,10 @@
-# 从用户方法到可审阅的测试计划
+# Python 方法编排：开发参考
 
-[English](method-planning.md) · [首次配置](first-run.zh-CN.md) · [文档导航](index.md)
+[English](method-planning.md) · [首次使用](first-check.zh-CN.md) · [业务与合作方式](first-run.zh-CN.md)
+
+**适合谁：**为离线程序准备输入、验证方法编译的开发者或 Agent 宿主。**前提：**完整仓库、Python 3.9 或以上，以及在仓库根目录打开的终端；无需广告账户凭据。通过对话使用 Agent 的读者从[首次使用](first-check.zh-CN.md)或[业务与合作方式](first-run.zh-CN.md)开始，下面的命令是可选路径。
+
+**运行后得到什么：**本地方法候选、可审阅的计划和模拟回执。M2 是本仓库对 Python 方法模块的称呼；MethodSpec 是带版本的结构化方法记录。普通使用者无需先理解或配置这些对象。
 
 本文说明**公开 Python 的 M2 模块**，是[宿主工作流](workflow.zh-CN.md)旁的可选离线检查路径。真实业务可以由宿主使用已验证、已授权的工具，按用户自己的方法准备和执行；不必经过 `task.py`，也不限于它的两类模板。宿主保留原方法、核对工具能否支持，再准备对应批次。
 
@@ -19,9 +23,34 @@ M2 只支持下表中的两种方法。`methodology.py` 不调用大模型；它
 
 ## 先运行完整演示
 
+指定一个**尚不存在**的输出目录，由命令创建。如果已经运行过下面的路径，请换一个目录名，保留之前的结果。
+
 ```bash
-python3 scripts/demo_methods.py
+python3 scripts/demo_methods.py --out runs/methods-first-look
 ```
+
+正常结束时，终端 JSON 中应看到 `result: "passed"`、`case_count: 6` 和 `native_platform_calls: 0`。出现异常或非零退出码时，表示演示未正常完成；保留错误与已有输出用于排查。
+
+### 跟着一个案例找到输入和结果
+
+以下路径均相对仓库根目录。Markdown 文件可直接在编辑器或 Agent 工具中打开，无需额外报告工具。
+
+| 步骤 | 打开哪里 | 重点看什么 |
+|---|---|---|
+| 1. 看输入 | `runs/methods-first-look/app_guided/` 下的 `profile.json`、`request.json`、`brief.json`、`candidates.json` | 虚构业务资料、明确的方法请求、预算与目标、素材身份声明 |
+| 2. 找结果入口 | `runs/methods-first-look/review.md` | 点击 `app_guided` 对应链接进入新版计划，不用猜生成目录名称 |
+| 3. 看方案 | 上一步链接的案例 `review.md` | 测试问题、素材入选与排除原因、固定项与变化项、目标共享预算 |
+| 4. 核对演示结果 | `runs/methods-first-look/demo-summary.json` | `app_guided` 初版选 `anchor` + `hook-b`，改方法后选 `anchor` + `concept-b`；重复运行新增数为 0 |
+
+输入由[虚构案例生成器](../evaluations/fixtures.py)生成，演示内的确认同样是虚构练习记录，不能作为真实用户采用方法的依据。查看已保存在磁盘上的任务状态，可运行：
+
+```bash
+python3 task.py status --task runs/methods-first-look/app_guided/task
+```
+
+最终阶段应为 `plan_review`，表示修改方法后生成的新计划等待审阅，不表示新版批次已执行或发布。
+
+### 演示具体检查什么
 
 演示使用已有完整档案的虚构 App、电商、线索业务，分别走 `guided` 与 `bring_own` 路线，共六个案例。每个步骤都启动独立 CLI 进程，验证任务能从磁盘继续：
 
@@ -34,7 +63,7 @@ python3 scripts/demo_methods.py
 
 ## 调用 M2 时宿主怎样协作
 
-1. 先选任务路线。真实任务按[首次配置](first-run.zh-CN.md)验证所需能力，只读工作不要求发布权限。M2 练习使用明确标记的模拟输入，解释其连接门槛是离线契约，不是真实账户验收。
+1. 先选任务路线。真实任务按[首次使用](first-check.zh-CN.md)验证所需能力，再明确[业务与合作方式](first-run.zh-CN.md)，只读工作不要求发布权限。M2 练习使用明确标记的模拟输入，解释其连接门槛是离线契约，不是真实账户验收。
 2. 接入和协作方式明确后，收集本次产品、平台、国家、Web/App、变现方式、测试问题与测量口径。已有事实不重复问，未知和冲突留在缺口中。
 3. 采用 M2 的新手路线时，用通俗语言解释两种候选及其取舍；已有方法保留原始来源，把明确条款转成支持的标签或结构化回答。不能为让校验通过而丢掉条款；程序不支持的部分，另行说明宿主工具是否能够实现，不能写成所有投放方法的限制。
 4. 展示候选的测试问题、变化项、固定项、锚定素材、范围、指标、数据来源、观察窗口和未解决项。只有用户明确确认后，才记录采用回执。

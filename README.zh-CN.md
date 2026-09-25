@@ -71,32 +71,28 @@
 
 **已有连接工具，为什么还需要这个项目？** 模型与连接工具提供账户读取和操作能力；Ad Ops Agent 把这些能力组织成一项投放任务：沿用产品资料与用户方法，整理素材和方案，核对预算与操作范围，并将执行、读回和下一轮复盘接起来。讨论“能不能改预算”之前，先明确**按谁的方法、针对哪些对象、观察哪个时间窗口、改后怎样核对**。
 
-[同一套工作流，两种不同投放方法（虚构示例）](docs/method-comparison.zh-CN.md) · [工作流说明](docs/workflow.zh-CN.md) · [方法确认](docs/method-planning.zh-CN.md) · [能力矩阵](docs/capability-status.zh-CN.md)
+[同一套工作流，两种不同投放方法（虚构示例）](docs/method-comparison.zh-CN.md) · [工作流说明](docs/workflow.zh-CN.md) · [业务与合作方式](docs/first-run.zh-CN.md) · [能力矩阵](docs/capability-status.zh-CN.md)
 
 ## 选一个起点
 
-**已有连接，开始一项任务。** 在 Agent 环境打开完整仓库，确认加载 [AGENTS.md](AGENTS.md)；核对本次账户、工具及授权范围，沿用已确认的产品与方法。[第一次只读检查：Agent 工具 + Pipeboard](docs/first-check.zh-CN.md) · [首次配置](docs/first-run.zh-CN.md) · [加载与验收](docs/use-in-agent.zh-CN.md)
+**[第一次使用：从这里拿到第一份结果 →](docs/first-check.zh-CN.md)**
+
+按教程完成：下载并打开项目 → 核对连接与账户 → 说明当前需求 → 完成一项任务。你通过对话提供业务信息，Agent 负责整理、检查和交付；无需先学 Python 或编辑 JSON。
+
+| 当前情况 | 连接核对后的第一份成果 |
+| --- | --- |
+| 有产品，尚未投放 | 业务摘要、缺项和素材准备清单 |
+| 已有广告在投 | 一个账户的只读检查报告与下一步 |
+| 已有成熟 SOP | 方法条款、支持情况和待确认项 |
+
+已有连接与资料可直接复用，跳过已完成且仍适用的步骤。首次教程以 Agent 工具 + Pipeboard + Meta 说明接入，保留其他连接路线；具体环境的实测状态在教程中列明。之后的发布按具体方案和授权执行。
+
+**只想先了解效果？** 直接阅读[课程业务例子](docs/build-from-zero.zh-CN.md)或[离线示例的任务与交付](demo/README.zh-CN.md)，无需账户或安装。想看详细字段，可查看[示例报告](demo/expected/report.md)。
 
 <details>
-<summary><strong>复制一条只读任务，作为第一次体验</strong></summary>
+<summary><strong>开发者：在本地运行公开示例</strong></summary>
 
-补充需要检查的平台和账户后，将下列内容发给已加载项目的 Agent：
-
-```text
-请对我选定的平台和账户做一次只读投放检查。
-先核对账户范围与本次可用的读取工具，具体说明缺少哪些访问能力。
-沿用已有业务资料、已确认方法和相关待办，只问缺失的信息。
-查看最近一个完整投放日，以各账户自己的时区为准，注明日期、时区和数据截至时间。
-输出数据质量问题、需要关注的对象、建议和待确认项；缺失数据不要写成零。
-本次暂不修改账户、预算或素材，也不创建或发布广告。
-```
-</details>
-
-第一次交付是一份只读检查结果：写清所选账户的覆盖范围、数据截至时间、缺少的能力或数据源、待看对象与待确认项；不会修改广告账户。
-
-**尚未接入，先配置工具。** 可继续使用已有 MCP、API 或 SDK；自建与托管方案见[平台接入指南](docs/platform-connectivity.zh-CN.md)。
-
-**不接账户，先运行公开示例。** 需要 Python 3.9+ 与系统 IANA 时区数据；仅用标准库。
+需要 Python 3.9+ 与系统 IANA 时区数据；仅用标准库。在终端运行：
 
 ```bash
 git clone https://github.com/creator2000212-crypto/ad-ops-agent.git
@@ -106,16 +102,18 @@ python3 demo/run_demo.py
 
 示例检查虚构的 **3 个 Meta 账户、10 个广告组**，输出分析、待审差异与快照对照。不连接广告平台，不产生广告消耗。
 
-[示例说明](demo/README.zh-CN.md) · [输出报告](demo/expected/report.md) · [更多验证命令](docs/capability-status.zh-CN.md#离线验证入口)
+运行后的文件位置与阅读顺序见[示例说明](demo/README.zh-CN.md)，其他检查见[验证命令](docs/capability-status.zh-CN.md#离线验证入口)。
+
+</details>
 
 ## 继续深入
 
 | 你关心什么 | 从这里阅读 |
 | --- | --- |
-| 业务与方法 | [具体搭建例子](docs/build-from-zero.zh-CN.md) · [方法与测试计划](docs/method-planning.zh-CN.md) |
+| 业务与方法 | [具体搭建例子](docs/build-from-zero.zh-CN.md) · [带入自己的方法](docs/first-run.zh-CN.md) |
 | 执行与核对 | [工作流](docs/workflow.zh-CN.md) · [任务记录模板](templates/task-record.zh-CN.md) |
 | 知识与私有经验 | [知识库](docs/knowledge-base.zh-CN.md) · [产品私有方法库](docs/private-memory.zh-CN.md) |
-| 代码与实现范围 | [架构](docs/architecture.md) · [能力矩阵](docs/capability-status.zh-CN.md) · [贡献](CONTRIBUTING.md) |
+| 代码与实现范围 | [架构](docs/architecture.md) · [Python 方法编排](docs/method-planning.zh-CN.md) · [能力矩阵](docs/capability-status.zh-CN.md) · [贡献](CONTRIBUTING.md) |
 
 [完整文档导航 →](docs/index.md)
 

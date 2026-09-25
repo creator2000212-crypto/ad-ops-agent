@@ -76,4 +76,8 @@ Open the [complete report (Chinese)](expected/report.md) for all ad sets and evi
 python3 demo/run_demo.py
 ```
 
+The terminal prints the report. Then open `demo/out/report.md` for the generated report; start with proposed changes and remaining follow-ups, and inspect `demo/out/gate.json` or `demo/out/reconciliation.json` only when tracing the snapshot checks. These paths are relative to the repository root and are ignored by Git. The committed `demo/expected/report.md` is the reference sample, not the output of your own run.
+
+To start your own task after reading, follow [first use](../docs/first-check.md). Running this demo does not connect an account.
+
 For concrete examples of initial setup, creative testing and retaining experience, read the [building guide](../docs/build-from-zero.md). Refer to the [technical guide](../docs/operating-loop.md) when you need fields, formulas or step-by-step commands.

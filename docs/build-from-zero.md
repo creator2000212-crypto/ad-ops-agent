@@ -1,6 +1,8 @@
-# How to turn advertising work into an agent
+# Follow a course product through the advertising workflow
 
 [简体中文](build-from-zero.zh-CN.md) · [See the runnable account-review demo](../demo/README.md)
+
+**For:** newcomers and media buyers who want to understand a complete task without running code. **Outcome:** see concrete business context, method selection, a review draft and follow-up handoff. To begin your own task, use [first use](first-check.md).
 
 This agent connects account setup, business context, asset selection, configuration and result checks, leaving media buyers more time for analysis and decisions. It comes from advertising workflows already used in an agent tool. Others can load the instructions in their own host and work with tools they have connected and authorized. A fictional example shows how to assemble the work and hand it over.
 
@@ -60,28 +62,60 @@ You confirm adoption of the method. Selection does not mean the assets have been
 
 ## 4. Handle daily work: separate preparation, decisions and checks
 
-First prepare a batch review:
+### 4.1 Start with a filled review draft
 
-- Use course account A only, target the United States, and use assets A and B with the same booking page.
-- Put one asset in each test unit and keep the round within the user's $60 total. Explain which native object owns the budget, whether it is daily or lifetime, and whether it is shared. Do not promise that each asset receives half the spend.
-- Track cost per form submission and retain sales-confirmed booking counts. Review after three days without automatically declaring a winner when the date arrives.
+**Fictional plan `course-test-v1`: draft; writes cannot proceed.** The user has agreed on the test question and $60 total boundary. The native budget owner, budget type and exact dates remain unresolved; the agent must not choose them silently.
 
-**Your decision is to confirm or revise this concrete plan.** After checking account and tool capabilities and recording the batch authorization, the host carries out the permitted configuration and publishing steps. Creating paused objects is also a write and must be covered. Unchanged mechanical steps already authorized do not need repeated approval. If a required capability is missing, deliver the preparation and state the gap; do not treat a local simulation as publishing.
+| Review item | Current content | What remains |
+|---|---|---|
+| Scope | Meta, course account A (an example alias), United States, English, adult courses | Read and verify the actual account and timezone |
+| Question and assets | Compare A/B openings; keep body, call to action and booking page fixed; exclude C | Verify real asset references, destination and tracking event |
+| Proposed creation | Two test units with one asset each; leave existing ads unchanged | Map the units to specific native advertising objects |
+| Budget boundary | USD; at most $60 for this entire new test, counted across both units | Verify owner, daily versus total budget, sharing and enforcement capability; not $60 per asset or $60 per day |
+| Timing and judgement | Review after three days; track form cost and qualified bookings separately | Set start/end times in the account timezone; no automatic pause or scaling threshold is agreed |
+| Current status | Method and draft preparation only | No batch configuration or publishing authorization; no creation, review or delivery receipts |
 
-A handoff such as “A and B were created and their configuration checked; A has passed review, while B is still pending review” needs the corresponding objects, check times and read results. Record enabled configuration, review approval and observed delivery separately instead of assigning one success label to the whole batch.
+**You can confirm the method and draft direction at this point, not a publishable final batch.** The agent reads native structure and supported fields, completes budget, dates, object mapping and tracking, and explains how the $60 boundary will be enforced. If the tools cannot enforce it, the plan stays unresolved. A completed revision then presents the concrete actions for your review.
 
-Suppose a later day's supplied figures look like this. They are still fictional observations:
+Only after the final plan and authorization are complete may the host configure and publish within scope. Creating paused objects is a write; mechanical steps already covered need no repeated approval. After execution, the handoff needs object references, read times, actual configuration, review states and remaining work. This example supplies no real execution receipt and does not establish creation or delivery.
+
+### 4.2 Day 1: deliver an interim observation
+
+This separate section demonstrates **how to report supplied data**; it does not establish that the unresolved draft above was published. Suppose the user supplies these fictional Day 1 figures:
 
 | Asset | Spend | Form submissions | Cost per submission |
 |---|---:|---:|---:|
 | A | $18 | 3 | $6 |
 | B | $12 | 1 | $12 |
+| Total | $30 | 4 | $7.50 |
 
-The agent can organize the conclusion: “A had a lower form-submission cost that day. Valid-booking results are incomplete, so these figures do not establish that A deserves more budget.” It brings the data, gaps and recommendation together. You decide whether to observe longer or change direction; “looks promising” does not become an automatic budget increase.
+An interim handoff could say:
 
-Before a configuration change, a current budget that differs from the previous record should prompt a comparison. If the resulting value differs from the plan, retain the discrepancy instead of marking the work complete based only on a success message. Observed receipt status must come from a read result, never from the target value or a hardcoded `ACTIVE`.
+> **Scope:** user-supplied Day 1 A/B figures, totaling $30 and four submissions. This example supplies no native platform receipt or specific date/timezone; a real report needs the matching window and source for account reconciliation.
+>
+> **Observation:** A had the lower submission cost that day.
+>
+> **Still unknown:** qualified-booking results are incomplete and the three-day observation period has not ended. This does not establish that A deserves more budget.
+>
+> **Next:** check later data against the agreed budget and schedule, and obtain sales-qualified bookings. This task only analyzes data; no ad changes or budget increase occurred.
 
-Later, when you ask for yesterday's course report, the agent reuses the agreed definitions and checks the date, time zone, accounts and data coverage. It does not repeat the A/B planning interview. At the start of a new account review, it first rechecks relevant outstanding items from the previous round.
+Subtracting this day's known $30 from the $60 boundary does not verify remaining allowance. Complete cumulative spend, current configuration and other periods still need checking. The review date, data maturity and permission to continue spending are separate conditions.
+
+### 4.3 Day 3: the review is due, but missing evidence stays visible
+
+Suppose the agreed review date arrives, but the user has supplied only Day 1 data, with Days 2–3 and qualified bookings still unavailable. The agent does not invent cumulative results or present Day 1 costs as the final outcome.
+
+| Handoff item | What can be delivered on Day 3 |
+|---|---|
+| Known | The agreement was three days with a $60 total boundary; only Day 1 observations are available |
+| To verify | Full three-day account data, cumulative spend, actual schedule state, sales-qualified bookings and matching rules |
+| Conclusion status | Due review remains incomplete; total-budget compliance and a winning asset are unverified |
+| Next steps and responsibilities | Agent obtains account data through authorized reads; user supplies or authorizes access to sales results; compare agreed measures once coverage is complete |
+| Action boundary | Do not automatically extend the schedule or increase budget; if delivery is still running, flag it promptly and check existing authorization and stop conditions; read back any action taken within scope, and present changes outside that scope for the user's decision |
+
+If a proposed change reveals a current value different from the prior record, reconcile the difference. An actual result that differs from the plan remains open despite a success message. “Readback” means reading an object again after an operation to check its result; actual values come from the read, not from copied targets.
+
+Later, “Give me yesterday's course report” reuses the agreed definitions and checks dates, timezone, account scope and coverage, without another A/B interview. A new review starts by rechecking relevant open items from the previous round.
 
 ## 5. Retain experience: reuse what you confirm
 
@@ -101,10 +135,10 @@ Experience accumulates through observations, candidates, confirmation and later 
 | Reusable host workflow | The host handles conversation and uses connected, authorized tools to read, inspect media, configure and verify. The deployer validates the specific environment |
 | Public Python programs | They store business inputs/private records offline, propose two method types, prepare tests from declared differences, analyze snapshots and simulate recovery. They do not call platforms, understand media or learn automatically |
 
-Start with the [host workflow](workflow.md) and [task template](../templates/task-record.md) for your own task. Use Python when you want to validate supported structured plans; reports, troubleshooting and migrations do not all need to become creative tests in `task.py`. See the [capability boundaries](capability-status.md) for limits and acceptance criteria.
+**Next:** begin your own task with [first use](first-check.md); if connected but business details are missing, use [business context and collaboration](first-run.md); with context and a method ready, use the [daily task workflow](workflow.md) and have the agent prepare the [task record](../templates/task-record.md). Use Python when you want to validate supported structured plans; reports, troubleshooting and migrations do not all need to become creative tests in `task.py`. See the [capability boundaries](capability-status.md) for limits and acceptance criteria.
 
 The reusable parts are business context, confirmed methods, preparation and result checks. The user chooses the product, countries, budgets and practices. Keeping connection handling, business methods and execution records separate makes them easier to update without imposing one advertising strategy on everyone.
 
-Read more: [module responsibilities](architecture.md) · [offline review fields and commands](operating-loop.md) · [Python methods and test plans](method-planning.md).
+**For developers:** [module responsibilities](architecture.md) · [offline review fields and commands](operating-loop.md) · [Python methods and test plans](method-planning.md).
 
 Back to the [project home](../README.md).

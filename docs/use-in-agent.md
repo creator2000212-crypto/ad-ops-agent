@@ -1,56 +1,56 @@
-# Load Ad Ops Agent in Codex or another host
+# Project loading and troubleshooting
 
-[简体中文](use-in-agent.zh-CN.md) · [First read-only task](first-check.md) · [Platform connections](platform-connectivity.md)
+[简体中文](use-in-agent.zh-CN.md) · [Back to first use](first-check.md) · [Documentation](index.en.md)
 
-Load the complete repository, confirm that the host can read its instructions, then check the tools needed for your first task. The conversation entry point is [AGENTS.md](../AGENTS.md); it routes real advertising work, offline exercises and repository development separately.
+**For:** users already following the first-use tutorial who cannot read files, load rules or access tools. **Outcome:** identify the gap and return to the interrupted step. Start with the [first-use tutorial](first-check.md); this page is a reference, not another required onboarding sequence.
 
-The host can use verified, authorized MCP/API/SDK tools for real work without first implementing this repository's Python adapters. Loading the files does not install those tools or grant account access. The public Python modules remain a separate offline route; see [capability status](capability-status.md).
+## Distinguish three states
 
-## 1. Make the complete repository available
+| State | How to check | What it does not establish |
+| --- | --- | --- |
+| Project files are readable | File tools read the root `AGENTS.md` and its workflow references | An advertising account connection |
+| This task uses the rules | Response identifies rule sources; check host instruction logs and subsequent behavior where available | Publishing or budget authority |
+| Selected account is readable | An actual read returns that account, required fields, source and time | Access to every account or every write capability |
 
-Clone or download the repository and keep its structure, including the root `AGENTS.md`, code and `docs/` directory. A GitHub URL, a README upload or a copied script alone does not establish that the host can read the project instructions and their references.
+The repository supplies working instructions and reference material, the agent tool supplies the model and file/tool access, and a connector supplies authorized platform operations. Public Python is a separate offline route. [Capability scope](capability-status.md)
 
-- **Codex:** use the repository directory as the task's project. CLI users can start Codex from that directory. Project instruction discovery follows the path from the project root to the current directory; overrides and size limits can affect the result. After changing instructions, start a new run and check their source. See the official [project instructions guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md) and [project directory guidance](https://learn.chatgpt.com/docs/projects).
-- **Another host:** use its documented project-rule mechanism, if available. Otherwise, explicitly ask it to read the root `AGENTS.md` and make the referenced files accessible through that host's supported file tools. Do not assume every client automatically loads that filename.
+## Files or rules are inaccessible
 
-The repository has not been validated in every host. Check the files and tools actually available in the current task.
+**You check:** obtain the complete repository through [step 1](first-check.md#open-project) and open the folder containing `AGENTS.md` and `docs/`. Uploading only a README, copying a script or sharing a GitHub URL does not establish access to referenced files.
 
-## 2. Check loading and reading tools
+Hosts load instructions differently:
 
-Send this prompt in the project task:
+- **Codex:** use the repository directory as the task project; CLI users can start there. Project paths, overrides and instruction-size limits may affect loading. After instruction changes, check sources in a new run. See the official [project instructions](https://learn.chatgpt.com/docs/agent-configuration/agents-md) and [project directory guidance](https://learn.chatgpt.com/docs/projects).
+- **Other agent tools:** use their documented project-rule mechanism. Without automatic loading, explicitly ask the host to read the root `AGENTS.md` and supply referenced files through supported file tools. Do not assume all clients load that filename automatically.
+
+**Ask the agent to diagnose:**
 
 ```text
-Read the repository's root AGENTS.md and confirm the current project directory.
-List the instruction files you can verify and report anything inaccessible or uncertain.
-I want to begin with a read-only advertising task. Explain which available tools
-can discover accounts and read reports, and what platform/account scope is still needed.
-Reuse my existing connection or chosen route. If access is missing, identify the
-specific gap and point me to the platform connection guide.
-Inspect and explain only; do not install services, purchase or write to accounts.
+I am having trouble loading Ad Ops Agent. Inspect only:
+1. Identify the project directory, AGENTS.md and docs/workflow.md actually accessible to this task.
+2. State which files you read and which are missing or uncertain; do not just say "loaded".
+3. If instruction overrides or truncation information are visible, identify the source; otherwise mark unknown.
+4. Give the specific action I need to take and the step to retry afterward.
+Do not change global configuration, install services or operate on ad accounts.
 ```
 
-A useful response names the instruction sources, distinguishes host tools from offline Python, and reports actual tool evidence or a specific access gap. Discovering a tool is not proof that it can read the selected account. For supplied-file analysis, check the files and their coverage instead of requiring an account connection.
+**Resolved when:** required files are actually readable, rule sources are identified and uncertainty stays explicit. A model's claim alone does not prove subsequent behavior; instruction or session logs can help where available. Return to the [step 1 completion check](first-check.md#open-project), then continue with connection setup.
 
-If instructions appear missing, inspect the repository version, working directory, overrides and truncation. A model's claim to have loaded a file helps diagnosis but does not prove subsequent behavior. Use instruction or session logs when the host exposes them; this guide does not authorize changes to global configuration.
+## Files load, but accounts or reports are unavailable
 
-## 3. Complete the first read-only task
+| Situation | Evidence the agent should provide | Your action | Resume |
+| --- | --- | --- | --- |
+| No advertising reading tools | Actual visible tools or discovery results, with missing capabilities | Check the existing route; see connection options if none chosen | [Connection](first-check.md#connect) |
+| Tools visible, account read fails | Call category, error category and target scope, without credentials | Check platform identity, selected accounts and necessary permissions | [Account check](first-check.md#verify-account) |
+| Account readable, report empty | Date, time zone, filters, pagination and coverage | Confirm scope; choose preparation if advertising has not started | [Task selection](first-check.md#choose-task) |
+| Response is offline JSON or `ready_simulation` | Identify the fixture or local simulation source | A real task still requires a real read; simulation can be a separate exercise | [Account check](first-check.md#verify-account) |
 
-Follow the [first read-only task tutorial](first-check.md) for a scoped account and report check. It gives a prompt, expected output and acceptance criteria for another host with Pipeboard. If you already use another connection, keep that route and verify the same required reading capabilities.
+Ask: “Explain what the real tools can read, the last successful step, the gap and who resolves it. Do not turn empty responses into zeros or create ads to diagnose access.” See the [connection reference](platform-connectivity.md) for other routes.
 
-For missing access or a new connection, use the [platform connection guide](platform-connectivity.md). For broader business work after this check, continue with the [host workflow](workflow.md). Reading access is sufficient for this first task; a later configuration or publishing task needs its own verified writing/readback capabilities, concrete batch and applicable authorization.
+A read-only task needs only its reading capabilities; missing write access does not invalidate supplied-report analysis. When users explicitly choose supplied-file analysis, check file coverage and source, and label it as file analysis rather than live account validation.
 
-## 4. Accept the output
+## After resolving the gap
 
-These are manual checks, **not a report of completed tests in a new environment**.
+Resume the interrupted step in the first-use tutorial and retain verified context. See its [delivery checks](first-check.md#check-result). Later configuration or publishing follows the [daily workflow](workflow.md): a concrete batch, necessary capabilities, covered authorization and readback.
 
-| Check | Acceptable evidence |
-|---|---|
-| Project loading | The repository and instruction sources are identified; missing files or uncertain loading are disclosed |
-| Tool and account access | Actual discovery/read results identify the selected account, or the response explains the specific blocking gap |
-| Report scope | Platform, account, dates, time zone, currency and source/extraction time are stated; unavailable fields stay explicit |
-| Result and limits | Observed results are separated from interpretations, missing coverage and next decisions; a submission-success receipt or simulation alone does not establish real completion |
-| Action boundary | The first task stays read-only and respects the chosen connection; any later write has a reviewable batch, verified capabilities and covered authorization |
-
-Do not create advertisements merely to finish this check. For later authorized writes, retain native IDs and receipts, reconcile uncertain outcomes before retrying, and read back affected objects. The [host workflow](workflow.md) covers those execution and handoff details.
-
-For an explicitly requested offline exercise or a supported deterministic check, use the [method guide](method-planning.md). Simulation does not establish live access or authorize publishing.
+Use the [Python method planning reference](method-planning.md) only when running a program example is intended. This troubleshooting guidance is not a report of completed fresh-environment validation.

@@ -2,9 +2,11 @@
 
 [简体中文](workflow.zh-CN.md) · [Cases from practice](case-studies.md) · [Capability status](capability-status.md)
 
+**For:** users who have loaded the project and checked their connection, and now have a task to delegate. **Outcome:** know the inputs, review decisions and delivery checks for that task. Begin with [first use](first-check.md) if you are new; use [business context and collaboration](first-run.md) to fill relevant gaps.
+
 This is a host-agent workflow: how to take an advertising request through preparation, authorized operations and handoff using an agent tool with the necessary connections. It distils historical work records. A new host must still verify its available tools and permissions.
 
-This route can use the host's MCP, API, SDK or user-authorized platform UI. The repository's Python programs provide a separate offline validation route. They neither make these live calls nor need to become live adapters before a host can use its existing tools.
+This route can use the host's MCP, API, SDK or user-authorized platform UI. The repository's Python programs provide a separate offline validation route. They neither make these live calls nor need to become live adapters before a host can use its existing tools. Here, a “write” creates or changes a platform object; “readback” reads that object again afterward to check the actual result.
 
 ## Start with the current task
 
@@ -15,7 +17,7 @@ This route can use the host's MCP, API, SDK or user-authorized platform UI. The 
 | “Review these accounts for changes” | Time window, account coverage, current method and previous open items | Evidence, recommendations, missing data and follow-ups |
 | “Move this campaign to another account” | Source structure, target access, reusable identities/events/media and overlapping spend | Object mapping, differences, authorized operations and checks |
 | “This ad is not spending / was rejected / is misconfigured” | Effective and parent state, review/error details and recent changes | Diagnosis, evidence, recovery options and results |
-| “Give me an Offer-level daily report” | Date/timezone, channels/accounts, cost/conversion/revenue sources and mapping rules | A readable report, coverage notes and traceable detail |
+| “Give me a daily report by product or offer” | Date/timezone, channels/accounts, cost/conversion/revenue sources and mapping rules | A readable report, coverage notes and traceable detail |
 
 Choose the task before collecting its inputs. A report request does not require another creative-testing interview.
 
@@ -38,7 +40,22 @@ Read relevant material and confirmed agreements. Summarize the product, market, 
 
 **Experienced buyer example:** “Keep my original campaign and test in a separate group. Leave existing delivery alone.” Record the original objects as excluded from changes, identify the new test and budget, and resolve missing conditions. Show conflicts with older methods instead of silently substituting a previous approach.
 
-IAA, IAP, hybrid monetization, purchases, forms and qualified leads determine which facts matter. Unknown lifetime revenue stays unknown. The author's historical campaign structures, budget ladders and stop-loss numbers are not defaults for everyone.
+Business type determines which facts matter: IAA means revenue from in-app advertising, IAP means revenue from in-app purchases, and hybrid monetization combines both. Web businesses may track purchases, form submissions or sales-qualified leads. Unknown lifetime revenue stays unknown. The author's historical structures, budget ladders and stop-loss numbers are not universal defaults.
+
+### Experienced buyer example: a daily report using an existing SOP
+
+This fictional read-only task needs no asset selection or ad creation. SOP means the user's existing standard operating procedure.
+
+> ‘Use my existing rules for yesterday's report: cover the two selected accounts and combine spend and form submissions by product; take qualified leads from the sales sheet. Recheck whether the previous recommendations were implemented before suggesting changes. Do not change accounts in this task.’
+
+| Step | What the agent does | What the user can check |
+|---|---|---|
+| Organize the existing method | Preserve product-level aggregation, the sales-sheet lead definition, prior-action checks and read-only scope | A summary of constants; no substitution with a default creative test |
+| Identify variables and missing inputs | Update dates and actual data each round; reuse known timezones, product mapping and prior records; ask only for missing sales dates or matching rules | The reporting window and the gaps that affect conclusions |
+| Read facts | Read authorized data, check coverage for both accounts and product mapping, and inspect current state for prior objects | Sources, read times, detail and a distinction between checked and not yet checkable items |
+| Hand off and continue | Suppose ad data is complete but the sales sheet and traceable prior-action records are unavailable | Deliver spend and form results; qualified-lead cost and the effects of earlier recommendations remain unresolved; list the required inputs |
+
+The handoff states: ‘Read-only; no account changes. Supply the matching sales sheet and prior execution records before the next review.’ Successful retrieval does not verify lead quality, and missing prior records do not prove a recommendation went unexecuted. Without an agreed threshold, retain observations and gaps rather than inventing a pause or scaling number.
 
 ## 3. Prepare a concrete batch for review
 
@@ -94,8 +111,10 @@ A user correction first fixes the current conclusion. When the user explicitly r
 
 ## Reuse the workflow
 
-Copy the [task record template](../templates/task-record.md) to a private directory and have the host follow this guide. Business facts, native object IDs, receipts and assets stay private. Connections and methods can change while preparation, review, execution and verification remain reusable.
+Have the agent organize the [task record](../templates/task-record.md) from this conversation and actual tool results, in the private location you allow for this task. You check scope, reasoning and decisions rather than manually filling every field; read-only tasks can skip publishing sections. Keep business facts, native IDs, receipts and assets out of the public repository. Connections and methods can change while preparation, review, execution and verification remain reusable.
 
 In a new host, begin with a read or preparation task, then validate writes and readback within explicit authorization. A historical case from an agent tool does not prove another host is configured or every advertising product on all three platforms is supported.
 
-For public-code checks of planning, recovery and data validation, use the [offline validation entry points](capability-status.md#offline-validation-entry-points). Simulation approvals and fictional accounts never authorize live work.
+**Next task:** after a report, ask the agent to collect the missing evidence before another review; for a new batch, reuse confirmed context and prepare the review in step 3. If the business or collaboration changes, update the relevant part of [business context and collaboration](first-run.md).
+
+**For developers:** for public-code checks of planning, recovery and data validation, use the [offline validation entry points](capability-status.md#offline-validation-entry-points). Simulation approvals and fictional accounts never authorize live work.

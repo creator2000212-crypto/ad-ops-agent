@@ -71,32 +71,28 @@ Newcomers can start with a few candidate methods; experienced buyers can bring t
 
 **What does this add to a connection tool?** A model and its connected tools can read or change account objects. Ad Ops Agent organizes those capabilities around a buying task: it keeps product context and the user's method, prepares assets and a plan, checks budget and action scope, then connects execution to readback and the next review. Before asking whether a budget *can* be changed, the workflow establishes **whose method, which objects, which observation window and how the change will be verified**.
 
-[Same workflow, two methods (fictional example)](docs/method-comparison.md) · [Host workflow](docs/workflow.md) · [Method confirmation](docs/method-planning.md) · [Capability matrix](docs/capability-status.md)
+[Same workflow, two methods (fictional example)](docs/method-comparison.md) · [Host workflow](docs/workflow.md) · [Business and working preferences](docs/first-run.md) · [Capability matrix](docs/capability-status.md)
 
 ## Choose a starting point
 
-**Already connected? Start a task.** Open the full repository in your Agent environment and confirm that [AGENTS.md](AGENTS.md) is loaded. Check the selected accounts, tools and authorization scope, then use the known product context and method. [First read-only check: an agent tool + Pipeboard](docs/first-check.md) · [First setup](docs/first-run.md) · [Loading and validation](docs/use-in-agent.md)
+**[First use: get your first useful result →](docs/first-check.md)**
+
+Follow the tutorial: download and open the project → verify the connection and account → explain the current need → complete one task. Supply business context through conversation; the agent organizes, checks and delivers the work. You do not need to learn Python or edit JSON first.
+
+| Your situation | First deliverable after connection verification |
+| --- | --- |
+| Product ready, no advertising history | Business brief, gaps and asset preparation checklist |
+| Ads already running | A read-only findings report for one account and next steps |
+| An established SOP | Method terms, support status and unresolved conditions |
+
+Reuse existing connections and context, skipping completed steps still valid for the task. The tutorial illustrates an agent tool + Pipeboard + Meta and preserves other connection options; its environment-validation status is stated on the page. Later publishing follows a concrete plan and covered authorization.
+
+**Want to see the result first?** Read the [course-business example](docs/build-from-zero.md) or [offline task walkthrough](demo/README.md), without an account or installation. The [sample report (Chinese)](demo/expected/report.md) shows detailed fields.
 
 <details>
-<summary><strong>Copy a read-only task to try the workflow</strong></summary>
+<summary><strong>Developers: run the public example locally</strong></summary>
 
-Add the platform and accounts you want to inspect, then send this to the Agent after loading the project:
-
-```text
-Run a read-only advertising check for the platform and accounts I select.
-First verify the account scope and available read tools. State which capabilities are missing.
-Reuse known business context, confirmed methods and relevant open items; ask only for missing information.
-Review the latest complete delivery day in each account's timezone. State the dates, timezones and data cutoff times.
-Report data-quality issues, objects needing attention, suggestions and unresolved questions. Missing data is not zero.
-Do not modify accounts, budgets or assets, and do not create or publish ads.
-```
-</details>
-
-The first deliverable is a read-only findings report: selected account coverage, data cutoff, missing capabilities or sources, objects to review and open questions. It does not change an ad account.
-
-**Not connected? Set up tools first.** Existing MCP, API and SDK connections remain valid. See the [platform connection guide](docs/platform-connectivity.md) for self-managed and hosted routes.
-
-**No account needed? Run the public example.** Requires Python 3.9+ and system IANA timezone data; standard library only.
+Requires Python 3.9+ and system IANA timezone data; standard library only. Run in a terminal:
 
 ```bash
 git clone https://github.com/creator2000212-crypto/ad-ops-agent.git
@@ -106,16 +102,18 @@ python3 demo/run_demo.py
 
 The example checks **three fictional Meta accounts and ten ad sets**, producing analysis, proposed differences and snapshot comparisons. It makes no ad-platform calls and incurs no ad spend.
 
-[Walkthrough](demo/README.md) · [Output report (Chinese)](demo/expected/report.md) · [More validation commands](docs/capability-status.md#offline-validation-entry-points)
+See the [walkthrough](demo/README.md) for output locations and reading order, or [validation commands](docs/capability-status.md#offline-validation-entry-points) for other checks.
+
+</details>
 
 ## Explore further
 
 | Your question | Start here |
 | --- | --- |
-| Business and methods | [Build from an example](docs/build-from-zero.md) · [Method and test planning](docs/method-planning.md) |
+| Business and methods | [Build from an example](docs/build-from-zero.md) · [Bring your own method](docs/first-run.md) |
 | Execution and checks | [Workflow](docs/workflow.md) · [Task record template](templates/task-record.md) |
 | Knowledge and private experience | [Knowledge (Chinese)](docs/knowledge-base.zh-CN.md) · [Private methods (Chinese)](docs/private-memory.zh-CN.md) |
-| Code and implementation scope | [Architecture (Chinese)](docs/architecture.md) · [Capabilities](docs/capability-status.md) · [Contributing](CONTRIBUTING.md) |
+| Code and implementation scope | [Architecture (Chinese)](docs/architecture.md) · [Python method planning](docs/method-planning.md) · [Capabilities](docs/capability-status.md) · [Contributing](CONTRIBUTING.md) |
 
 [Complete documentation index →](docs/index.en.md)
 

@@ -1,12 +1,12 @@
 # Connect Meta, TikTok and Google Ads through API, SDK or MCP
 
-[简体中文：完整平台申请指南](platform-connectivity.zh-CN.md) · [First-run setup](first-run.md) · [Host workflow](workflow.md)
+[简体中文：完整平台申请指南](platform-connectivity.zh-CN.md) · [First use](first-check.md) · [Host workflow](workflow.md)
 
 > The platform references below were checked for the existing guide on **2026-09-24**. This documentation reorganization did not reverify provider capabilities. Entry points, permissions, plans and supported tools can change; check current official documentation and actual account access before configuring them.
 
 There are two routes: use existing tools exposed to the host, or develop an independent application that calls platform APIs. A verified, authorized host connection can support the [host workflow](workflow.md) without first implementing this repository's Python adapters. The public Python modules remain offline and do not acquire live capabilities when the host connects an MCP server.
 
-Start with the task and selected accounts. Read-only analysis needs its relevant reading/reporting access. The first complete configuration/publishing workflow verifies the necessary reading, writing and native readback capabilities before business intake. All three platforms need not be connected, and purchasing a service does not prove access or authorize operations.
+For your first task, follow [First use](first-check.md); this page is a connection reference to open when needed. Start with the task and selected accounts. Read-only analysis needs its relevant reading/reporting access. The first complete configuration/publishing workflow verifies the necessary reading, writing and native readback capabilities before business intake. All three platforms need not be connected, and purchasing a service does not prove access or authorize operations.
 
 Start by verifying an existing connection or the user's chosen route. If neither is available, compare the routes below; a hosted connection such as Pipeboard can reduce setup maintenance.
 
@@ -70,7 +70,7 @@ Verify Cloud access, authorized customer identity, time zone/currency and report
 
 The existing [Pipeboard Ads MCP guide](https://pipeboard.co/guides/ads-mcp) describes a common entry point exposing platform-specific tools for authorized Meta, Google Ads and TikTok accounts. Verify the current service, required operations and account scope before choosing it.
 
-**[Visit Pipeboard to connect your ad accounts](https://pipeboard.co/#via=tian)** · [Complete the first read-only task](first-check.md)
+**[Visit Pipeboard to connect your ad accounts](https://pipeboard.co/#via=tian)** · [Complete your first task](first-check.md)
 
 1. Check the current [plans and limits](https://pipeboard.co/pricing); a plan name alone does not prove a writing capability.
 2. Connect only the selected accounts for this work. Read the resulting account list without automatically including every visible business or manager account.
@@ -91,7 +91,7 @@ The service can reduce connection maintenance. It does not replace account permi
 
 ## Continue into the workflow
 
-Once the task's necessary capabilities are available, reuse or establish collaboration preferences and business context. Preserve facts, sources, unknowns and user methods. Prepare a concrete batch, check its authorization, execute covered actions and read back results; read-only tasks deliver sourced analysis without a publishing step. Follow the [host workflow](workflow.md).
+Once the task's necessary capabilities are available, return to [task selection](first-check.md#choose-task). Use [business and working preferences](first-run.md) to fill task-relevant gaps. Preserve facts, sources, unknowns and user methods. Prepare a concrete batch, check its authorization, execute covered actions and read back results; read-only tasks deliver sourced analysis without a publishing step. Follow the [host workflow](workflow.md).
 
 Start deployment verification with accurate account discovery and reconcilable reports. Test writing, readback and permission-failure branches only within explicitly authorized test scope; this document does not authorize creating objects or revoking real permissions. Add media, batch and product coverage as actual tasks require it.
 

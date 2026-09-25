@@ -1,6 +1,10 @@
-# From a user method to a reviewable test plan
+# Python method planning: developer reference
 
-[简体中文](method-planning.zh-CN.md) · [Project home](../README.md)
+[简体中文](method-planning.zh-CN.md) · [First use](first-check.md) · [Business intake](first-run.md)
+
+**Audience:** developers and agent hosts preparing offline inputs or checking method compilation. **Prerequisites:** the full repository, Python 3.9 or later, and a terminal opened at the repository root. No advertising credentials are needed. If you want to use the agent through conversation, start with [first use](first-check.md) or [business intake](first-run.md); these commands are optional.
+
+**Result:** local candidate methods, reviewable plans and simulation receipts. M2 is this repository's name for the Python method module. A MethodSpec is a versioned structured record of a method; neither term is something an ordinary user must configure before their first task.
 
 This page documents the **public Python M2 module**, an optional offline path alongside the [host workflow](workflow.md). Real tasks can use the host's verified, authorized tools and the user's own method; they do not have to pass through `task.py` or fit its two templates. The host preserves source terms, reviews feasibility and prepares an appropriate batch through that route.
 
@@ -19,9 +23,34 @@ The user explicitly selects the anchor asset; the compiler does not infer the be
 
 ## Run the complete demonstration
 
+Use a **new** output directory. The command below creates it; do not create it first. If it already exists from an earlier run, choose another name rather than deleting previous results.
+
 ```bash
-python3 scripts/demo_methods.py
+python3 scripts/demo_methods.py --out runs/methods-first-look
 ```
+
+When it finishes, the terminal JSON should report `result: "passed"`, `case_count: 6` and `native_platform_calls: 0`. A traceback or nonzero exit code means the demonstration did not finish successfully; keep the error and existing output for diagnosis.
+
+### Follow one case from inputs to review
+
+All paths below are relative to the repository root. Open Markdown files in your editor or agent tool; no extra report viewer is required.
+
+| Step | Where to look | What to check |
+|---|---|---|
+| 1. Read the input | The `profile.json`, `request.json`, `brief.json` and `candidates.json` files under `runs/methods-first-look/app_guided/` | Fictional product context, explicit method request, budget/targets and declared asset identities |
+| 2. Read the output index | `runs/methods-first-look/review.md` | Follow the `app_guided` link to its revised plan; generated plan directory names need not be guessed |
+| 3. Review the plan | The linked case `review.md` | Test question, selected and excluded assets, fixed/variable components and shared target budget |
+| 4. Check the exercise result | `runs/methods-first-look/demo-summary.json` | For `app_guided`, initial assets are `anchor` + `hook-b`; revised assets are `anchor` + `concept-b`; repeat creation count is 0 |
+
+The input files are generated from [fictional fixtures](../evaluations/fixtures.py); the demonstration supplies fictional confirmations as part of the exercise. Do not treat those confirmations as a real user's adoption. To inspect the persisted task state, run:
+
+```bash
+python3 task.py status --task runs/methods-first-look/app_guided/task
+```
+
+Its final stage should be `plan_review`: the revised method has a new plan ready to inspect. It does not mean a revised batch was executed or published.
+
+### What the demonstration exercises
 
 The demonstration uses complete fictional App, ecommerce and lead-generation profiles, each with `guided` and `bring_own` approaches, for six cases. Each step launches an independent CLI process to check persistence between calls:
 
@@ -34,7 +63,7 @@ Outputs stay in a fresh directory under the ignored `runs/` path. `demo-summary.
 
 ## The host's role when using M2
 
-1. Choose the route first. For a real task, follow [first-run setup](first-run.md) and verify the capabilities it needs; read-only work does not require publishing permissions. For an M2 exercise, use explicitly simulated inputs and explain that its connection gate is an offline contract, not a live account check.
+1. Choose the route first. For a real task, follow [first use](first-check.md), verify the capabilities it needs, then establish [business context](first-run.md); read-only work does not require publishing permissions. For an M2 exercise, use explicitly simulated inputs and explain that its connection gate is an offline contract, not a live account check.
 2. Establish collaboration needs, then collect the product, platforms, countries, Web/App surface, monetization, test question and measurement basis needed for this task. Reuse known facts and retain unknowns and conflicts.
 3. For guided users taking the M2 route, explain the two supported candidates and organize answers. For an existing methodology, retain its original source and map explicit terms into supported labels or structured answers. Do not discard unsupported terms to pass validation. Explain separately whether the host can handle those terms through its actual tools; a Python limitation is not a universal strategy restriction.
 4. Present the question, variable, fixed components, anchor, scope, metric, source, observation window and unresolved items. Record adoption only after an explicit user confirmation.

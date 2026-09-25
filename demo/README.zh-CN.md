@@ -76,4 +76,8 @@
 python3 demo/run_demo.py
 ```
 
+终端会打印报告。随后打开 `demo/out/report.md` 查看本次生成结果，先看拟改内容与剩余待办；需要追溯快照判断时再看 `demo/out/gate.json` 和 `demo/out/reconciliation.json`。这些路径均相对仓库根目录，输出已被 Git 忽略。仓库中的 `demo/expected/report.md` 是参考样例，不是你本次运行的产物。
+
+看完后要开始自己的任务，进入[首次使用](../docs/first-check.zh-CN.md)。运行本例不会接通账户。
+
 首次接入、素材测试和经验积累的具体例子，见[从零搭建说明](../docs/build-from-zero.zh-CN.md)。需要字段、公式与分步命令时，再查[技术参考](../docs/operating-loop.zh-CN.md)。

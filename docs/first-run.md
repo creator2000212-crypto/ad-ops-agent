@@ -1,64 +1,101 @@
-# First-run setup: connect the required capabilities, then understand the work
+# Help the agent understand your business and working style
 
-[简体中文](first-run.zh-CN.md) · [Host workflow](workflow.md)
+[简体中文](first-run.zh-CN.md) · [First use](first-check.md) · [Everyday task workflow](workflow.md)
 
-**Start with a concrete task:** follow the [agent tool + Pipeboard first read-only check](first-check.md) for one Meta account. This page then covers collaboration preferences, business context and subsequent workflows.
+**Who this is for:** people who have checked the required account connection and want the agent to work with their business and methods. **What you will get:** a reviewable business brief, a current task and a list of missing information. Provide context through conversation; you do not need to write program configuration.
 
-Begin with the task, selected platforms and accounts. A complete configuration/publishing workflow follows **connection → verification of necessary reading, writing and readback → collaboration preferences → business context and methods → preparation, review and execution**. Connecting all three platforms is unnecessary. Read-only analysis needs the relevant reading/reporting access; analysis of supplied reports does not require advertising write permissions.
+If you have not opened the project or checked its connection, start with [first use](first-check.md). This page reuses verified accounts, tools and existing information, without reinstalling connectors or repeating the whole questionnaire. When analyzing supplied reports, check their sources and scope; advertising write permissions are unnecessary for that task.
 
-**The host workflow and public Python modules are separate routes.** The original workflow has been used in the author's business through an agent tool. In a new host, verify its available tools and account scope. A host can use verified, authorized tools without first implementing Python adapters. Public Python modules evaluate structured inputs and simulated snapshots, compile two bounded method templates and exercise local recovery; they do not connect to real platforms. `ready_simulation` is not proof of live access. See [capability status](capability-status.md).
+## 1. Establish what can be done this time
 
-Load the root [AGENTS.md](../AGENTS.md) to apply project instructions in conversation. The [host loading guide](use-in-agent.md) distinguishes loading rules from installing tools or authorizing accounts.
+The agent first identifies the selected platforms, accounts and capabilities actually available. Read-only tasks need relevant reading or reporting access. Before a first complete configuration and publishing workflow, verify necessary reading, writing and the ability to re-read affected objects, then begin full business intake. Unselected platforms and accounts need not be connected; do not create ads just to probe permissions.
 
-## 1. Select the task scope and connection route
+When a capability is missing, the agent explains the affected steps and the next connection action. Retain information already supplied and continue independent work supported by current access. If no usable connection or route has been chosen, consider [Pipeboard](https://pipeboard.co/#via=tian) first; an existing MCP, API, SDK or another connection route remains valid. Choices and setup details live in the [connectivity guide](platform-connectivity.md).
 
-Establish which platforms/accounts the task uses, whether a connection already exists and which necessary capabilities are missing. Before the first full writing workflow, resolve connection requirements instead of presenting a long business questionnaire. Retain information the user already supplied. For supplied-data analysis, check its scope, definitions and source.
+A working connection does not authorize publishing or spending. Actual account reads, available tools and permission evidence establish capabilities; public Python offline results cannot replace that evidence. See [capability status](capability-status.md) for scope.
 
-### Without an existing connection, consider Pipeboard first
+## 2. Use three questions to establish a working style
 
-**Pipeboard is the project's first setup recommendation for users who want less connection maintenance.** Its Ads MCP describes a unified route for authorized Meta, Google Ads and TikTok accounts. Actual operations depend on account permissions, service capabilities and the supported platform product. [Official Ads MCP guide](https://pipeboard.co/guides/ads-mcp)
+The agent reuses known information and asks only about gaps, starting with at most three relevant questions.
 
-- A common MCP entry point for supported tools.
-- Less custom connection code to maintain.
-- Connection of the accounts selected for the current work.
-
-**[Visit Pipeboard to connect your ad accounts](https://pipeboard.co/#via=tian)**
-
-Check current plans, limits and required tools before choosing. The service helps with connectivity; it does not replace methods, assets, measurement or platform review. The host uses the capabilities actually available after connection. A purchase does not add live execution to the Python modules, and the recommendation itself does not authorize installing, purchasing or submitting credentials.
-
-### With an existing connection or a self-managed route
-
-Keep a working MCP/API/SDK connection, use another MCP or follow the [platform connectivity guide](platform-connectivity.md). Verify existing access instead of asking users to switch. Respect another chosen route or a dismissed recommendation.
-
-The offline input records these preferences in `setup_preferences.route` and `setup_preferences.recommendation_dismissed`. Route values are `undecided`, `pipeboard`, `existing`, `self_managed` and `other_mcp`. Choosing a route is a preference, not evidence of successful access.
-
-## 2. Verify the capabilities this task needs
-
-The host checks:
-
-1. Native account IDs, platform identity and authorized account scope.
-2. Current connection health and the required reading/reporting tools and permissions.
-3. For configuration or publishing, the necessary writing capabilities and a way to read back affected objects.
-
-Read-only access can support inventory, reporting and diagnosis; it cannot replace write capabilities for a writing task. Unselected accounts or platforms need not be connected. Recheck requirements when the task, account or platform changes.
-
-Explain missing capabilities and the steps they block, while continuing independent work that current access supports. For the first complete writing workflow, resolve missing connection capabilities before business intake. Passing a capability check does not authorize publishing, spending or increasing budgets.
-
-Use account discovery, reading results, actual tool schemas and permission evidence. Preserve execution and readback evidence for authorized operations. An installation receipt or the existence of a creation tool is insufficient; do not create live objects merely to test access. Keep tokens in secure configuration, never in the repository, fixtures or logs.
-
-The unchanged Python `onboarding.py` contract still checks simulated reading and `create_simulated_draft` capabilities for its four readiness evaluations. Its `connection_gate` and `guidance` outputs describe that offline route. They are neither a universal gate for host read-only tasks nor a substitute for actual capability evidence.
-
-## 3. Establish how the user wants to collaborate
-
-After the required capabilities are available, reuse known context and ask only missing questions. Start with at most three relevant questions; platform experience may remain unknown and must not independently block progress.
-
-| Information | Example question | Use |
+| What to establish | Plain-language question | How the answer guides the work |
 |---|---|---|
-| Relevant platform experience | “Have you used Meta Ads before?” | Adjust explanation depth without inferring permissions |
-| Collaboration approach | “Would you like step-by-step guidance or to use your existing method?” | Choose `guided` or `bring_own` |
-| Current need | “What would you most like to accomplish this time?” | Limit intake to the current task |
+| Current stage and need | “Are you already running ads? What would you most like to accomplish this time?” | Distinguishes launch preparation, account analysis and a specific operation |
+| Platform experience | “Have you advertised on this platform before?” | Adjusts explanation depth; unknown experience does not block progress |
+| Working style | “Would you like help developing a plan, or should I use your method or SOP?” | Offers candidate methods or preserves and checks an existing method |
 
-For the Python route, these values are recorded in `collaboration`:
+Experience is platform-specific, and the working style can change between tasks. An experienced Meta buyer starting with Google Ads can request detailed guidance. Advertising expertise does not require knowledge of code or configuration files.
+
+**If you do not have an established method, you can say:**
+
+> The account is connected. I have a course website and want appointment leads, but I do not have an established advertising method. Understand my product, markets, appointment process and existing assets, asking only about gaps that affect the next step. Start with a business brief, a preparation checklist and candidate testing directions. I will confirm the budget.
+
+The agent explains choices and their applicability, then proposes candidates. An unconfirmed suggestion remains a candidate rather than becoming an adopted user method.
+
+**If you already have a method, you can say:**
+
+> The account is connected. Read my SOP and identify the rules to preserve, what may vary, observation conditions and missing information. Then check whether the available tools can support it. Keep my method and prepare a reviewable execution outline; do not modify the account yet.
+
+The agent preserves source terms and references, identifies conflicts, gaps and requirements unsupported by the current tools, and lets the user decide how to handle them. User methods may cover reports, inspections, creative tests or other tasks; they are not limited to the public Python program's two test templates.
+
+## 3. Collect only the context needed for this task
+
+These are prompts to use when relevant, not a questionnaire to complete from top to bottom. The agent reads tool-accessible facts and identifies their sources; the user supplies business meanings, goals and trade-offs. Reuse known information and retain unknowns rather than guessing.
+
+| Current task | What the user provides | What the agent reads, organizes and checks | First deliverable |
+|---|---|---|---|
+| A product that has not launched ads | Product, markets, audience, conversion journey and existing assets; undecided budget limits stay open | Website or app destinations, available accounts and events, missing materials | Business brief, preparation checklist and candidate testing directions |
+| Review existing advertising | Account and date range, question to answer, adopted metrics or methods | Reports, time zone, currency, data coverage and definitions | Sourced observations, suggestions and open questions |
+| Work from an existing SOP | Original SOP or file, applicability, current task and fixed conditions | Rules mapped to actual tools, current objects, conflicts and gaps | Restated method, feasible scope and batch draft |
+
+Different businesses call for different context:
+
+- **Web:** where the ad sends users and what counts as a conversion; whether a form submission becomes a qualified lead only after sales confirms it.
+- **App:** store destination, operating system and in-app events; whether revenue comes from advertising (IAA), in-app purchases (IAP), or both.
+- **Revenue decisions:** the data source, observation window and treatment of refunds; matching metric names do not establish matching definitions.
+- **Creative testing or writes:** what to compare, what stays fixed, available assets, whether the budget is total or daily, and observation or adjustment conditions. Undecided write conditions remain in the draft rather than receiving invented defaults.
+
+Ask about these only when they affect the current task. Analyzing yesterday's existing report does not require rebuilding the entire creative strategy.
+
+## 4. Check a business brief, then start the task
+
+This **fictional course website example** illustrates the deliverable. It is not a real account record or a recommended budget.
+
+> **Current task:** prepare initial creative testing directions; do not modify the account.
+>
+> **Known business:** an English course website for adults in the US; the goal is to book a 15-minute trial lesson.
+>
+> **Existing materials:** three videos; the user has no established testing method.
+>
+> **Outcomes to distinguish:** form submissions, qualified appointments and subsequent purchases are separate results.
+>
+> **Candidate directions:** compare openings for one selling point, or compare different selling points; inspect assets before choosing.
+>
+> **Open questions:** qualified-appointment definition and source, available conversion event, budget type and cap, observation conditions.
+>
+> **Next step:** the user confirms or corrects the brief; the agent organizes assets and a plan using confirmed conditions. Unresolved conditions remain in the draft.
+
+| Who is responsible | What they do |
+|---|---|
+| You | Supply business information unavailable from the account, correct the brief, and decide goals, method and spending boundaries |
+| Agent | Read permitted materials, cite sources, distinguish facts, candidate judgments and unknowns, and organize the brief and gaps |
+| You and the agent | Confirm the current task scope, identify gaps that affect the next step, and enter the relevant workflow |
+
+**Done means:** both sides can explain the current task, confirmed inputs, remaining gaps and first deliverable. A business brief or method choice does not authorize publishing. Once a concrete write batch is prepared, check existing authorization or obtain missing confirmation, execute covered work and re-read results. Read-only tasks deliver their report directly.
+
+Next, choose the relevant [everyday task workflow](workflow.md). For a complete business example, read the [course website walkthrough](build-from-zero.md). Continue to the appendix only if you need the code interface.
+
+## Developer appendix: offline fields and examples
+
+Ordinary users can skip this section. The host turns conversation into private inputs; the following is the public Python offline contract, not a universal gate for real host tools.
+
+### Connection preferences and simulated capabilities
+
+`setup_preferences.route` records `undecided`, `pipeboard`, `existing`, `self_managed` or `other_mcp`; `setup_preferences.recommendation_dismissed` records a dismissed recommendation. Do not repeat unsolicited recommendations after a route is selected or the recommendation is dismissed. Choosing a route does not prove access.
+
+`onboarding.py` uses `connection_gate` to check simulated reading and `create_simulated_draft` capabilities for four readiness evaluations; `guidance` stays at connection setup when that gate fails. This contract is unchanged. It does not require real read-only tasks to have write permission, and `ready_simulation` is not a live account check.
+
+### Collaboration fields
 
 ```json
 {
@@ -69,30 +106,18 @@ For the Python route, these values are recorded in `collaboration`:
 }
 ```
 
-Experience values are `new`, `experienced` and `unknown`; approaches are `guided`, `bring_own` and `undecided`; explanation is `detailed` or `concise`. The current need must be nonempty for the offline collaboration gate. Experience and explanation preferences do not expand account, budget or publishing authority.
+Store this object in the profile's `collaboration` field. Experience values are `new`, `experienced` and `unknown`; approaches are `guided`, `bring_own` and `undecided`; explanation preferences are `detailed` or `concise`. The offline collaboration gate requires a selected approach and nonempty current need; experience may remain unknown. Python varies questions by approach and records preferences; it does not implement a complete adaptive conversational interface. None of these fields expands account, budget or publishing authority.
 
-A user may be experienced on Meta and new to Google Ads, or change approach between tasks. The host adapts its explanations accordingly. Python records these preferences and varies questions by approach; it does not implement a complete adaptive conversation interface.
+M2 is the optional offline method module and compiles only hook comparisons and concept exploration. M1 private text methods provide context and review material; they do not automatically become adopted MethodSpecs. Real host work need not pass through M2. See the [Python method reference](method-planning.md) for its interface and constraints.
 
-## 4. Complete context and methods, then work
+### Inspect a deliberately incomplete check
 
-Gather only the product, market, event, measurement, asset, method and budget information needed for the task. Attribute facts supplied by tools, leave unknowns visible and distinguish user decisions from observed history.
-
-- For `guided`, explain the choices and prepare a reviewable method proposal. A suggestion is not a confirmed method.
-- For `bring_own`, preserve original terms, sources, applicable scope and fixed conditions. The method is not restricted to the two Python templates. Explain actual tool limitations without silently deleting requirements.
-- Resolve an unknown approach or missing current need before expanding business questions.
-
-Users work through conversation and need not edit JSON. The host explains variables, constants, scope, measurement, asset selection/exclusions and budget before preparing native configurations. If a supported offline check is useful, it can separately prepare inputs for `task.py`. M2 compiles only hook comparisons and concept exploration; private text methods do not automatically become adopted MethodSpecs. See the [method guide](method-planning.md).
-
-For real writes, prepare the batch, check existing authorization or obtain missing confirmation, execute covered steps and read back native objects. Reconcile uncertain outcomes before retrying. Analysis tasks end with sourced results and suggestions without an unnecessary publishing step. See the [host workflow](workflow.md).
-
-## Run the separate offline example
-
-From the repository root:
+Run from the repository root:
 
 ```bash
 python3 onboarding.py --input examples/onboarding-setup-required.json --out runs/setup
 ```
 
-This deliberately incomplete fixture returns **exit code `2`**. Inspect `setup.md`, `setup.json` and the `connection_gate` / `guidance` fields in `context.json`. Manually changing a field to `ready_simulation` does not verify a real connection.
+This fictional input lacks connectivity, so **exit code `2` is expected**. Open `runs/setup/setup.md` for guidance, `runs/setup/setup.json` for structured output, and `runs/setup/context.json` for `connection_gate` / `guidance`. Do not edit success fields to claim live access.
 
-`examples/onboarding-learning.json` is a complete fictional profile; `examples/onboarding-app-hybrid-discovery.json` has business gaps. Run `python3 scripts/demo.py` to generate and check fresh fictional inputs. `python3 scripts/demo_methods.py` demonstrates method proposals, adoption, compilation and simulated recovery across six fictional cases. None of these examples reads real accounts or proves cross-host usability.
+`examples/onboarding-learning.json` is a complete fictional profile; `examples/onboarding-app-hybrid-discovery.json` retains business gaps. `python3 scripts/demo.py` checks freshly generated fictional inputs. For method proposals, adoption and recovery, follow the [Python method reference](method-planning.md). None of these examples reads real accounts or establishes cross-host usability.

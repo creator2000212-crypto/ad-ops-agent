@@ -10,9 +10,14 @@
 
 ## 开始用 / 完成一项任务
 
-第一次可从[Agent 工具 + Pipeboard 的 Meta 只读检查教程](first-check.zh-CN.md)开始：打开项目、核对连接、选择一个账户，再交付并核对第一份报告。页面分别记录官方资料核对与尚待完成的实测范围。
+**第一次统一从[拿到第一份结果](first-check.zh-CN.md)开始。** 这是首次使用主路径：打开项目 → 核对连接与账户 → 说明需求 → 选择投放准备、账户检查或 SOP 核对 → 检查交付。已经完成且仍适用的步骤可跳过，不要求先读其他页面。
 
-[首次配置](first-run.zh-CN.md) → [加载与验收](use-in-agent.zh-CN.md) → [宿主工作流](workflow.zh-CN.md) → [任务记录模板](../templates/task-record.zh-CN.md)。先核对本次任务的账户、工具及授权，沿用已知业务资料和方法，再补缺项。
+只在对应问题出现时查阅：
+
+- 读不到文件或项目规则：[打开项目与加载排查](use-in-agent.zh-CN.md)，解决后返回教程原步骤。
+- 不知道该提供哪些业务信息：[业务与合作方式](first-run.zh-CN.md)。
+- 需要其他连接或平台：[接入参考](platform-connectivity.zh-CN.md)。
+- 已拿到第一份结果，准备处理日常工作：[日常工作流](workflow.zh-CN.md)；Agent 可按实际证据整理[任务记录](../templates/task-record.zh-CN.md)，保存在你授权的私有位置。
 
 ## 看实现 / 运行公开代码
 
@@ -25,8 +30,8 @@
 | 你要解决的问题 | 文档 |
 | --- | --- |
 | 从具体业务与素材搭建一轮工作流程 | [搭建例子](build-from-zero.zh-CN.md) · [English](build-from-zero.md) |
-| 理解业务、保留来源，避免重复访谈 | [业务初始化](onboarding.md) |
-| 组织用户 SOP、确认方法并生成测试计划 | [方法与测试](method-planning.zh-CN.md) · [两种方法对照](method-comparison.zh-CN.md) · [English](method-planning.md) |
+| 告诉 Agent 业务背景、目标与合作方式 | [业务与合作方式](first-run.zh-CN.md) |
+| 带入 SOP，或理解不同测试方法 | [日常工作流](workflow.zh-CN.md) · [两种方法对照](method-comparison.zh-CN.md) |
 | 检索知识、判断适用条件与证据缺口 | [知识库](knowledge-base.zh-CN.md) |
 | 保存、修订、撤回产品范围内的私有方法 | [私有方法库](private-memory.zh-CN.md) |
 
@@ -34,9 +39,9 @@
 
 | 你要解决的问题 | 文档 |
 | --- | --- |
-| 跟着一条路线拿到第一份只读结果 | [首次只读检查](first-check.zh-CN.md) · [English](first-check.md) |
-| 尚未接入，或第一次配置 | [首次配置](first-run.zh-CN.md) · [English](first-run.md) |
-| 确认宿主加载了项目指令 | [加载与对话验收](use-in-agent.zh-CN.md) · [English](use-in-agent.md) |
+| 跟着一条路线拿到第一份结果 | [首次使用](first-check.zh-CN.md) · [English](first-check.md) |
+| 连接后，补齐本次业务信息 | [业务与合作方式](first-run.zh-CN.md) · [English](first-run.md) |
+| 确认宿主加载了项目指令 | [打开项目与加载排查](use-in-agent.zh-CN.md) · [English](use-in-agent.md) |
 | 了解 Meta、TikTok、Google 连接路线 | [平台接入](platform-connectivity.zh-CN.md) · [English](platform-connectivity.md) |
 | 申请 Google Ads API | [申请指南](google-ads-api-application.zh-CN.md) |
 
@@ -57,6 +62,8 @@
 | 实际业务、宿主工具、公开 Python 的区别 | [能力矩阵](capability-status.zh-CN.md) · [English](capability-status.md) |
 | 模块分工与后续开发方向 | [架构](architecture.md) · [开发路线](roadmap.md) |
 | 贡献可复用流程或原生适配器 | [贡献说明](../CONTRIBUTING.md) |
+
+开发参考：[Python 方法编排](method-planning.zh-CN.md) · [业务初始化状态设计](onboarding.md)。这些文档不是使用宿主工作流的前置课程。
 
 <details>
 <summary><strong>结构化设计契约</strong></summary>

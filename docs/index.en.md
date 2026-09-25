@@ -10,9 +10,14 @@ Start with the [Meta preparation](case-studies.md#meta-task) and [TikTok status 
 
 ## Start a task
 
-For a first task, follow the [agent tool + Pipeboard Meta read-only tutorial](first-check.md): open the project, check the connection, select one account, then produce and verify a report. It distinguishes reviewed official setup information from the live validation still required.
+**Start with [First use: get your first useful result](first-check.md).** This is the main first-use path: open the project → verify connection/account access → establish the need → choose preparation, an account check or SOP review → check the result. Reuse completed steps that still apply; no other page is mandatory reading first.
 
-[First setup](first-run.md) → [Load and validate](use-in-agent.md) → [Host workflow](workflow.md) → [Task record](../templates/task-record.md). Confirm this task's account scope, tools and authorization; reuse known product context and methods, and ask about missing items.
+Open a reference only when needed:
+
+- Files or project rules are inaccessible: [project loading and troubleshooting](use-in-agent.md); then return to the same tutorial step.
+- Unsure what business context to provide: [business and working preferences](first-run.md).
+- Need a different connector or platform: [connection reference](platform-connectivity.md).
+- First result complete, ready for ongoing work: [daily workflow](workflow.md). The agent can assemble a [task record](../templates/task-record.md) from evidence in a private location you authorize.
 
 ## Run the public code
 
@@ -25,8 +30,8 @@ For a first task, follow the [agent tool + Pipeboard Meta read-only tutorial](fi
 | Question | Read |
 | --- | --- |
 | Build a workflow from a concrete business and assets | [Worked example](build-from-zero.md) |
-| Understand the business and preserve source context | [Business onboarding (Chinese)](onboarding.md) |
-| Bring a SOP and prepare a reviewable test | [Method planning](method-planning.md) · [Two-method comparison](method-comparison.md) |
+| Explain the business, goals and working preferences | [Business and working preferences](first-run.md) |
+| Bring a SOP or compare test methods | [Daily workflow](workflow.md) · [Two-method comparison](method-comparison.md) |
 | Check knowledge applicability and evidence gaps | [Knowledge base (Chinese)](knowledge-base.zh-CN.md) |
 | Save or revise private methods within a product scope | [Private methods (Chinese)](private-memory.zh-CN.md) |
 
@@ -34,9 +39,9 @@ For a first task, follow the [agent tool + Pipeboard Meta read-only tutorial](fi
 
 | Question | Read |
 | --- | --- |
-| Follow one route to a first read-only deliverable | [First read-only check](first-check.md) |
-| Configure the project for the first time | [First setup](first-run.md) |
-| Verify that the host loaded project instructions | [Loading and validation](use-in-agent.md) |
+| Follow one route to your first result | [First use](first-check.md) |
+| Complete task-relevant context after connecting | [Business and working preferences](first-run.md) |
+| Verify that the host loaded project instructions | [Project loading and troubleshooting](use-in-agent.md) |
 | Explore Meta, TikTok and Google connection routes | [Platform connectivity](platform-connectivity.md) |
 | Apply for Google Ads API access | [Application guide (Chinese)](google-ads-api-application.zh-CN.md) |
 
@@ -57,6 +62,8 @@ For a first task, follow the [agent tool + Pipeboard Meta read-only tutorial](fi
 | Distinguish business history, host tools and public Python | [Capability matrix](capability-status.md) |
 | Understand modules and future work | [Architecture (Chinese)](architecture.md) · [Roadmap (Chinese)](roadmap.md) |
 | Contribute a workflow or native adapter | [Contributing](../CONTRIBUTING.md) |
+
+Developer references: [Python method planning](method-planning.md) · [Onboarding state design (Chinese)](onboarding.md). These are not prerequisites for using the host workflow.
 
 <details>
 <summary><strong>Structured design contracts</strong></summary>
