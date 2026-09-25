@@ -90,6 +90,8 @@ Do not modify accounts, budgets or assets, and do not create or publish ads.
 ```
 </details>
 
+The first deliverable is a read-only findings report: selected account coverage, data cutoff, missing capabilities or sources, objects to review and open questions. It does not change an ad account.
+
 **Not connected? Set up tools first.** Existing MCP, API and SDK connections remain valid. See the [platform connection guide](docs/platform-connectivity.md) for self-managed and hosted routes.
 
 **No account needed? Run the public example.** Requires Python 3.9+ and system IANA timezone data; standard library only.
