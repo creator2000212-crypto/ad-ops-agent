@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Ad Ops Agent social preview</title>
+  <desc id="desc">Ad Ops Agent. 把投放经验，变成可复用的 AI 工作流。素材与方案、执行与核对、巡检与复盘。</desc>
+  <rect width="1280" height="640" fill="#f3f8f5"/>
+  <rect x="36" y="36" width="1208" height="568" rx="28" fill="#142f27"/>
+  <circle cx="102" cy="105" r="8" fill="#9de0b8"/>
+  <text x="125" y="112" fill="#b8d3c4" font-family="Arial, PingFang SC, sans-serif" font-size="23" letter-spacing="3">OPEN-SOURCE / ADVERTISING WORKFLOW</text>
+  <text x="96" y="252" fill="#f8fcf9" font-family="Arial, PingFang SC, sans-serif" font-size="88" font-weight="700">Ad Ops Agent</text>
+  <text x="99" y="352" fill="#f8fcf9" font-family="PingFang SC, Arial, sans-serif" font-size="47" font-weight="600">把投放经验，变成可复用的 AI 工作流</text>
+  <line x1="99" y1="426" x2="1180" y2="426" stroke="#466456" stroke-width="2"/>
+  <text x="99" y="503" fill="#a9dbc0" font-family="PingFang SC, Arial, sans-serif" font-size="31">素材与方案  ·  执行与核对  ·  巡检与复盘</text>
+</svg>

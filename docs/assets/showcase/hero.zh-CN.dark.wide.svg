@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="342" viewBox="0 0 1200 342" role="img" aria-labelledby="t d">
+<title id="t">Ad Ops Agent</title><desc id="d">Open-source advertising workflow. People choose goals and methods; connected host tools perform authorized operations.</desc>
+<rect x="0" y="0" width="1200" height="342" rx="20" fill="#10281F"/>
+<text x="52" y="49" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="15" font-weight="600" text-anchor="start" fill="#AEC8B7" letter-spacing="1.4">OPEN-SOURCE / ADVERTISING WORKFLOW</text>
+<text x="52" y="146" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="83" font-weight="700" text-anchor="start" fill="#F0F8F0" letter-spacing="-3">Ad Ops Agent</text>
+<text x="52" y="210" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="32" font-weight="500" text-anchor="start" fill="#F0F8F0">让 Agent 处理投放操作，</text>
+<text x="52" y="256" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="32" font-weight="500" text-anchor="start" fill="#F0F8F0">让投手专注分析与决策。</text>
+<path d="M838 83 L838 260" fill="none" stroke="#3C5D4B" stroke-width="1"/>
+<circle cx="881" cy="101" r="6" fill="#254939" stroke="#3C5D4B"/>
+<path d="M881 109 L881 159" fill="none" stroke="#3C5D4B" stroke-width="1"/>
+<text x="903" y="107" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="600" text-anchor="start" fill="#AEC8B7">01</text>
+<text x="945" y="107" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="600" text-anchor="start" fill="#F0F8F0">METHOD</text>
+<circle cx="881" cy="176" r="6" fill="#94DFB3" stroke="#3C5D4B"/>
+<path d="M881 184 L881 234" fill="none" stroke="#3C5D4B" stroke-width="1"/>
+<text x="903" y="182" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="600" text-anchor="start" fill="#AEC8B7">02</text>
+<text x="945" y="182" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="600" text-anchor="start" fill="#F0F8F0">WORKFLOW</text>
+<circle cx="881" cy="251" r="6" fill="#254939" stroke="#3C5D4B"/>
+<text x="903" y="257" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="600" text-anchor="start" fill="#AEC8B7">03</text>
+<text x="945" y="257" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="600" text-anchor="start" fill="#F0F8F0">TOOLS</text>
+<path d="M52 294 L1148 294" fill="none" stroke="#3C5D4B" stroke-width="1"/>
+<text x="52" y="322" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#AEC8B7">真实业务来源  /  方法由用户决定  /  连接方式可替换</text>
+</svg>

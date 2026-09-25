@@ -1,3 +1,5 @@
+# Ad Ops Agent
+
 <picture>
   <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/hero.zh-CN.dark.narrow.png">
   <source media="(max-width: 640px)" srcset="docs/assets/showcase/hero.zh-CN.light.narrow.png">
@@ -65,7 +67,9 @@
 
 新手可以从候选方法开始；熟手可以带入自己的 SOP。Agent 只补与本次任务有关的缺项，不强制采用作者的策略。
 
-[工作流说明](docs/workflow.zh-CN.md) · [方法确认](docs/method-planning.zh-CN.md) · [能力矩阵](docs/capability-status.zh-CN.md)
+**已有连接工具，为什么还需要这个项目？** 模型与连接工具提供账户读取和操作能力；Ad Ops Agent 把这些能力组织成一项投放任务：沿用产品资料与用户方法，整理素材和方案，核对预算与操作范围，并将执行、读回和下一轮复盘接起来。讨论“能不能改预算”之前，先明确**按谁的方法、针对哪些对象、观察哪个时间窗口、改后怎样核对**。
+
+[同一套工作流，两种不同投放方法（虚构示例）](docs/method-comparison.zh-CN.md) · [工作流说明](docs/workflow.zh-CN.md) · [方法确认](docs/method-planning.zh-CN.md) · [能力矩阵](docs/capability-status.zh-CN.md)
 
 ## 选一个起点
 

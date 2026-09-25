@@ -1,3 +1,5 @@
+# Ad Ops Agent
+
 <picture>
   <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/assets/showcase/hero.en.dark.narrow.png">
   <source media="(max-width: 640px)" srcset="docs/assets/showcase/hero.en.light.narrow.png">
@@ -5,7 +7,7 @@
   <img src="docs/assets/showcase/hero.en.light.wide.png" alt="Ad Ops Agent: let the agent handle ad operations while media buyers focus on analysis and decisions." width="1200">
 </picture>
 
-[Real work](#from-actual-advertising-work) · [Reusable workflow](#bring-your-method-reuse-the-workflow) · [Get started](#choose-a-starting-point) · [Documentation](docs/index.md) · [简体中文](README.zh-CN.md)
+[Real work](#from-actual-advertising-work) · [Reusable workflow](#bring-your-method-reuse-the-workflow) · [Get started](#choose-a-starting-point) · [Documentation](docs/index.en.md) · [简体中文](README.zh-CN.md)
 
 **An open-source AI workflow drawn from actual advertising work, reusable across products, methods and connection routes.**
 
@@ -65,7 +67,9 @@ These images summarize anonymized historical tasks; they are not screenshots of 
 
 Newcomers can start with a few candidate methods; experienced buyers can bring their own SOP. The agent asks only for information missing from the current task and does not impose the maintainer's strategy.
 
-[Host workflow](docs/workflow.md) · [Method confirmation](docs/method-planning.md) · [Capability matrix](docs/capability-status.md)
+**What does this add to a connection tool?** A model and its connected tools can read or change account objects. Ad Ops Agent organizes those capabilities around a buying task: it keeps product context and the user's method, prepares assets and a plan, checks budget and action scope, then connects execution to readback and the next review. Before asking whether a budget *can* be changed, the workflow establishes **whose method, which objects, which observation window and how the change will be verified**.
+
+[Same workflow, two methods (fictional example)](docs/method-comparison.md) · [Host workflow](docs/workflow.md) · [Method confirmation](docs/method-planning.md) · [Capability matrix](docs/capability-status.md)
 
 ## Choose a starting point
 
@@ -107,9 +111,9 @@ The example checks **three fictional Meta accounts and ten ad sets**, producing 
 | Business and methods | [Build from an example](docs/build-from-zero.md) · [Method and test planning](docs/method-planning.md) |
 | Execution and checks | [Workflow](docs/workflow.md) · [Task record template](templates/task-record.md) |
 | Knowledge and private experience | [Knowledge (Chinese)](docs/knowledge-base.zh-CN.md) · [Private methods (Chinese)](docs/private-memory.zh-CN.md) |
-| Code and implementation scope | [Architecture](docs/architecture.md) · [Capabilities](docs/capability-status.md) · [Contributing](CONTRIBUTING.md) |
+| Code and implementation scope | [Architecture (Chinese)](docs/architecture.md) · [Capabilities](docs/capability-status.md) · [Contributing](CONTRIBUTING.md) |
 
-[Complete documentation index →](docs/index.md)
+[Complete documentation index →](docs/index.en.md)
 
 ### Author and provenance
 

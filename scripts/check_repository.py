@@ -7,6 +7,7 @@ import re
 import struct
 import sys
 from urllib.parse import unquote, urlsplit
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 SKIP = {'.git', '__pycache__', '.venv', 'venv', 'runs', '.direct-work'}
@@ -32,7 +33,9 @@ REQUIRED = [
     'evaluations/fixtures.py', 'scripts/demo_methods.py',
     'docs/method-planning.md', 'docs/method-planning.zh-CN.md',
     'scripts/demo.py', 'tests/test_adops.py', 'tests/test_onboarding.py',
-    'docs/index.md', 'docs/product.md', 'docs/architecture.md', 'docs/onboarding.md',
+    'docs/index.md', 'docs/index.en.md', 'docs/method-comparison.md', 'docs/method-comparison.zh-CN.md',
+    'docs/assets/showcase/social-preview.svg', 'docs/assets/showcase/social-preview.png',
+    'docs/product.md', 'docs/architecture.md', 'docs/onboarding.md',
     'docs/operations.md', 'docs/meta-creative-recovery.md', 'docs/roadmap.md',
     'contracts/README.md', 'contracts/connector-contract.json', 'contracts/creative-recovery.json',
     'contracts/acceptance-scenarios.json', 'contracts/experience-catalog.json',
@@ -72,9 +75,10 @@ def main():
         for language in SHOWCASE_LANGUAGES:
             for theme in SHOWCASE_THEMES:
                 for width in SHOWCASE_WIDTHS:
-                    filename = f'{kind}.{language}.{theme}.{width}.png'
-                    if not (showcase / filename).is_file():
-                        errors.append(f'missing showcase image: {filename}')
+                    for extension in ('png', 'svg'):
+                        filename = f'{kind}.{language}.{theme}.{width}.{extension}'
+                        if not (showcase / filename).is_file():
+                            errors.append(f'missing showcase image: {filename}')
     for path in sorted(ROOT.rglob('*')):
         relative = path.relative_to(ROOT)
         if any(part in SKIP for part in relative.parts) or not path.is_file():
@@ -94,6 +98,8 @@ def main():
             width, height = struct.unpack('>II', data[16:24])
             if not (300 <= width <= 2048 and 120 <= height <= 2048):
                 errors.append(f'unexpected showcase image dimensions: {relative}')
+            if path.name == 'social-preview.png' and ((width, height) != (1280, 640) or len(data) >= 1_000_000):
+                errors.append(f'invalid social preview size or dimensions: {relative}')
             continue
         files.append(path)
         try:
@@ -105,6 +111,17 @@ def main():
             if pattern.search(text):
                 # Never echo a potentially sensitive matched value.
                 errors.append(f'{label}: {relative}')
+        if path.suffix == '.svg' and relative.parts[:3] == ('docs', 'assets', 'showcase'):
+            try:
+                root = ET.fromstring(text)
+                if root.tag != '{http://www.w3.org/2000/svg}svg':
+                    errors.append(f'invalid showcase SVG root: {relative}')
+                if any(node.tag.rsplit('}', 1)[-1] in {'script', 'foreignObject'} for node in root.iter()):
+                    errors.append(f'unsafe showcase SVG element: {relative}')
+                if any(key.rsplit('}', 1)[-1] == 'href' for node in root.iter() for key in node.attrib):
+                    errors.append(f'external-capable showcase SVG reference: {relative}')
+            except ET.ParseError:
+                errors.append(f'invalid showcase SVG XML: {relative}')
         if path.suffix == '.py':
             try:
                 ast.parse(text, filename=str(relative))
@@ -127,7 +144,7 @@ def main():
                 if not destination.is_relative_to(ROOT) or not destination.exists():
                     errors.append(f'broken local link: {relative} -> {target}')
     result = {'status': 'failed' if errors else 'passed', 'public_text_files': len(files),
-              'checks': ['required files', 'Python syntax', 'JSON contracts', 'runtime knowledge catalog', 'local Markdown links', 'common disclosure patterns'],
+              'checks': ['required files', 'showcase PNG and SVG assets', 'Python syntax', 'JSON contracts', 'runtime knowledge catalog', 'local Markdown links', 'common disclosure patterns'],
               'limitations': 'Heuristic source check; not a comprehensive secret scanner or runtime/platform validation.',
               'errors': errors}
     print(json.dumps(result, ensure_ascii=False, indent=2))

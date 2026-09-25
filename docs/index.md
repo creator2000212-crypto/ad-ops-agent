@@ -24,7 +24,7 @@
 | --- | --- |
 | 从具体业务与素材搭建一轮工作流程 | [搭建例子](build-from-zero.zh-CN.md) · [English](build-from-zero.md) |
 | 理解业务、保留来源，避免重复访谈 | [业务初始化](onboarding.md) |
-| 组织用户 SOP、确认方法并生成测试计划 | [方法与测试](method-planning.zh-CN.md) · [English](method-planning.md) |
+| 组织用户 SOP、确认方法并生成测试计划 | [方法与测试](method-planning.zh-CN.md) · [两种方法对照](method-comparison.zh-CN.md) · [English](method-planning.md) |
 | 检索知识、判断适用条件与证据缺口 | [知识库](knowledge-base.zh-CN.md) |
 | 保存、修订、撤回产品范围内的私有方法 | [私有方法库](private-memory.zh-CN.md) |
 

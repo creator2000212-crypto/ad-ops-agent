@@ -10,11 +10,15 @@ Labels such as `WB-01` correspond to the maintainer's private source index. The 
 
 Historical records: September 22–23, 2026. Record types: local creative audit, launch plan and candidate list.
 
+**Task:** Assess creatives and prepare a reviewable batch. **Delivered:** A Meta candidate plan and a separate TikTok creative audit. **Human decides:** Asset fit, test method and unresolved setup choices. **Reusable:** Keep business fit, technical readiness and candidate state distinct.
+
 These materials include separately preserved Meta candidate plans and a TikTok creative audit. Frame inspection belongs to the TikTok task and is not evidence of the same activity in the Meta batch.
 
 <a id="meta-task"></a>
 
 ### Facebook (Meta) preparation: turn assets and a method into a reviewable plan
+
+**Task:** Prepare two business lines. **Delivered:** 20 proposed ad entries and 20 copy sets, all pending creation. **Human decides:** Assets, budget, attribution and old-structure handling. **Reusable:** A candidate checklist with reasons, usage history and review fields.
 
 **Inputs:** Two business lines in a single task on September 22, 2026, local creatives, existing account assets and prior-use records, and the user's chosen testing method.
 
@@ -38,6 +42,8 @@ These materials include separately preserved Meta candidate plans and a TikTok c
 
 Historical records: September 22–23, 2026. Record types: revised plan for three business lines, creation state files, readback script and launch receipt.
 
+**Task:** Build and hand off three TikTok lines. **Delivered:** Revised plan, creation records and a receipt showing two eligible lines and one under review. **Human decides:** Structure, creative choices and old-line treatment; some business terms remain open. **Reusable:** Read and hand off each object's state with unresolved items.
+
 **What was delivered:** A revised campaign plan, creation records, old-line pause results and a status receipt retaining unresolved items.
 
 | Business line in the receipt (anonymous label) | Recorded status | Handoff meaning |
@@ -58,6 +64,8 @@ A/B/C are presentation labels, not platform names or object IDs. This table summ
 
 Historical records: September 22–24, 2026. Record types: channel reports, mapping checks, missing-source notice, structure audit and rename history.
 
+**Task:** Reconcile a daily report with missing sources and changed names. **Delivered:** Channel tables, mapping checks and an explicit coverage gap. **Human decides:** Account scope, sources and business ownership. **Reusable:** Keep source coverage and stable object identity with each report.
+
 - **Input:** Channel data for a defined date, a user-provided business export, account scope, business mapping rules and native object relationships.
 - **Human decision:** Set the account population and data sources, resolve authorization gaps and confirm whether a changed name represents a real change in business ownership.
 - **What the agent did:** Produced channel tables, a combined table and mapping checks. When one channel could not be retrieved, it marked the combined table incomplete. A separate read-only audit used landing associations, pixels and rename records to distinguish mixed business content within a campaign from drift in name-based reporting rules.
@@ -70,6 +78,8 @@ Historical records: September 22–24, 2026. Record types: channel reports, mapp
 
 Historical records: September 22–23, 2026. Record types: incident report, monetary-filter repair script, rule snapshots and activity records.
 
+**Task:** Diagnose unexpected Meta rule actions. **Delivered:** A unit-based diagnosis and targeted repair script; final object state needs separate readback. **Human decides:** Recovery targets and intended thresholds. **Reusable:** Validate native field units before writing and read back affected settings and states.
+
 - **Input:** Unexpected pauses, rule definitions, the intended business thresholds and trigger/recovery records.
 - **Human decision:** Confirm which objects should be restored and which thresholds and actions the rules should use. The historical project's thresholds are not defaults for another team.
 - **What the agent did:** The incident report attributed the unexpected actions to inconsistent monetary units. The repair script remaps specified monetary filter fields and known old values rather than changing every number. Later records continue to inspect rules and object states.
@@ -80,6 +90,8 @@ Historical records: September 22–23, 2026. Record types: incident report, mone
 
 Historical records: September 23–24, 2026. Record types: monitoring reports, follow-up reads and an action/verification ledger.
 
+**Task:** Check whether earlier recommendations were acted on. **Delivered:** Follow-up reads and a ledger that keeps unexecuted and unassessable items visible. **Human decides:** Execute, adjust, defer or reject. **Reusable:** Separate recommendation, action, observed state and outcome window.
+
 - **Input:** Current data, earlier recommendations, native configuration, actual operations and the agreed observation window.
 - **Human decision:** Execute, adjust, defer or reject a recommendation. Operation reviews also record differences between manual changes and the earlier structure; a user's method cannot be inferred solely from the AI's suggestions.
 - **What the agent did:** Follow-up scripts read the objects awaiting verification. The ledger pairs “not executed” with “unable to assess,” alongside other entries recording execution and improvement. Monitoring reports keep proposed actions, observations and unresolved items distinct.
@@ -89,6 +101,8 @@ Historical records: September 23–24, 2026. Record types: monitoring reports, f
 ## WB-06 · An ACTIVE row is not necessarily preserved evidence of activation
 
 Historical records: September 20–22, 2026; the evidence conflict was identified during the September 25 review. Record types: Meta batch CSV, receipt generator, paused-stage readbacks and activation script.
+
+**Task:** Reconcile a launch table with saved object evidence. **Delivered:** A documented conflict between hard-coded `ACTIVE` rows and earlier readbacks; no final readback was found in this review. **Human decides:** Whether to observe, investigate or resume after checking current state. **Reusable:** Generate status receipts from timed native readbacks.
 
 - **Input:** A creative batch's plan, created objects, execution state files and launch record being prepared for handoff.
 - **Human decision:** Use the batch's actual state to decide whether to observe, investigate or complete remaining work. A conflicting “complete” table should trigger reconciliation rather than make that decision on the user's behalf.

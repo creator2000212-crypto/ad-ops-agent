@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="302" viewBox="0 0 1200 302" role="img" aria-labelledby="t d">
+<title id="t">Reusable workflow</title><desc id="d">Workflow illustration, not a deployment diagram: understand business, prepare, confirm scope, execute authorized actions, verify results, review. Tools and methods remain user-specific.</desc>
+<rect x="0" y="0" width="1200" height="302" rx="20" fill="#10281F"/>
+<text x="40" y="46" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#94DFB3" letter-spacing="1.3">THE REUSABLE WORKFLOW</text>
+<text x="40" y="98" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="33" font-weight="650" text-anchor="start" fill="#F0F8F0">通用的是流程，不是固定投法</text>
+<path d="M103 161 L257 161" fill="none" stroke="#3C5D4B" stroke-width="2"/>
+<path d="M246 156 L257 161 L246 166" fill="none" stroke="#3C5D4B" stroke-width="2"/>
+<circle cx="78" cy="161" r="21" fill="#254939"/>
+<text x="78" y="168" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="600" text-anchor="middle" fill="#94DFB3">1</text>
+<text x="78" y="212" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="400" text-anchor="middle" fill="#F0F8F0">理解业务</text>
+<path d="M307 161 L463 161" fill="none" stroke="#3C5D4B" stroke-width="2"/>
+<path d="M452 156 L463 161 L452 166" fill="none" stroke="#3C5D4B" stroke-width="2"/>
+<circle cx="282" cy="161" r="21" fill="#254939"/>
+<text x="282" y="168" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="600" text-anchor="middle" fill="#94DFB3">2</text>
+<text x="282" y="212" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="400" text-anchor="middle" fill="#F0F8F0">准备方案</text>
+<path d="M513 161 L669 161" fill="none" stroke="#3C5D4B" stroke-width="2"/>
+<path d="M658 156 L669 161 L658 166" fill="none" stroke="#3C5D4B" stroke-width="2"/>
+<circle cx="488" cy="161" r="21" fill="#94DFB3"/>
+<text x="488" y="168" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="600" text-anchor="middle" fill="#10281F">3</text>
+<text x="488" y="212" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="600" text-anchor="middle" fill="#F0F8F0">整批确认</text>
+<path d="M719 161 L875 161" fill="none" stroke="#3C5D4B" stroke-width="2"/>
+<path d="M864 156 L875 161 L864 166" fill="none" stroke="#3C5D4B" stroke-width="2"/>
+<circle cx="694" cy="161" r="21" fill="#254939"/>
+<text x="694" y="168" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="600" text-anchor="middle" fill="#94DFB3">4</text>
+<text x="694" y="212" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="400" text-anchor="middle" fill="#F0F8F0">授权执行</text>
+<path d="M925 161 L1079 161" fill="none" stroke="#3C5D4B" stroke-width="2"/>
+<path d="M1068 156 L1079 161 L1068 166" fill="none" stroke="#3C5D4B" stroke-width="2"/>
+<circle cx="900" cy="161" r="21" fill="#254939"/>
+<text x="900" y="168" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="600" text-anchor="middle" fill="#94DFB3">5</text>
+<text x="900" y="212" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="400" text-anchor="middle" fill="#F0F8F0">结果核对</text>
+<circle cx="1104" cy="161" r="21" fill="#254939"/>
+<text x="1104" y="168" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="600" text-anchor="middle" fill="#94DFB3">6</text>
+<text x="1104" y="212" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="400" text-anchor="middle" fill="#F0F8F0">复盘迭代</text>
+<path d="M40 244 L1160 244" fill="none" stroke="#3C5D4B" stroke-width="1"/>
+<text x="40" y="277" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#AEC8B7">产品、用户方法与可用工具可更换；目标和执行范围由人决定。</text>
+</svg>

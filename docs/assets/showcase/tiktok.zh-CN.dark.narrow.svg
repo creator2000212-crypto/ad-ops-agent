@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="470" viewBox="0 0 680 470" role="img" aria-labelledby="t d">
+<title id="t">TikTok / Handoff case</title><desc id="d">Historical receipt for three business lines: A and B eligible; C in review. These statuses do not establish spend or performance. September 22–23, 2026.</desc>
+<rect x="0" y="0" width="680" height="470" rx="20" fill="#10281F"/>
+<text x="40" y="45" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="700" text-anchor="start" fill="#94DFB3" letter-spacing="1.5">02 / TIKTOK</text>
+<text x="640" y="45" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="end" fill="#AEC8B7">2026.09.22–23</text>
+<text x="40" y="104" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="34" font-weight="650" text-anchor="start" fill="#F0F8F0">完成搭建，逐项交接状态</text>
+<text x="40" y="150" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="400" text-anchor="start" fill="#AEC8B7">三条业务线 · 按对象核对结果</text>
+<rect x="40" y="195" width="186" height="133" rx="12" fill="#254939"/>
+<text x="60" y="234" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="600" text-anchor="start" fill="#94DFB3">A</text>
+<text x="60" y="292" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="30" font-weight="650" text-anchor="start" fill="#94DFB3">可投</text>
+<rect x="247" y="195" width="186" height="133" rx="12" fill="#254939"/>
+<text x="267" y="234" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="600" text-anchor="start" fill="#94DFB3">B</text>
+<text x="267" y="292" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="30" font-weight="650" text-anchor="start" fill="#94DFB3">可投</text>
+<rect x="454" y="195" width="186" height="133" rx="12" fill="#493921"/>
+<text x="474" y="234" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="600" text-anchor="start" fill="#FFD78F">C</text>
+<text x="474" y="292" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="30" font-weight="650" text-anchor="start" fill="#FFD78F">审核中</text>
+<path d="M40 356 L640 356" fill="none" stroke="#3C5D4B" stroke-width="1"/>
+<text x="40" y="401" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="400" text-anchor="start" fill="#F0F8F0">历史回执：2 条可投，1 条审核中。</text>
+<text x="40" y="444" font-family="Arial, Noto Sans CJK SC, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="400" text-anchor="start" fill="#AEC8B7">可投 ≠ 已有消耗或效果</text>
+</svg>
