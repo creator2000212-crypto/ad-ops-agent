@@ -1,83 +1,63 @@
-# Capability status: practice, host tools and public code
+# Real vs demo
 
-[简体中文](capability-status.zh-CN.md) · [Project home](../README.md) · [Cases from practice](case-studies.md)
+[简体中文](capability-status.zh-CN.md) · [Project home](../README.md) · [How it ran](how-it-ran.md) · [Case studies](case-studies.md)
 
-**The public Python code's lack of ad API calls does not describe the author's entire working setup. Historical use of an agent tool does not mean a fresh checkout has connected accounts.** These claims require different evidence.
+What ran on live accounts, what this repository implements, and how to run it. The live work was Meta and TikTok lead-gen in Sep 2026 through WorkBuddy (Tencent's desktop AI agent; not affiliated); the [operating record](how-it-ran.md) has the dates and the run log.
 
-## Three layers
+**Scope.** This repository is offline by design: every module reads JSON files and makes 0 platform calls. Live reads and writes ran through WorkBuddy's connectors, and I approved launches and budget changes ([WB-08](case-studies.md#wb-08) is the time that broke, and why approval is now an explicit gate). Opening this project in an agent does not connect an ad account.
 
-| Layer | What exists | Evidence or conditions |
+## The matrix
+
+| Capability | Ran live (2026) | Public code | Run it here |
+|---|---|---|---|
+| Field-by-field readback before activation | Every interactive build, Sep 10–27: create paused → read back → activate | [`readback.py`](../readback.py): `verify_build()`, HOLD/ACTIVATE receipt | `python3 readback.py --plan examples/readback/meta-plan.json --readback examples/readback/meta-readback.json` |
+| Pre-flight lint of a build checklist | New here; live builds relied on readback | [`preflight.py`](../preflight.py): naming vs config, URL parameters, special-category declaration, attribution, duplicate files | `python3 preflight.py --checklist examples/preflight/checklist.json --policy examples/preflight/policy.json` |
+| Daily pull checked against settlement | Daily job, Sep 21–26; scope fix Sep 20 | Settlement reconciliation in [`operating_rules.py`](../operating_rules.py): spend, results and CPA gaps; scope gaps never zero-filled | `python3 demo/run_demo.py` (section "Platform vs settlement") |
+| Classifying ad sets against the T ladder | 12-hour job, Sep 22–26 | `decide_account()` in [`operating_rules.py`](../operating_rules.py) with thresholds from [`methodology-reference.json`](../examples/operating/methodology-reference.json) | `python3 demo/run_demo.py` |
+| Re-checking the previous round first | Every 12-hour round, Sep 22–26 | Append-only ledger in [`operating_loop.py`](../operating_loop.py): `apply`, `verify`, `open` | `python3 scripts/demo_operating_loop.py` |
+| Five-state write gate and after-state comparison | Ported into the private live loop, Sep 24 | `gate()` and `reconcile()` in [`operating_rules.py`](../operating_rules.py) | `python3 demo/run_demo.py --steps` |
+| Acceptance criteria and stop conditions per action | On every action from Sep 24 | Action catalogue in the methodology, rendered by `scripts/render_decision_matrix.py` | [Decision matrix](decision-matrix.md) |
+| Why CPA moved (CPM, CTR, CVR) | New here | `cpa_driver_decomposition()` in [`operating_rules.py`](../operating_rules.py) | `python3 demo/run_demo.py` (section "Why CPA moved") |
+| Reading and writing ad accounts | Through WorkBuddy's connectors: a hosted MCP connector for Meta, a self-built TikTok API for Business client | None: 0 platform calls | — |
+| Scheduling | WorkBuddy's local scheduler, Sep 20–26; paused since Sep 26 | None | — |
+
+Google Ads appears only in the connection guidance and the simulated adapters; the live work covered Meta and TikTok.
+
+## The pre-launch prototype
+
+These modules came from a separate planning and onboarding prototype. They were not part of what ran live; they run on fictional inputs.
+
+| Module | Implements | Does not |
 |---|---|---|
-| **Business practice in an agent tool** | Business conversations, tool operations, asset selection, creation/change records, reports and recurring reviews | Selected local historical records have been reviewed. Each case states its completion boundary. Private originals are not published and do not verify current platform state |
-| **Reusable host workflow** | Project instructions, task flow, business and method organization, batch review, execution checks and record templates | The host must load the instructions and have usable, authorized tools for this task. Each new environment requires validation |
-| **Public Python validation code** | Structured checks, limited method compilation, knowledge lookup, private records, offline diagnosis and simulated execution/recovery | Runnable locally; no model or ad-platform calls; live mode is rejected |
-
-A host using existing tools does not first need Python platform adapters. Making the Python program a standalone live executor still requires native parameter mapping, authentication, real approval and integration checks.
-
-## What the reviewed working records cover
-
-| Task | Work found in the records | What it does not establish |
-|---|---|---|
-| Creative and batch preparation | Deduplication, asset/destination matching, user revisions and batch records | Automatic understanding of every asset or proven performance |
-| Meta creation, restructuring and configuration diagnosis | Creation/read records, state checks, user confirmation and unresolved items | Every batch took effect, or an accepted request started spending |
-| TikTok creative and delivery work | Multi-product plans, user-supplied creative constraints and object-state records | Every object was approved or spent, or equal support across three platforms |
-| Reporting and product mapping | Source tables, account scope, product mapping, missing-data notes and reports | Conversions from different sources can be summed, or missing means zero |
-| Recurring reviews and corrections | Prior-item checks, fresh retrieval, method references and report handoffs | Every recommendation was executed or scheduled runs always succeeded |
-
-The reviewed records primarily concern Meta and TikTok. **Google designs and simulated adapters are not presented as verified live business deployment.** See the [anonymized cases](case-studies.md).
-
-## What the public Python code implements
-
-| Module | Implemented scope | Outside that scope |
-|---|---|---|
-| `onboarding.py` / `guidance.py` | Structured facts, dependencies/gaps, fictional connection snapshots and rule-based guidance | Real connection verification, model interviews or connector installation |
-| `methodology.py` / `task.py` | Two limited method candidates, explicit adoption, private task copies and method versions | Arbitrary natural-language SOP parsing or every host-supported method |
-| `planning.py` | Metadata and declared component identities, test units, budgets and content-bound plans | Media understanding, performance ranking, native payloads or randomized A/B allocation |
-| `knowledge.py` | Versioned knowledge, applicability, source and evidence-gap checks | Automatic platform-fact verification, causal conclusions or autonomous budget changes |
-| `memory_store.py` / `personalization.py` | Scoped local records, versions/history/revocation and conditional reuse | Automatic learning, performance certification, multi-tenant security or automatic personal-memory writes |
-| `adops.py` | Simulated batch plans/authorization, SQLite objects and same-state recovery | Real identity/approval, platform submission or global network/cross-directory deduplication |
-| `operating_loop.py` | Supplied-snapshot diagnosis, field differences, a local ledger and later-snapshot comparison | Platform retrieval, user approval, actual writes or background scheduling |
-
-All three simulated adapters accept only `generic_draft`; `native_payload` is `null`. Neither `completed_simulation` nor `ready` constitutes live publishing approval. Files under `contracts/` do not become loaded runtime features merely by existing.
-
-## Offline validation entry points
-
-Python 3.9+ and system IANA timezone data are required. The programs use the standard library. All examples use fictional inputs and need no account or API key.
+| `onboarding.py` / `guidance.py` | Structured business facts, gaps, fictional connection snapshots, rule-based guidance | Verify a real connection or install a connector |
+| `methodology.py` / `task.py` | Two method templates, explicit adoption, private task copies and versions | Parse an arbitrary SOP written in natural language |
+| `planning.py` | Test units, budgets and plans from declared component identities | Understand media, rank performance or randomize A/B allocation |
+| `knowledge.py` | Versioned knowledge with applicability, source and evidence gaps | Verify platform facts or make causal claims |
+| `memory_store.py` / `personalization.py` | Product-scoped private records with versions, history and revocation | Learn automatically or certify performance |
+| `adops.py` | Simulated batch plans, simulated authorization, SQLite objects, same-state recovery | Submit to a platform; `native_payload` stays `null` |
 
 ```bash
-# An ad review and comparison with preset later state
-python3 demo/run_demo.py
-
-# Batch planning, simulated execution, interruption and repeat-run recovery
-python3 scripts/demo.py
-
-# Saving, revising and conditionally reusing private methods
-python3 scripts/demo_private_memory.py
-
-# Six fictional business inputs across two method routes
-python3 scripts/demo_methods.py
+python3 scripts/demo.py                  # simulated batch, interruption and recovery
+python3 scripts/demo_private_memory.py   # saving, revising and reusing private methods
+python3 scripts/demo_methods.py          # six fictional inputs across two method routes
 ```
 
-Outputs stay in local Git-ignored run directories. The six business inputs check offline behavior; they are not six customer deployments.
+## Checks
 
-Checks:
+Python 3.9+ and the standard library only; no account or API key.
 
 ```bash
 python3 -m unittest discover -s tests -v
 python3 demo/run_demo.py --check
+python3 readback.py --plan examples/readback/meta-plan.json --readback examples/readback/meta-readback.json \
+    --check examples/readback/expected/meta-receipt.md
+python3 preflight.py --checklist examples/preflight/checklist.json --policy examples/preflight/policy.json \
+    --check examples/preflight/expected/checklist.md
 python3 scripts/check_repository.py
 ```
 
-See the [method guide](method-planning.md) for manual tasks and inputs, and the [technical reference](operating-loop.md) for operating-loop fields and commands. Passing local tests does not establish live platform integration.
+Passing these shows the offline logic is consistent. It says nothing about a live account.
 
-## Validate your own environment
+## Using it on your own accounts
 
-Use the [host workflow](workflow.md) and [task record](../templates/task-record.md) for an actual task you need. Retain:
-
-1. Task accounts, available tool capabilities, read time and coverage.
-2. Confirmed business context and method, plus unresolved inputs.
-3. A concrete batch, budget impact, real user confirmation and plan version.
-4. Per-object request receipts and later reads, separating review, delivery eligibility and observed impressions/spend.
-5. Existing-object checks after interruption and an explicit unresolved-item handoff.
-
-A read-only task requires read and deliverable checks, not ad writes to complete a checklist. Preserve gaps where evidence is unavailable. Host usability, media understanding, connector replacement and business outcomes require evidence in their specific environment.
+Use the [host workflow](workflow.md) with tools you have verified and are authorized to use, and keep a [task record](../templates/task-record.md) for each batch: the accounts and tools in scope with the read time, the confirmed business context and method, the concrete batch with its budget impact and your approval, per-object readback that keeps review, eligibility and delivery apart, and the open items at handoff. A read-only task needs only read access; do not write to an account to complete a checklist.

@@ -1,12 +1,12 @@
 # Documentation guide
 
-[Project home](../README.md) · [中文导航](index.md) · [Capability scope](capability-status.md)
+[Project home](../README.md) · [中文导航](index.md) · [Real vs demo](capability-status.md)
 
 **Choose the question you have now. You do not need to read the technical documents in order.** Pages without an English version are marked **Chinese**.
 
 ## See the work
 
-Start with the [Meta preparation](case-studies.md#meta-task) and [TikTok status handoff](case-studies.md#tiktok-task), then read the [six anonymized cases](case-studies.md) and [product design (Chinese)](product.md). The original private records are not public.
+Start with [How it ran](how-it-ran.md): what ran in WorkBuddy on live Meta and TikTok accounts in Sep 2026, the run log of the scheduled jobs, and what each piece became here. Then read the [ten case studies](case-studies.md), the [methodology history](methodology-history.md) and [Real vs demo](capability-status.md). To see the checks run, try the [offline demo](../demo/README.md), [Build QA](build-qa.md) and the [decision matrix](decision-matrix.md). The original private records are not public.
 
 ## Start a task
 
@@ -21,7 +21,7 @@ Open a reference only when needed:
 
 ## Run the public code
 
-[Offline demonstration](../demo/README.md) → [Commands and capability scope](capability-status.md) → [Architecture (Chinese)](architecture.md) → [Roadmap (Chinese)](roadmap.md). Public Python uses fictional inputs and does not execute on an ad platform.
+[Offline demonstration](../demo/README.md) → [Build QA](build-qa.md) → [Real vs demo](capability-status.md) → [Architecture (Chinese)](architecture.md) → [Roadmap (Chinese)](roadmap.md). Public Python uses fictional inputs and does not execute on an ad platform.
 
 ## Find a topic
 
@@ -53,14 +53,18 @@ Open a reference only when needed:
 | Record a plan, confirmation and next actions | [Task record template](../templates/task-record.md) |
 | Check assets, posts, links, budgets and states | [Operations cards (Chinese)](operations.md) |
 | Handle a disapproval or a failed media upload | [Disapproval triage: fix or appeal](disapproval-triage.md) |
+| Lint a build before creating it; check readback before activating | [Build QA: pre-flight and readback](build-qa.md) |
+| See every action with its window, acceptance and stop condition | [Decision matrix](decision-matrix.md) |
 | Inspect offline monitoring fields, formulas and commands | [Technical reference](operating-loop.md) |
 
 ### Evidence, implementation and contribution
 
 | Question | Read |
 | --- | --- |
-| Understand actual work and its evidence limits | [Anonymized cases](case-studies.md) |
-| Distinguish business history, host tools and public Python | [Capability matrix](capability-status.md) |
+| See what ran live, the run log and the limits | [How it ran](how-it-ran.md) |
+| Read the cases and the guardrail each one produced | [Case studies](case-studies.md) |
+| See how the method changed and why | [Methodology history](methodology-history.md) |
+| Separate what ran live from what runs here | [Real vs demo](capability-status.md) |
 | Understand modules and future work | [Architecture (Chinese)](architecture.md) · [Roadmap (Chinese)](roadmap.md) |
 | Contribute a workflow or native adapter | [Contributing](../CONTRIBUTING.md) |
 

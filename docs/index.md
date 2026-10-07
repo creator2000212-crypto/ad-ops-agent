@@ -1,12 +1,12 @@
 # 文档导航
 
-[中文首页](../README.zh-CN.md) · [English overview](../README.md) · [能力范围](capability-status.zh-CN.md)
+[中文首页](../README.zh-CN.md) · [English overview](../README.md) · [实盘与演示对照](capability-status.zh-CN.md)
 
 **先选你要做的事，不必从第一篇技术文档开始读。**
 
 ## 看作品 / 了解项目
 
-从 [Meta 素材与方案准备](case-studies.zh-CN.md#meta-task) 和 [TikTok 建单与状态交接](case-studies.zh-CN.md#tiktok-task) 开始，再看 [六个工作案例](case-studies.zh-CN.md) 与 [产品设计](product.md)。案例是历史记录的脱敏整理，原始私有资料不公开。
+从[实际是怎么跑的](how-it-ran.zh-CN.md)开始：2026 年 9 月在 WorkBuddy 中对 Meta 与 TikTok 实盘账户跑了什么、定时任务的运行记录，以及每一部分在仓库里对应什么。接着看[十个案例](case-studies.zh-CN.md)、[方法演变](methodology-history.zh-CN.md)和[实盘与演示对照](capability-status.zh-CN.md)。想看检查实际运行，试试[离线示例](../demo/README.zh-CN.md)、[建单质检](build-qa.zh-CN.md)和[决策矩阵](decision-matrix.md)（英文）。原始私有资料不公开。
 
 ## 开始用 / 完成一项任务
 
@@ -21,7 +21,7 @@
 
 ## 看实现 / 运行公开代码
 
-[离线示例](../demo/README.zh-CN.md) → [命令与能力范围](capability-status.zh-CN.md) → [实现架构](architecture.md) → [开发路线](roadmap.md)。公开 Python 使用虚构输入，不代表真实平台执行。
+[离线示例](../demo/README.zh-CN.md) → [建单质检](build-qa.zh-CN.md) → [实盘与演示对照](capability-status.zh-CN.md) → [实现架构](architecture.md) → [开发路线](roadmap.md)。公开 Python 使用虚构输入，不代表真实平台执行。
 
 ## 按问题查找
 
@@ -53,14 +53,18 @@
 | 在私有目录记录方案、确认与下轮待办 | [任务模板](../templates/task-record.zh-CN.md) · [English](../templates/task-record.md) |
 | 检查素材、帖子、链接、预算及状态 | [16 张实操卡](operations.md) |
 | 处理拒审或素材上传失败 | [拒审分诊：修正或申诉](disapproval-triage.zh-CN.md) · [English](disapproval-triage.md) |
+| 建单前预检；激活前核对读回 | [建单质检](build-qa.zh-CN.md) · [English](build-qa.md) |
+| 查看每个动作的响应窗口、验收标准与停止条件 | [决策矩阵（英文）](decision-matrix.md) |
 | 查看离线巡检的字段、公式和命令 | [技术参考](operating-loop.zh-CN.md) · [English](operating-loop.md) |
 
 ### 证据、实现与贡献
 
 | 你要了解的问题 | 文档 |
 | --- | --- |
-| 真实工作中的过程及证据范围 | [脱敏案例](case-studies.zh-CN.md) · [English](case-studies.md) |
-| 实际业务、宿主工具、公开 Python 的区别 | [能力矩阵](capability-status.zh-CN.md) · [English](capability-status.md) |
+| 实盘跑了什么、运行记录与不足 | [实际是怎么跑的](how-it-ran.zh-CN.md) · [English](how-it-ran.md) |
+| 每个案例及其带来的护栏 | [案例](case-studies.zh-CN.md) · [English](case-studies.md) |
+| 方法怎样变化、为什么变化 | [方法演变](methodology-history.zh-CN.md) · [English](methodology-history.md) |
+| 区分实盘运行过的与这里能运行的 | [实盘与演示对照](capability-status.zh-CN.md) · [English](capability-status.md) |
 | 模块分工与后续开发方向 | [架构](architecture.md) · [开发路线](roadmap.md) |
 | 贡献可复用流程或原生适配器 | [贡献说明](../CONTRIBUTING.md) |
 

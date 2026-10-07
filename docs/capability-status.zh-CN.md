@@ -1,83 +1,63 @@
-# 能力范围：实际工作流、宿主工具与公开代码
+# 实盘与演示对照
 
-[English](capability-status.md) · [项目首页](../README.zh-CN.md) · [真实案例](case-studies.zh-CN.md)
+[English](capability-status.md) · [项目首页](../README.zh-CN.md) · [实际是怎么跑的](how-it-ran.zh-CN.md) · [案例](case-studies.zh-CN.md)
 
-**“公开 Python 不调用广告 API”不能概括作者整个工作流的使用状态；“作者曾通过 Agent 工具处理真实任务”也不能证明刚下载的仓库已经接好账户。**本页分别说明证据和使用条件。
+哪些在实盘账户上跑过、本仓库实现了什么、怎么运行。实盘工作是 2026 年 9 月通过 WorkBuddy（腾讯的桌面 AI Agent；本项目与其无关联）进行的 Meta 与 TikTok 线索投放；日期和运行记录见[运行记录](how-it-ran.zh-CN.md)。
 
-## 三个层次
+**范围。** 本仓库按设计离线运行：所有模块只读取 JSON 文件，发起的平台调用为 0。实盘读写通过 WorkBuddy 的连接器完成，上线和预算调整由我批准（[WB-08](case-studies.zh-CN.md#wb-08) 是这一点被打破的一次，也是批准成为显式关卡的原因）。在 Agent 中打开本项目不会连接任何广告账户。
 
-| 层次 | 现在有什么 | 证据或使用条件 |
+## 对照表
+
+| 能力 | 实盘运行（2026） | 公开代码 | 在这里运行 |
+|---|---|---|---|
+| 激活前逐字段读回 | 9 月 10—27 日每次交互建单：暂停创建 → 读回 → 激活 | [`readback.py`](../readback.py)：`verify_build()`，HOLD/ACTIVATE 回执 | `python3 readback.py --plan examples/readback/meta-plan.json --readback examples/readback/meta-readback.json` |
+| 建单清单预检 | 本仓库新增；实盘建单依赖读回 | [`preflight.py`](../preflight.py)：命名与配置、URL 参数、特殊类别声明、归因、重复文件 | `python3 preflight.py --checklist examples/preflight/checklist.json --policy examples/preflight/policy.json` |
+| 每日取数与结算核对 | 每日任务，9 月 21—26 日；范围修正于 9 月 20 日 | [`operating_rules.py`](../operating_rules.py) 中的结算对账：花费、结果数、CPA 差异；范围缺口绝不补零 | `python3 demo/run_demo.py`（“Platform vs settlement”一节） |
+| 按 T 阶梯给广告组分类 | 12 小时任务，9 月 22—26 日 | [`operating_rules.py`](../operating_rules.py) 的 `decide_account()`，阈值来自 [`methodology-reference.json`](../examples/operating/methodology-reference.json) | `python3 demo/run_demo.py` |
+| 先回验上一轮 | 每轮 12 小时巡检，9 月 22—26 日 | [`operating_loop.py`](../operating_loop.py) 的只追加台账：`apply`、`verify`、`open` | `python3 scripts/demo_operating_loop.py` |
+| 五态写入关卡与写后核对 | 9 月 24 日移植进私有实盘巡检 | [`operating_rules.py`](../operating_rules.py) 的 `gate()` 与 `reconcile()` | `python3 demo/run_demo.py --steps` |
+| 每个动作的验收标准与停止条件 | 9 月 24 日起覆盖每个动作 | 方法文件中的动作目录，由 `scripts/render_decision_matrix.py` 渲染 | [决策矩阵](decision-matrix.md)（英文） |
+| CPA 为什么变化（CPM、CTR、CVR） | 本仓库新增 | [`operating_rules.py`](../operating_rules.py) 的 `cpa_driver_decomposition()` | `python3 demo/run_demo.py`（“Why CPA moved”一节） |
+| 读写广告账户 | 通过 WorkBuddy 的连接器：Meta 走托管 MCP 连接器，TikTok 走自建 TikTok API for Business 客户端 | 无：平台调用为 0 | — |
+| 定时调度 | WorkBuddy 本地调度器，9 月 20—26 日；9 月 26 日起暂停 | 无 | — |
+
+Google Ads 只出现在接入说明和模拟适配器中；实盘工作只涉及 Meta 与 TikTok。
+
+## 上线前原型
+
+以下模块来自一个独立的规划与初始化原型，不属于实盘运行的部分，使用虚构输入运行。
+
+| 模块 | 实现了 | 不做 |
 |---|---|---|
-| **Agent 工具中的业务实践** | 留存了业务对话、工具操作、素材筛选、建单/调整记录、报表与巡检产物 | 已复核部分本地历史记录；各案例说明完成到哪一步。原始私有资料不随仓库发布，也不是当前平台状态核验 |
-| **可复用的宿主工作流** | 项目指令、任务流程、方法与业务资料组织、整批审阅、执行核对、经验记录模板 | 宿主需正确加载指令，并具备本任务可用且获授权的工具；新环境需独立验收 |
-| **公开 Python 验证程序** | 结构化检查、有限方法编排、知识检索、私有记录、离线巡检、模拟执行与恢复 | 可本地运行和测试；不调用大模型或广告平台，拒绝 live 模式 |
-
-真实任务通过宿主已有工具开展时，不必先为 Python 程序补平台适配器。若要让 Python 程序独立操作平台，则仍需另行实现原生参数、认证、真实批准和集成验证。
-
-## 实际使用记录覆盖了什么
-
-| 任务 | 已复核记录中的工作 | 不能据此声称什么 |
-|---|---|---|
-| 素材与批次准备 | 文件去重、素材/目的地匹配、用户调整方案、批次记录 | 所有素材都被程序自动理解或性能已证明 |
-| Meta 建单、结构调整与配置排查 | 创建/读取记录、状态检查、用户确认和未完成项 | 所有批次均已生效，或请求成功就已开始花费 |
-| TikTok 素材与投放 | 多产品方案、用户补充素材约束、对象状态记录 | 所有对象都已过审、实际消耗或三平台等价支持 |
-| 日报与归属校验 | 来源表、账户范围、产品映射、缺数说明与报告 | 不同来源的转化可直接相加，缺数等于零 |
-| 周期巡检与修正 | 上轮待办回验、本轮取数、方法引用、报告交接 | 每项建议都已执行，或定时任务始终运行成功 |
-
-当前复核以 Meta、TikTok 相关记录为主。**未把 Google 的设计与模拟适配器写成已核实的真实业务部署。**详细情况见[脱敏案例](case-studies.zh-CN.md)。
-
-## 公开 Python 具体实现
-
-| 模块 | 已实现的范围 | 仍在范围之外 |
-|---|---|---|
-| `onboarding.py` / `guidance.py` | 结构化事实、依赖/缺项检查、模拟连接快照、规则式引导 | 真实连接验证、模型访谈、自动安装连接器 |
-| `methodology.py` / `task.py` | 两类有限候选、明确采用、任务副本和方法版本 | 任意自然语言 SOP 解析、宿主全部投放方法 |
-| `planning.py` | 元数据和已声明组件身份筛选、测试单元、预算与计划绑定 | 媒体理解、绩效排序、真实原生参数或随机 A/B 分配 |
-| `knowledge.py` | 版本化知识、适用条件、来源和证据缺口检查 | 自动验证平台事实、因果结论、自主调预算 |
-| `memory_store.py` / `personalization.py` | 产品范围内的本地记录、版本/历史/撤回、条件复用 | 自动学习、效果认证、多租户安全、自动写入个人记忆 |
-| `adops.py` | 整批模拟计划、模拟授权、SQLite 对象、同一状态目录的恢复 | 真实身份与批准、平台提交、网络/跨目录全局防重 |
-| `operating_loop.py` | 输入快照诊断、字段差异、本地台账与后置快照比较 | 自动取平台数据、用户审批、实际写入、后台调度 |
-
-三个模拟适配器仅接受 `generic_draft`，`native_payload` 为 `null`。`completed_simulation` 和 `ready` 不能成为真实发布批准。`contracts/` 的设计不因文件存在就自动被程序加载。
-
-## 离线验证入口
-
-需要 Python 3.9+ 与系统 IANA 时区数据库，程序只用标准库。所有示例使用虚构输入，无需账户或 API 密钥。
+| `onboarding.py` / `guidance.py` | 结构化业务事实、缺项检查、虚构连接快照、规则式引导 | 验证真实连接或安装连接器 |
+| `methodology.py` / `task.py` | 两类方法模板、明确采用、私有任务副本与版本 | 解析任意自然语言 SOP |
+| `planning.py` | 按已声明组件身份生成测试单元、预算与计划 | 理解媒体内容、排序效果或随机 A/B 分配 |
+| `knowledge.py` | 带适用条件、来源与证据缺口的版本化知识 | 验证平台事实或下因果结论 |
+| `memory_store.py` / `personalization.py` | 按产品范围的私有记录，含版本、历史与撤回 | 自动学习或认证效果 |
+| `adops.py` | 模拟批次计划、模拟授权、SQLite 对象、同一状态目录的恢复 | 向平台提交；`native_payload` 始终为 `null` |
 
 ```bash
-# 一轮广告检查及预置结果核对
-python3 demo/run_demo.py
-
-# 批次计划、模拟执行、中断恢复和重复运行
-python3 scripts/demo.py
-
-# 私有方法的保存、修订与条件复用
-python3 scripts/demo_private_memory.py
-
-# 六个虚构业务输入，含两种方法路线
-python3 scripts/demo_methods.py
+python3 scripts/demo.py                  # 模拟批次、中断与恢复
+python3 scripts/demo_private_memory.py   # 私有方法的保存、修订与复用
+python3 scripts/demo_methods.py          # 六个虚构输入，两种方法路线
 ```
 
-输出位于被 Git 忽略的本地运行目录。六个业务输入验证的是离线逻辑，不是六类客户部署。
+## 检查
 
-检查命令：
+只需 Python 3.9+ 与标准库，无需账户或 API 密钥。
 
 ```bash
 python3 -m unittest discover -s tests -v
 python3 demo/run_demo.py --check
+python3 readback.py --plan examples/readback/meta-plan.json --readback examples/readback/meta-readback.json \
+    --check examples/readback/expected/meta-receipt.md
+python3 preflight.py --checklist examples/preflight/checklist.json --policy examples/preflight/policy.json \
+    --check examples/preflight/expected/checklist.md
 python3 scripts/check_repository.py
 ```
 
-手动任务与输入格式见[方法编排](method-planning.zh-CN.md)，巡检字段和命令见[技术参考](operating-loop.zh-CN.md)。本地测试通过不等于真实平台联调完成。
+这些检查通过说明离线逻辑自洽，不说明任何实盘账户的情况。
 
-## 在自己的环境验收什么
+## 用在你自己的账户上
 
-先用[宿主工作流](workflow.zh-CN.md)和[任务记录模板](../templates/task-record.zh-CN.md)完成一条当前需要的任务，保留以下证据：
-
-1. 本任务的账户、工具能力、读取时间与覆盖范围。
-2. 已确认业务背景与方法，以及待补信息。
-3. 具体批次方案、预算影响、实际用户确认与版本。
-4. 逐对象请求回执与操作后读取；审核、可投、展示/花费分开。
-5. 中断后的既有对象核对与未完成项交接。
-
-只读任务验收读取和交付，不需要为了凑齐五项进行广告写入。无法获得某项证据时，如实保留缺口。跨宿主可用性、媒体能力、连接器可替换性和业务结果都应按具体环境验证。
+使用已验证且获授权的工具，按[宿主工作流](workflow.zh-CN.md)操作，并为每个批次保留一份[任务记录](../templates/task-record.zh-CN.md)：范围内的账户与工具及读取时间、已确认的业务背景与方法、具体批次及其预算影响和你的批准、逐对象读回（审核、可投、实际投放分开），以及交接时的未完成项。只读任务只需要读取权限，不要为了填满清单而写入账户。
