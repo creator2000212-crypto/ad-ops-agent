@@ -1,20 +1,58 @@
 # Contributing
 
-Contributions are welcome in Chinese or English. Start with the [architecture](docs/architecture.md) and [roadmap](docs/roadmap.md).
+Contributions are welcome in English or Chinese. For the decision engine start with the [operating loop](docs/operating-loop.md), [build QA](docs/build-qa.md) and the [decision matrix](docs/decision-matrix.md); for the planning prototype, the [architecture](docs/architecture.md) and [roadmap](docs/roadmap.md).
 
 ## Local checks
 
+Python 3.9 or newer, standard library only. CI ([`ci.yml`](.github/workflows/ci.yml)) runs the same list on Python 3.9 and 3.13.
+
 ```bash
+# Tests, including the repository checker's own tests
 python3 -m unittest discover -s tests -v
+
+# Golden files: each command exits 1 and prints a diff when output has drifted
+python3 demo/run_demo.py --check                    # English and Chinese reports
+python3 scripts/render_decision_matrix.py --check   # docs/decision-matrix.md
+python3 scripts/render_visuals.py --check           # README images and excerpts (no browser needed)
+for case in meta tiktok; do
+  for lang in en zh-CN; do
+    suffix=$([ "$lang" = en ] && echo md || echo zh-CN.md)
+    python3 readback.py --plan examples/readback/$case-plan.json \
+      --readback examples/readback/$case-readback.json --lang $lang \
+      --check examples/readback/expected/$case-receipt.$suffix
+  done
+done
+python3 preflight.py --checklist examples/preflight/checklist.json --policy examples/preflight/policy.json \
+  --check examples/preflight/expected/checklist.md
+python3 preflight.py --checklist examples/preflight/checklist.json --policy examples/preflight/policy.json \
+  --lang zh-CN --check examples/preflight/expected/checklist.zh-CN.md
+
+# Demonstrations
+python3 demo/run_demo.py --steps > /dev/null
+python3 scripts/demo_operating_loop.py
 python3 scripts/demo.py
 python3 scripts/demo_private_memory.py
 python3 scripts/demo_methods.py
-python3 scripts/demo_operating_loop.py
-python3 demo/run_demo.py --check
+
+# Public contents: required files, disclosures, policy wording, links
 python3 scripts/check_repository.py
 ```
 
-Use fictional fixtures and keep generated state under the ignored `runs/` directory. Never include credentials, raw customer data, account exports or private campaign/media files in a commit, issue or pull request.
+After an intended behaviour change, regenerate instead of hand-editing: `python3 demo/run_demo.py --refresh`, `python3 scripts/render_decision_matrix.py`, `readback.py ... --receipt <expected file>`, `preflight.py ... --report <expected file>`, and `python3 scripts/render_visuals.py` (needs Google Chrome). Read the diff, then run `--check`.
+
+`scripts/check_repository.py` fails on, among other things, a local home-directory path, a token or key, a Meta ad account ID, a standalone 15–19-digit ID, a token in a URL, a referral fragment, or wording about getting unchanged media past ad review in docs and fixtures. When you add a module, test, doc, fixture or script, add it to `REQUIRED` in that file; `tests/test_check_repository.py` fails until you do.
+
+Use fictional fixtures and `example.com`, and keep generated state under the ignored `runs/` and `demo/out/` directories. Never include credentials, raw customer data, account exports or private campaign/media files in a commit, issue or pull request.
+
+## Commit hook
+
+Enable the repository's hook once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+[`.githooks/pre-commit`](.githooks/pre-commit) rejects a commit whose author or committer email is not a GitHub noreply address (`<id>+<username>@users.noreply.github.com`) and runs `scripts/check_repository.py`. CI runs the same checker, so `--no-verify` only moves the failure later.
 
 ## Workflow and case contributions
 
@@ -56,6 +94,10 @@ The host may translate natural-language answers into structured inputs, but loca
 
 ## Pull requests
 
-Describe the problem, resulting behavior, scope and verification. Distinguish implemented code from design-only contracts and future acceptance scenarios. If a new native operation is added, document its real account/API support separately from mock tests; no public CI job should need ad credentials or spend money.
+The [pull request template](.github/pull_request_template.md) asks for three things: the decision impact (the diff of `demo/expected/summary.json`, or "none"), the checks you ran, and the safety boxes (no real identifiers, offline boundary unchanged, nothing that helps an ad pass review without fixing it). Add a line to [CHANGELOG.md](CHANGELOG.md) under the unreleased version.
+
+Distinguish implemented code from design-only contracts and future acceptance scenarios. If a new native operation is added, document its real account/API support separately from mock tests; no public CI job should need ad credentials or spend money.
+
+`main` is protected by the ruleset in [`.github/rulesets/main.json`](.github/rulesets/main.json): no deletion or force push, changes through a pull request, and both `offline (3.9)` and `offline (3.13)` must pass. A maintainer applies it once under Settings → Rules → Rulesets → Import a ruleset, or with `gh api repos/OWNER/REPO/rulesets --method POST --input .github/rulesets/main.json`. Dependabot ([`.github/dependabot.yml`](.github/dependabot.yml)) proposes GitHub Actions updates monthly in one grouped pull request.
 
 Preserve existing license notices. Contributions are licensed under the repository's MIT license.

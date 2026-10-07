@@ -1,0 +1,14 @@
+# Keep the pinned GitHub Actions current. The Python code uses the standard
+# library only, so there is no package manifest to watch.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: ci

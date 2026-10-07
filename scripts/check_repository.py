@@ -1,7 +1,21 @@
 #!/usr/bin/env python3
-"""Check public source structure and common accidental disclosures, offline."""
+"""Check public source structure and common accidental disclosures, offline.
+
+    python3 scripts/check_repository.py     # prints a JSON result; exit 1 on any error
+
+It checks that every file in ``REQUIRED`` exists, that binary files are only the
+generated README images, that Python, JSON, SVG and local Markdown links are
+valid, and that no text file carries a pattern from ``SENSITIVE`` (anywhere) or
+``POLICY`` (in public prose and fixtures). Errors name the rule and the file,
+never the matched value.
+
+Patterns whose literal text would match themselves are assembled from pieces, so
+this file and tests/test_check_repository.py can be scanned like any other.
+It is a heuristic guard, not a complete secret scanner.
+"""
 import ast
 import json
+import os
 from pathlib import Path
 import re
 import struct
@@ -22,66 +36,160 @@ ASSET_DIRS = {('docs', 'assets', name) for name in ('hero', 'proof', 'social', '
 ASSET_SUFFIXES = {'.png', '.svg'}
 ASSET_MAX_BYTES = 600 * 1024
 SOCIAL_PREVIEW = ('docs', 'assets', 'social', 'social-preview.png')
+EXECUTABLE = ['.githooks/pre-commit']
+
+# Every file the public tree is expected to contain. tests/test_check_repository.py
+# fails when a module, test, doc, fixture or script exists but is not listed here.
 REQUIRED = [
-    'README.md', 'README.zh-CN.md', 'AGENTS.md', 'LICENSE', 'NOTICE.md', 'CONTRIBUTING.md', 'SECURITY.md',
-    'adops.py', 'onboarding.py', 'guidance.py', 'knowledge.py', 'knowledge/catalog.json',
-    'tests/test_guidance.py', 'tests/test_setup_flow.py', 'docs/first-run.zh-CN.md', 'docs/use-in-agent.zh-CN.md',
-    'examples/onboarding-setup-required.json', 'examples/onboarding-guided.json',
-    'docs/knowledge-base.zh-CN.md', 'tests/test_knowledge.py',
-    'memory_store.py', 'personalization.py', 'tests/test_memory_store.py',
-    'tests/test_private_memory_integration.py', 'scripts/demo_private_memory.py',
-    'examples/private-methodology.json', 'docs/private-memory.zh-CN.md',
-    'methodology.py', 'planning.py', 'task.py', 'schemas/methodology.schema.json',
-    'tests/test_methodology.py', 'tests/test_planning.py', 'tests/test_m2_integration.py',
-    'evaluations/fixtures.py', 'scripts/demo_methods.py',
+    # Project, contribution and CI files
+    'README.md', 'README.zh-CN.md', 'AGENTS.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md',
+    'LICENSE', 'NOTICE.md', '.gitignore', '.gitattributes', '.githooks/pre-commit',
+    '.github/workflows/ci.yml', '.github/dependabot.yml', '.github/pull_request_template.md',
+    '.github/rulesets/main.json',
+    # Decision engine and its fixtures
+    'operating_rules.py', 'operating_loop.py',
+    'examples/operating/methodology-reference.json', 'examples/operating/snapshot-primary.json',
+    'examples/operating/writeback-snapshot.json', 'examples/operating/after-snapshot.json',
+    'examples/operating/settlement-daily.json',
+    'demo/README.md', 'demo/README.zh-CN.md', 'demo/run_demo.py',
+    'demo/expected/report.md', 'demo/expected/report.zh-CN.md', 'demo/expected/summary.json',
+    # Build QA: readback verifier and pre-flight linter
+    'readback.py', 'preflight.py',
+    'examples/readback/meta-plan.json', 'examples/readback/meta-readback.json',
+    'examples/readback/tiktok-plan.json', 'examples/readback/tiktok-readback.json',
+    'examples/readback/expected/meta-receipt.md', 'examples/readback/expected/meta-receipt.zh-CN.md',
+    'examples/readback/expected/tiktok-receipt.md', 'examples/readback/expected/tiktok-receipt.zh-CN.md',
+    'examples/preflight/checklist.json', 'examples/preflight/policy.json',
+    'examples/preflight/expected/checklist.md', 'examples/preflight/expected/checklist.zh-CN.md',
+    # Pre-launch planning and onboarding prototype
+    'adops.py', 'onboarding.py', 'guidance.py', 'knowledge.py', 'memory_store.py', 'personalization.py',
+    'methodology.py', 'planning.py', 'task.py',
+    'knowledge/catalog.json', 'schemas/methodology.schema.json', 'evaluations/fixtures.py',
+    'examples/brief.json', 'examples/candidates.json', 'examples/knowledge-observations.json',
+    'examples/onboarding-app-hybrid-discovery.json', 'examples/onboarding-guided.json',
+    'examples/onboarding-learning.json', 'examples/onboarding-setup-required.json',
+    'examples/private-methodology.json',
+    'templates/task-record.md', 'templates/task-record.zh-CN.md',
+    'contracts/README.md', 'contracts/connector-contract.json', 'contracts/creative-recovery.json',
+    'contracts/acceptance-scenarios.json', 'contracts/experience-catalog.json',
+    'contracts/onboarding-extensions.json',
+    # Scripts
+    'scripts/check_repository.py', 'scripts/demo.py', 'scripts/demo_methods.py',
+    'scripts/demo_operating_loop.py', 'scripts/demo_private_memory.py',
+    'scripts/render_decision_matrix.py', 'scripts/render_visuals.py',
+    # Tests
+    'tests/test_adops.py', 'tests/test_check_repository.py', 'tests/test_guidance.py',
+    'tests/test_knowledge.py', 'tests/test_m2_integration.py', 'tests/test_memory_store.py',
+    'tests/test_methodology.py', 'tests/test_onboarding.py', 'tests/test_operating_loop.py',
+    'tests/test_planning.py', 'tests/test_preflight.py', 'tests/test_private_memory_integration.py',
+    'tests/test_readback.py', 'tests/test_reconciliation.py', 'tests/test_setup_flow.py',
+    # Docs: provenance, decisions and build QA
+    'docs/index.md', 'docs/index.en.md',
+    'docs/how-it-ran.md', 'docs/how-it-ran.zh-CN.md',
+    'docs/case-studies.md', 'docs/case-studies.zh-CN.md',
+    'docs/methodology-history.md', 'docs/methodology-history.zh-CN.md',
+    'docs/capability-status.md', 'docs/capability-status.zh-CN.md',
+    'docs/decision-matrix.md', 'docs/operating-loop.md', 'docs/operating-loop.zh-CN.md',
+    'docs/build-qa.md', 'docs/build-qa.zh-CN.md',
+    'docs/disapproval-triage.md', 'docs/disapproval-triage.zh-CN.md', 'docs/operations.md',
+    # Docs: host workflow, setup and the planning prototype
+    'docs/workflow.md', 'docs/workflow.zh-CN.md',
+    'docs/use-in-agent.md', 'docs/use-in-agent.zh-CN.md',
+    'docs/first-check.md', 'docs/first-check.zh-CN.md', 'docs/first-run.md', 'docs/first-run.zh-CN.md',
+    'docs/platform-connectivity.md', 'docs/platform-connectivity.zh-CN.md',
+    'docs/google-ads-api-application.zh-CN.md',
+    'docs/build-from-zero.md', 'docs/build-from-zero.zh-CN.md',
     'docs/method-planning.md', 'docs/method-planning.zh-CN.md',
-    'scripts/demo.py', 'tests/test_adops.py', 'tests/test_onboarding.py',
-    'docs/index.md', 'docs/index.en.md', 'docs/method-comparison.md', 'docs/method-comparison.zh-CN.md',
-    'scripts/render_visuals.py',
+    'docs/method-comparison.md', 'docs/method-comparison.zh-CN.md',
+    'docs/knowledge-base.zh-CN.md', 'docs/private-memory.zh-CN.md',
+    'docs/product.md', 'docs/architecture.md', 'docs/onboarding.md', 'docs/roadmap.md',
+    # README images and the sources they are rendered from
     'docs/assets/src/manifest.json', 'docs/assets/src/hero.en.html', 'docs/assets/src/hero.zh-CN.html',
     'docs/assets/src/receipt.en.html', 'docs/assets/src/receipt.zh-CN.html',
     'docs/assets/src/social-preview.html',
     'docs/assets/hero/hero.en.png', 'docs/assets/hero/hero.zh-CN.png',
     'docs/assets/proof/receipt.en.png', 'docs/assets/proof/receipt.zh-CN.png',
     'docs/assets/social/social-preview.png',
-    'docs/product.md', 'docs/architecture.md', 'docs/onboarding.md',
-    'docs/operations.md', 'docs/disapproval-triage.md', 'docs/disapproval-triage.zh-CN.md', 'docs/roadmap.md',
-    'contracts/README.md', 'contracts/connector-contract.json', 'contracts/creative-recovery.json',
-    'contracts/acceptance-scenarios.json', 'contracts/experience-catalog.json',
-    'contracts/onboarding-extensions.json',
-    'operating_rules.py', 'operating_loop.py', 'tests/test_operating_loop.py',
-    'scripts/demo_operating_loop.py', 'docs/operating-loop.md', 'docs/operating-loop.zh-CN.md',
-    'examples/operating/methodology-reference.json', 'examples/operating/snapshot-primary.json',
-    'examples/operating/writeback-snapshot.json', 'examples/operating/after-snapshot.json',
-    'examples/operating/settlement-daily.json',
-    'demo/README.md', 'demo/README.zh-CN.md', 'demo/run_demo.py',
-    'demo/expected/report.md', 'demo/expected/report.zh-CN.md', 'demo/expected/summary.json',
-    'tests/test_reconciliation.py', 'scripts/render_decision_matrix.py', 'docs/decision-matrix.md',
-    'docs/build-from-zero.md', 'docs/build-from-zero.zh-CN.md',
-    '.github/workflows/ci.yml', '.gitignore', '.gitattributes'
 ]
+
+# Checked in every text file. Errors print the label and path, never the match.
 SENSITIVE = [
     ('personal workspace path', re.compile('/' + r'Users/[^/\s]+/|/' + r'home/[^/\s]+/')),
     ('GitHub token', re.compile(r'gh[pousr]_[A-Za-z0-9_]{20,}')),
     ('private key', re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----')),
     ('API key', re.compile(r'\bsk-[A-Za-z0-9_-]{24,}')),
     ('private source reference', re.compile('投放经验学习记录_' + r'\d{8}|Work' + 'Buddy/')),
+    # Meta ad account IDs are written act_<digits>; fixtures use keys such as acct-a.
+    ('ad account ID', re.compile(r'(?<![A-Za-z0-9])' + 'act' + r'_\d{6,}')),
+    # Page, pixel, campaign, ad set, ad and advertiser IDs are 15-19 digit numbers.
+    # Only a standalone run counts: digits inside a hash, a decimal or a longer
+    # number do not, and public help-centre URLs are removed first (see LONG_ID_EXEMPT).
+    ('long numeric ID', re.compile(r'(?<![\w.])\d{15,19}(?![\w]|\.\d)')),
+    ('token in URL', re.compile(r'https?://[^\s"\'<>()]*[?&#][A-Za-z_]*' + 'tok' + 'en=', re.IGNORECASE)),
+    ('referral link fragment', re.compile('#' + 'via' + '=')),
+]
+# Public documentation URLs carry long article IDs that are not account data.
+LONG_ID_EXEMPT = re.compile(
+    r'https://(?:www\.facebook\.com/business/help|developers\.facebook\.com/docs'
+    r'|business-api\.tiktok\.com/portal/docs|ads\.tiktok\.com/help'
+    r'|support\.google\.com|developers\.google\.com)[^\s"\'<>()]*')
+
+# Checked only in public prose and fixtures: what an agent or reader takes as
+# guidance. Disapprovals are resolved by fixing the content or through the
+# platform's review process, so wording for getting unchanged media past review
+# has no place there (docs/disapproval-triage.md).
+POLICY_DIRS = {'docs', 'contracts', 'examples', 'knowledge', 'demo', 'templates'}
+POLICY = [
+    ('ad-review circumvention wording',
+     re.compile('改' + '哈希' + '|' + '换' + '.{0,4}' + '哈希' + '|' + r'\bre-?' + 'hash', re.IGNORECASE)),
+    ('traffic-mixing jargon', re.compile('混' + '量' + '|' + r'mixed[ _-]?' + 'traffic', re.IGNORECASE)),
+]
+CHECKS = [
+    'required files', 'README images: PNG/SVG only under docs/assets/{hero,proof,social,charts}/, at most 600 KB each',
+    'Python syntax', 'JSON documents and unloaded contracts', 'runtime knowledge catalog', 'local Markdown links',
+    'executable git hook', 'disclosure patterns: workspace paths, tokens, keys, ad account and long numeric IDs, '
+    'tokens in URLs, referral fragments', 'ad-review circumvention and traffic-mixing wording in docs, contracts, '
+    'examples, knowledge, demo, templates and top-level Markdown',
 ]
 
 
-def main():
+def in_policy_scope(relative):
+    """Public prose and fixtures: the policy directories plus top-level Markdown."""
+    parts = Path(relative).parts
+    if len(parts) == 1:
+        return parts[0].endswith('.md')
+    return parts[0] in POLICY_DIRS
+
+
+def scan_text(relative, text):
+    """Return the labels of every disclosure or policy pattern found in ``text``.
+
+    ``relative`` is the repository-relative path; it decides whether the policy
+    patterns apply. The matched values are never returned.
+    """
+    labels = []
+    for label, pattern in SENSITIVE:
+        subject = LONG_ID_EXEMPT.sub(' ', text) if label == 'long numeric ID' else text
+        if pattern.search(subject):
+            labels.append(label)
+    if in_policy_scope(relative):
+        labels.extend(label for label, pattern in POLICY if pattern.search(text))
+    return labels
+
+
+def check_tree(root=ROOT):
+    """Check required files and every public file under ``root``; return (errors, text_files)."""
+    root = Path(root).resolve()
     errors, files = [], []
-    sys.path.insert(0, str(ROOT))
-    try:
-        import knowledge
-        knowledge.load_catalog()
-    except (OSError, ValueError, TypeError) as exc:
-        errors.append('runtime knowledge catalog invalid: ' + str(exc))
     for name in REQUIRED:
-        if not (ROOT / name).is_file():
+        if not (root / name).is_file():
             errors.append(f'missing required file: {name}')
-    for path in sorted(ROOT.rglob('*')):
-        relative = path.relative_to(ROOT)
+    for name in EXECUTABLE:
+        path = root / name
+        if path.is_file() and not os.access(str(path), os.X_OK):
+            errors.append(f'git hook is not executable: {name}')
+    for path in sorted(root.rglob('*')):
+        relative = path.relative_to(root)
         if any(part in SKIP for part in relative.parts) or not path.is_file():
             continue
         if tuple(relative.parts[:2]) in SKIP_PREFIXES:
@@ -117,10 +225,9 @@ def main():
         except UnicodeError:
             errors.append(f'unexpected non-text source: {relative}')
             continue
-        for label, pattern in SENSITIVE:
-            if pattern.search(text):
-                # Never echo a potentially sensitive matched value.
-                errors.append(f'{label}: {relative}')
+        for label in scan_text(relative.as_posix(), text):
+            # Never echo a potentially sensitive matched value.
+            errors.append(f'{label}: {relative}')
         if path.suffix == '.svg':
             try:
                 svg = ET.fromstring(text)
@@ -151,10 +258,23 @@ def main():
                 if parsed.scheme or parsed.netloc or not parsed.path:
                     continue
                 destination = (path.parent / unquote(parsed.path)).resolve()
-                if not destination.is_relative_to(ROOT) or not destination.exists():
+                if not destination.is_relative_to(root) or not destination.exists():
                     errors.append(f'broken local link: {relative} -> {target}')
+    return errors, files
+
+
+def main():
+    errors = []
+    sys.path.insert(0, str(ROOT))
+    try:
+        import knowledge
+        knowledge.load_catalog()
+    except (OSError, ValueError, TypeError) as exc:
+        errors.append('runtime knowledge catalog invalid: ' + str(exc))
+    tree_errors, files = check_tree(ROOT)
+    errors.extend(tree_errors)
     result = {'status': 'failed' if errors else 'passed', 'public_text_files': len(files),
-              'checks': ['required files', 'README images: PNG/SVG only under docs/assets/{hero,proof,social,charts}/, at most 600 KB each', 'Python syntax', 'JSON contracts', 'runtime knowledge catalog', 'local Markdown links', 'common disclosure patterns'],
+              'checks': CHECKS,
               'limitations': 'Heuristic source check; not a comprehensive secret scanner or runtime/platform validation.',
               'errors': errors}
     print(json.dumps(result, ensure_ascii=False, indent=2))

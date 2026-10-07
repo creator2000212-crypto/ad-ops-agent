@@ -2,16 +2,25 @@ name: Offline checks
 
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # The job id and matrix give the check names `offline (3.9)` and
+  # `offline (3.13)` that .github/rulesets/main.json requires. Rename both together.
   offline:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
         python: ['3.9', '3.13']
     steps:
@@ -21,19 +30,47 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
-      - name: Offline contract tests
+
+      - name: Unit and contract tests
         run: python -m unittest discover -s tests -v
-      - name: Demonstrate execution and recovery
-        run: python scripts/demo.py
-      - name: Demonstrate scoped private methods and corrections
-        run: python scripts/demo_private_memory.py
-      - name: Demonstrate six business and method workflows
-        run: python scripts/demo_methods.py
+      - name: Repository checker tests
+        run: python -m unittest tests.test_check_repository -v
+
+      - name: Build QA - readback replay matches the golden receipts (Meta holds, TikTok activates)
+        run: |
+          for case in meta tiktok; do
+            python readback.py --plan examples/readback/$case-plan.json \
+              --readback examples/readback/$case-readback.json \
+              --check examples/readback/expected/$case-receipt.md
+            python readback.py --plan examples/readback/$case-plan.json \
+              --readback examples/readback/$case-readback.json --lang zh-CN \
+              --check examples/readback/expected/$case-receipt.zh-CN.md
+          done
+      - name: Build QA - pre-flight lint matches the golden matrix
+        run: |
+          python preflight.py --checklist examples/preflight/checklist.json \
+            --policy examples/preflight/policy.json \
+            --check examples/preflight/expected/checklist.md
+          python preflight.py --checklist examples/preflight/checklist.json \
+            --policy examples/preflight/policy.json --lang zh-CN \
+            --check examples/preflight/expected/checklist.zh-CN.md
+      - name: Decision matrix matches the methodology
+        run: python scripts/render_decision_matrix.py --check
+      - name: Demo round matches the committed sample (English and Chinese)
+        run: python demo/run_demo.py --check
+      - name: README images and excerpts match the demo output
+        run: python scripts/render_visuals.py --check
+
+      - name: Walk the demo loop one stage at a time
+        run: python demo/run_demo.py --steps > /dev/null
       - name: Demonstrate the recurring operating loop and its write gate
         run: python scripts/demo_operating_loop.py
-      - name: Walk the same loop one stage at a time
-        run: python demo/run_demo.py --steps > /dev/null
-      - name: Verify the committed demo sample still matches a fresh run
-        run: python demo/run_demo.py --check
+      - name: Demonstrate execution and recovery (planning prototype)
+        run: python scripts/demo.py
+      - name: Demonstrate scoped private methods and corrections (planning prototype)
+        run: python scripts/demo_private_memory.py
+      - name: Demonstrate business and method workflows (planning prototype)
+        run: python scripts/demo_methods.py
+
       - name: Check public repository contents
         run: python scripts/check_repository.py

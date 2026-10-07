@@ -176,4 +176,4 @@ flowchart LR
 
 ## 许可
 
-[MIT](LICENSE)。[NOTICE](NOTICE.md) · [SECURITY](SECURITY.md) · [贡献](CONTRIBUTING.md)。本仓库不包含私有投放记录、凭据、素材或 WorkBuddy 会话数据。
+[MIT](LICENSE)。[NOTICE](NOTICE.md) · [更新日志](CHANGELOG.md) · [SECURITY](SECURITY.md) · [贡献](CONTRIBUTING.md)。本仓库不包含私有投放记录、凭据、素材或 WorkBuddy 会话数据。

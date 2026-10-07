@@ -1,0 +1,41 @@
+#!/bin/sh
+# Pre-commit guard for this repository. Enable it once per clone:
+#
+#     git config core.hooksPath .githooks
+#
+# 1. Author and committer email must be a GitHub noreply address, so a personal
+#    address never lands in public history.
+# 2. scripts/check_repository.py must pass. It reads the working tree, so it
+#    also sees unstaged files; keep the tree clean of private material.
+#
+# Bypassing it with --no-verify does not bypass CI, which runs the same check.
+set -eu
+
+noreply() {
+    case "$1" in
+        *@users.noreply.github.com|noreply@github.com) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+for role in AUTHOR COMMITTER; do
+    email=$(git var "GIT_${role}_IDENT" | sed -n 's/^.*<\([^>]*\)>.*$/\1/p')
+    if ! noreply "$email"; then
+        echo "pre-commit: the $(echo "$role" | tr 'A-Z' 'a-z') email is not a GitHub noreply address." >&2
+        echo "  Use the noreply address from https://github.com/settings/emails for this clone:" >&2
+        echo "  git config user.email '<id>+<username>@users.noreply.github.com'" >&2
+        exit 1
+    fi
+done
+
+root=$(git rev-parse --show-toplevel)
+if command -v python3 >/dev/null 2>&1; then
+    python=python3
+else
+    python=python
+fi
+if ! output=$("$python" "$root/scripts/check_repository.py" 2>&1); then
+    printf '%s\n' "$output" >&2
+    echo "pre-commit: scripts/check_repository.py failed; fix the errors listed above." >&2
+    exit 1
+fi

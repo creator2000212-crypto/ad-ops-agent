@@ -176,4 +176,4 @@ I defined the operating rules, thresholds and write-gate behaviour from campaign
 
 ## License
 
-[MIT](LICENSE). [NOTICE](NOTICE.md) · [SECURITY](SECURITY.md) · [Contributing](CONTRIBUTING.md). No private campaign records, credentials, media or WorkBuddy session data are in this repository.
+[MIT](LICENSE). [NOTICE](NOTICE.md) · [CHANGELOG](CHANGELOG.md) · [SECURITY](SECURITY.md) · [Contributing](CONTRIBUTING.md). No private campaign records, credentials, media or WorkBuddy session data are in this repository.
