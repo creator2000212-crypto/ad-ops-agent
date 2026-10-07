@@ -4,11 +4,14 @@
 #     git config core.hooksPath .githooks
 #
 # 1. Author and committer email must be a GitHub noreply address, so a personal
-#    address never lands in public history.
+#    address does not reach new commits. Commits made before this hook existed
+#    are not covered.
 # 2. scripts/check_repository.py must pass. It reads the working tree, so it
 #    also sees unstaged files; keep the tree clean of private material.
 #
-# Bypassing it with --no-verify does not bypass CI, which runs the same check.
+# CI runs the repository checker on every push and pull request, and checks the
+# emails of a pull request's commits; a direct push is checked only by this hook.
+# .githooks/commit-msg scans the commit message the same way.
 set -eu
 
 noreply() {

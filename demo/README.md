@@ -4,7 +4,7 @@ This demo replays one round of the read-only 12-hour check I ran as a scheduled 
 
 [简体中文](README.zh-CN.md) · [Project home](../README.md) · [Technical reference](../docs/operating-loop.md) · [Decision matrix](../docs/decision-matrix.md)
 
-WorkBuddy is Tencent's desktop AI agent; this project is not affiliated with it. Here the round runs offline: the script reads JSON fixtures, makes 0 platform calls, and writes a report plus a local ledger. Accounts, ad sets, creatives and prices are fictional; the rule structure and thresholds are the ones I used.
+WorkBuddy is Tencent's desktop AI agent; this project is not affiliated with it. Here the round runs offline: the script reads JSON fixtures, makes 0 platform calls, and writes a report plus a local ledger. Accounts, ad sets, creatives, prices and the unit economics (value per lead, approval rate, target ROAS) are fictional; the rule structure and the thresholds expressed relative to T follow the playbook I used.
 
 ```bash
 python3 demo/run_demo.py                # run the round and print the report (English)

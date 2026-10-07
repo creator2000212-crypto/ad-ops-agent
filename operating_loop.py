@@ -108,6 +108,8 @@ def validate_snapshot(snapshot):
         raise LoopError('Snapshot must contain at least one account.')
     seen = set()
     for account in accounts:
+        if not isinstance(account, dict):
+            raise LoopError('Every account must be a JSON object.')
         for key in ('account_key', 'platform'):
             if not account.get(key):
                 raise LoopError(f'Account is missing {key}: {account}')
@@ -449,7 +451,7 @@ REPORT_TEXT = {
         'or': ' or ',
         'decisions': '## Decisions by ad set',
         'decision_cols': ('Ad set', 'Stage', 'Spend', 'Impr.', 'Leads', 'CPA', 'T', 'Stop line',
-                          'Utilisation', 'Rules fired'),
+                          'Utilization', 'Rules fired'),
         'keep_observing': 'Keep observing',
         'cannot_classify': 'Cannot classify: ',
         'unreconciled': 'advisory: measurement unreconciled',
@@ -458,11 +460,11 @@ REPORT_TEXT = {
         'drivers': '## Why CPA moved',
         'drivers_intro': ('CPA = CPM ÷ (1000 × CTR × CVR), so the change in log CPA splits exactly into a CPM, '
                           'a CTR and a CVR term. Each cell is that term in log-points (100 × change in the '
-                          'natural log; negative pushed CPA down) and its share of the total movement. The '
+                          'natural log; positive pushed CPA up, negative pulled it down) and its share of the total movement. The '
                           'residual is what the quoted prior CPA leaves unexplained (rounding). It is an '
                           'accounting identity, not a cause.'),
-        'drivers_cols': ('Ad set', 'Prior window', 'CPA: prior → now', 'Δ log CPA', 'CPM', 'CTR', 'CVR',
-                         'Residual', 'Main driver'),
+        'drivers_cols': ('Ad set', 'Prior window', 'CPA: prior → now', 'Δ log CPA', 'CPM effect',
+                         'CTR effect', 'CVR effect', 'Residual', 'Main driver'),
         'drivers_guide': ('Read the largest share first: CVR points after the click (destination, form, '
                           'lead quality), CTR to the hook, CPM to the auction.'),
         'not_decomposed': 'not decomposed: {missing} missing',
@@ -544,8 +546,8 @@ REPORT_TEXT = {
                            '比较，而不是和 T 比较。只在一侧存在的行按缺失显示，绝不补零。状态为 {downgrade_on} 的账户，'
                            '{codes} 降为仅建议（口径未对齐）。'),
         'or': '、',
-        'decisions': '## 判定明细（按 ad set）',
-        'decision_cols': ('ad set', '阶段', '花费', '展示', '转化', 'CPA', 'T', '止损线', '利用率', '判据'),
+        'decisions': '## 判定明细（按广告组）',
+        'decision_cols': ('广告组', '阶段', '花费', '展示', '转化', 'CPA', 'T', '止损线', '利用率', '判据'),
         'keep_observing': '保持观察',
         'cannot_classify': '无法判定：',
         'unreconciled': '仅建议：口径未对齐',
@@ -553,9 +555,10 @@ REPORT_TEXT = {
         'code_sep': '；',
         'drivers': '## CPA 为什么变了',
         'drivers_intro': ('CPA = CPM ÷ (1000 × CTR × CVR)，所以 CPA 的对数变化可以精确拆成 CPM、CTR、CVR 三项。'
-                          '每格是该项的对数点（100 × 自然对数变化；负数表示把 CPA 往下拉）及其在总变动中的占比。'
+                          '每格是该项的对数点（100 × 自然对数变化；正数把 CPA 往上推，负数往下拉）及其在总变动中的占比。'
                           '残差是报出的上期 CPA 无法解释的部分（取整）。这是会计恒等式，不是因果结论。'),
-        'drivers_cols': ('ad set', '上期窗口', 'CPA：上期 → 本期', 'Δ log CPA', 'CPM', 'CTR', 'CVR', '残差', '主因'),
+        'drivers_cols': ('广告组', '上期窗口', 'CPA：上期 → 本期', 'Δ log CPA', 'CPM 贡献', 'CTR 贡献', 'CVR 贡献',
+                         '残差', '主因'),
         'drivers_guide': '先看占比最大的一项：CVR 指向点击之后（落地页、表单、线索质量），CTR 指向钩子，CPM 指向竞价。',
         'not_decomposed': '未拆分：缺少 {missing}',
         'prior': '上期', 'current': '本期',

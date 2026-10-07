@@ -38,7 +38,7 @@ body { font-family: var(--sans); color: var(--ink); font-variant-numeric: tabula
 .status.advisory .icon { color: var(--advisory); }
 .status.hold .icon, .status.muted .icon { color: var(--hold); }
 
-body { width: 880px; height: 871px; }
+body { width: 880px; height: 583px; }
 
 .card { width: 880px; border: 1px solid var(--line); border-radius: 20px; background: var(--bg);
         padding: 26px 30px 22px; overflow: hidden; }
@@ -56,7 +56,7 @@ h1 .mono { font-size: 19px; font-weight: 600; }
 .step .k { font-size: 10.5px; line-height: 13px; font-weight: 650; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
 .step .v { font-size: 20px; line-height: 24px; font-weight: 720; margin-top: 5px; white-space: nowrap; }
 .step.hold .v { color: var(--stop); } .step.activate .v { color: var(--promote); }
-.step .s { font-size: 11px; line-height: 14px; color: var(--muted); margin-top: 4px; white-space: nowrap; }
+.step .s { font-size: 12.5px; line-height: 15px; color: var(--muted); margin-top: 4px; white-space: nowrap; }
 .arrow { flex: 0 0 34px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 18px; }
 .problem { height: 42px; line-height: 40px; margin-top: 12px; background: var(--stop-bg); border: 1px solid #F3C4BE;
            border-radius: 10px; padding: 0 14px; font-size: 13px; color: #7A1A12; white-space: nowrap;
@@ -64,15 +64,15 @@ h1 .mono { font-size: 19px; font-weight: 600; }
 .problem b { color: var(--stop); margin-right: 8px; }
 .problem .mono { font-size: 12.5px; font-weight: 600; }
 .panel { margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-.row { display: grid; grid-template-columns: 84px 178px 124px 1fr 1fr 54px; align-items: center;
-       height: 32px; border-top: 1px solid var(--rule); font-size: 12px; }
+.row { display: grid; grid-template-columns: 88px 116px 124px 1fr 1fr 58px; align-items: center;
+       height: 32px; border-top: 1px solid var(--rule); font-size: 13px; }
 .row > div { padding: 0 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .row > div:first-child { padding-left: 16px; } .row > div:last-child { text-align: center; padding: 0; }
-.row.head { height: 32px; border-top: 0; border-bottom: 1px solid var(--line); font-size: 10px; font-weight: 650;
+.row.head { height: 32px; border-top: 0; border-bottom: 1px solid var(--line); font-size: 11px; font-weight: 650;
             letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .row.head + .row { border-top: 0; }
-.row .object { font-family: var(--mono); font-size: 11.5px; padding-right: 2px; }
-.row .value { font-family: var(--mono); font-size: 11px; }
+.row .object { font-family: var(--mono); font-size: 13px; padding-right: 2px; }
+.row .value { font-family: var(--mono); font-size: 13px; }
 .row .level { color: var(--muted); }
 .row.bad { background: #FFF6F5; }
 .row.bad .field { color: var(--stop); font-weight: 650; }
@@ -82,12 +82,12 @@ h1 .mono { font-size: 19px; font-weight: 600; }
 .param { display: inline-block; }
 .param + .param { margin-left: 8px; }
 .param.missing { color: var(--stop); background: var(--stop-bg); border-radius: 4px; padding: 0 5px; font-weight: 650; }
-.foot { height: 16px; line-height: 16px; margin-top: 12px; font-size: 11px; color: var(--muted); white-space: nowrap;
+.foot { height: 16px; line-height: 16px; margin-top: 12px; font-size: 12px; color: var(--muted); white-space: nowrap;
         overflow: hidden; text-overflow: ellipsis; }
 </style>
 </head>
 <body>
-<div class="card" style="height: 871px">
+<div class="card" style="height: 583px">
 <div class="top">
 <div><div class="eyebrow">BUILD RECEIPT · REPLAY, FICTIONAL VALUES</div><h1>Meta · <span class="mono">fictional-meta-account-a</span> · USD</h1></div>
 <div class="verdict hold">HOLD</div>
@@ -98,32 +98,23 @@ h1 .mono { font-size: 19px; font-weight: 600; }
 <div class="s mono">2026-09-23T02:00:00Z</div></div>
 <div class="arrow">→</div>
 <div class="step"><div class="k">Readback</div>
-<div class="v">39/40 fields</div>
+<div class="v">40/41 fields</div>
 <div class="s mono">2026-09-23T02:03:00Z</div></div>
 <div class="arrow">→</div>
 <div class="step hold"><div class="k">Decision</div>
-<div class="v">HOLD</div><div class="s">1 problem: nothing is activated</div></div>
+<div class="v">HOLD</div><div class="s">1 mismatch · nothing activated</div></div>
 </div>
-<div class="problem"><b>✗</b><span class="mono">ad-h3</span> · URL parameters: required parameter missing: utm_content</div>
+<div class="problem"><b>✗</b><span class="mono">ad-h3</span> · URL parameters: missing required parameter utm_content</div>
 <div class="panel">
 <div class="row head"><div>Level</div><div>Object</div><div>Field</div><div>Planned</div><div>Read back</div><div>Match</div></div>
-<div class="row"><div class="level">account</div><div class="object">fictional-meta-account-a</div><div class="field">Account currency</div><div class="value">USD</div><div class="value">USD</div><div><span class="mark ok">✓</span></div></div>
-<div class="row"><div class="level">campaign</div><div class="object">cmp-quote-01</div><div class="field">Objective</div><div class="value">OUTCOME_LEADS</div><div class="value">OUTCOME_LEADS</div><div><span class="mark ok">✓</span></div></div>
 <div class="row"><div class="level">campaign</div><div class="object">cmp-quote-01</div><div class="field">Status</div><div class="value">PAUSED</div><div class="value">PAUSED</div><div><span class="mark ok">✓</span></div></div>
-<div class="row"><div class="level">ad set</div><div class="object">as-h1</div><div class="field">Optimization goal</div><div class="value">OFFSITE_CONVERSIONS</div><div class="value">OFFSITE_CONVERSIONS</div><div><span class="mark ok">✓</span></div></div>
-<div class="row"><div class="level">ad set</div><div class="object">as-h1</div><div class="field">Optimization event</div><div class="value">LEAD</div><div class="value">LEAD</div><div><span class="mark ok">✓</span></div></div>
 <div class="row"><div class="level">ad set</div><div class="object">as-h1</div><div class="field">Daily budget</div><div class="value">20.00 USD</div><div class="value">20.00 USD (raw 2000)</div><div><span class="mark ok">✓</span></div></div>
-<div class="row"><div class="level">ad set</div><div class="object">as-h1</div><div class="field">Bid strategy</div><div class="value">LOWEST_COST_WITHOUT_CAP</div><div class="value">LOWEST_COST_WITHOUT_CAP</div><div><span class="mark ok">✓</span></div></div>
 <div class="row"><div class="level">ad set</div><div class="object">as-h1</div><div class="field">Attribution</div><div class="value">click 7d, view 1d</div><div class="value">click 7d, view 1d</div><div><span class="mark ok">✓</span></div></div>
-<div class="row"><div class="level">ad set</div><div class="object">as-h1</div><div class="field">Geo</div><div class="value">US</div><div class="value">US</div><div><span class="mark ok">✓</span></div></div>
-<div class="row"><div class="level">ad set</div><div class="object">as-h1</div><div class="field">Placements</div><div class="value">facebook, instagram</div><div class="value">facebook, instagram</div><div><span class="mark ok">✓</span></div></div>
 <div class="row"><div class="level">ad set</div><div class="object">as-h3</div><div class="field">Bid amount</div><div class="value">6.50 USD</div><div class="value">6.50 USD (raw 650)</div><div><span class="mark ok">✓</span></div></div>
-<div class="row"><div class="level">ad</div><div class="object">ad-h1</div><div class="field">Destination URL</div><div class="value">https://example.com/quote</div><div class="value">https://example.com/quote</div><div><span class="mark ok">✓</span></div></div>
 <div class="row" style="height: 50px"><div class="level">ad</div><div class="object">ad-h1</div><div class="field">URL parameters</div><div class="value"><span class="params"><span class="param">utm_source</span><span class="param">utm_medium</span><br><span class="param">utm_campaign</span><span class="param">utm_content</span></span></div><div class="value"><span class="params"><span class="param">utm_source</span><span class="param">utm_medium</span><br><span class="param">utm_campaign</span><span class="param">utm_content</span></span></div><div><span class="mark ok">✓</span></div></div>
-<div class="row"><div class="level">ad</div><div class="object">ad-h1</div><div class="field">CTA</div><div class="value">LEARN_MORE</div><div class="value">LEARN_MORE</div><div><span class="mark ok">✓</span></div></div>
 <div class="row bad" style="height: 67px"><div class="level">ad</div><div class="object">ad-h3</div><div class="field">URL parameters</div><div class="value"><span class="params"><span class="param">utm_source</span><span class="param">utm_medium</span><br><span class="param">utm_campaign</span><span class="param">utm_content</span></span></div><div class="value"><span class="params"><span class="param">utm_source</span><span class="param">utm_medium</span><br><span class="param">utm_campaign</span><br><span class="param missing">✗ utm_content missing</span></span></div><div><span class="mark bad">✗</span></div></div>
 </div>
-<div class="foot">15 of 40 fields shown: one per field type, plus every mismatch. Full receipt: examples/readback/expected/meta-receipt.md · 0 platform calls</div>
+<div class="foot">6 of 41 fields shown, including every mismatch. Full receipt: examples/readback/expected/meta-receipt.md · 0 platform calls</div>
 </div>
 </body>
 </html>

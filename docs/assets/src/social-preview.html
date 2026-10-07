@@ -45,15 +45,15 @@ body { background: #10281F; }
          padding: 64px 0 0 72px; display: flex; gap: 56px; }
 .left { flex: 0 0 560px; display: flex; flex-direction: column; height: 512px; }
 .eyebrow { font-size: 15px; font-weight: 700; letter-spacing: 0.16em; color: #6FD3A8; }
-h1 { font-size: 76px; line-height: 1; font-weight: 780; letter-spacing: -0.03em; color: #F4F7F4; margin: 22px 0 22px; }
-.lede { font-size: 26px; line-height: 1.38; color: #C8DCD2; margin: 0; font-weight: 450; }
-.chips { display: flex; gap: 12px; margin-top: 34px; }
-.chip { flex: 1 1 0; background: #173A2D; border: 1px solid #2D5646; border-radius: 14px; padding: 14px 14px 15px; }
-.chip .big { font-size: 34px; font-weight: 740; color: #F4F7F4; line-height: 1; white-space: nowrap; }
-.chip .big .of { font-size: 20px; color: #A9C6B8; font-weight: 600; }
+h1 { font-size: 64px; line-height: 1; font-weight: 780; letter-spacing: -0.03em; color: #F4F7F4; margin: 20px 0 20px; }
+.lede { font-size: 24px; line-height: 1.38; color: #C8DCD2; margin: 0; font-weight: 450; }
+.chips { display: flex; flex-direction: column; gap: 10px; margin-top: 26px; }
+.chip { display: flex; align-items: center; gap: 14px; background: #173A2D; border: 1px solid #2D5646;
+        border-radius: 14px; padding: 10px 16px 10px 14px; }
+.chip .big { flex: 0 0 66px; font-size: 34px; font-weight: 740; color: #F4F7F4; line-height: 1; white-space: nowrap; }
 .chip .icon { font-size: 18px; margin-right: 7px; position: relative; top: -5px; }
 .icon.promote { color: #5FD39C; } .icon.human { color: #F2B65A; } .icon.stop { color: #FF8A7A; }
-.chip .label { font-size: 14px; line-height: 1.35; color: #A9C6B8; margin-top: 9px; }
+.chip .label { font-size: 16px; line-height: 1.32; color: #A9C6B8; }
 .foot { margin-top: auto; font-size: 15px; color: #8DB1A1; }
 .foot .repo { color: #DDEBE3; font-weight: 600; }
 .panel { flex: 1 1 auto; margin-right: -2px; height: 640px; background: var(--surface); border-radius: 18px 0 0 0;
@@ -61,18 +61,16 @@ h1 { font-size: 76px; line-height: 1; font-weight: 780; letter-spacing: -0.03em;
 .panel .head { display: flex; justify-content: space-between; align-items: baseline; padding: 22px 26px 14px; }
 .panel .head .title { font-size: 19px; font-weight: 700; }
 .panel .head .round { font-size: 14px; color: var(--muted); }
-table { width: 100%; border-collapse: collapse; font-size: 17px; }
-th { font-size: 13px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
-     text-align: left; padding: 9px 10px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--line); }
-td { height: 44px; padding: 0 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
-th:first-child, td:first-child { padding-left: 26px; }
-td.short { font-size: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 22px; }
+th { font-size: 15px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+     text-align: left; padding: 11px 12px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--line); }
+td { height: 72px; padding: 0 12px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th:first-child, td:first-child { padding-left: 28px; }
+td.short { font-size: 21px; }
 td.t { color: var(--muted); }
-.pill { height: 28px; padding: 0 12px; border-radius: 14px; font-size: 15px; }
-.status { font-size: 15px; } .status .icon { width: 18px; }
+.pill { height: 36px; padding: 0 15px; border-radius: 18px; font-size: 19px; }
+.status { font-size: 19px; } .status .icon { width: 22px; }
 th:last-child, td:last-child { padding-right: 26px; }
-.fade { position: absolute; left: 0; right: 0; bottom: 0; height: 120px;
-        background: linear-gradient(rgba(255,255,255,0), var(--surface) 85%); }
 </style>
 </head>
 <body>
@@ -80,11 +78,11 @@ th:last-child, td:last-child { padding-right: 26px; }
 <div class="left">
 <div class="eyebrow">META · TIKTOK · LEAD-GEN · AD OPS</div>
 <h1>Ad Ops Agent</h1>
-<p class="lede">Turns yesterday&#x27;s ad data into a gated change list, and checks every change actually landed</p>
+<p class="lede">Turns yesterday&#x27;s ad data into a gated change list, and checks that every change actually landed</p>
 <div class="chips">
-<div class="chip"><div class="big"><span class="icon promote">✓</span>4<span class="of">/20</span></div><div class="label">findings ready for review</div></div>
-<div class="chip"><div class="big"><span class="icon human">▲</span>2</div><div class="label">held for a human</div></div>
-<div class="chip"><div class="big"><span class="icon stop">✗</span>1</div><div class="label">change that didn&#x27;t take effect</div></div>
+<div class="chip"><div class="big"><span class="icon promote">✓</span>4</div><div class="label">changes passed the write gate (of 20 findings); awaiting approval</div></div>
+<div class="chip"><div class="big"><span class="icon human">▲</span>2</div><div class="label">held for a human (1 conflict, 1 unknown)</div></div>
+<div class="chip"><div class="big"><span class="icon stop">✗</span>1</div><div class="label">change that didn&#x27;t take effect, caught by the after-check</div></div>
 </div>
 <div class="foot"><span class="repo">github.com/creator2000212-crypto/ad-ops-agent</span><br>Fictional data · replay of one 12-hour round · 0 platform calls</div>
 </div>
@@ -103,15 +101,9 @@ th:last-child, td:last-child { padding-right: 26px; }
 <tr><td class="short mono">a2</td><td class="cpa num">—</td><td class="t num">7.20</td><td class="decision"><span class="pill hold">Under-tested</span></td><td class="gate"><span class="status muted"><span class="icon">·</span>advisory</span></td></tr>
 <tr><td class="short mono">a3</td><td class="cpa num">—</td><td class="t num">7.20</td><td class="decision"><span class="pill stop">Pause · no leads</span></td><td class="gate"><span class="status hold"><span class="icon">=</span>satisfied</span></td></tr>
 <tr><td class="short mono">a4</td><td class="cpa num">20.00</td><td class="t num">7.20</td><td class="decision"><span class="pill stop">Pause · over cost</span></td><td class="gate"><span class="status promote"><span class="icon">✓</span>ready</span></td></tr>
-<tr><td class="short mono">a5</td><td class="cpa num">2.80</td><td class="t num">7.20</td><td class="decision"><span class="pill hold">Under-tested</span></td><td class="gate"><span class="status muted"><span class="icon">·</span>advisory</span></td></tr>
 <tr><td class="short mono">a6</td><td class="cpa num">5.25</td><td class="t num">7.20</td><td class="decision"><span class="pill hold">Hold · breaker</span></td><td class="gate"><span class="status muted"><span class="icon">·</span>advisory</span></td></tr>
 <tr><td class="short mono">a7</td><td class="cpa num">—</td><td class="t num">7.20</td><td class="decision"><span class="pill human">Fix or appeal</span></td><td class="gate"><span class="status muted"><span class="icon">·</span>advisory</span></td></tr>
-<tr><td class="short mono">a8</td><td class="cpa num">7.10</td><td class="t num">7.20</td><td class="decision"><span class="pill stop">Pause · tracking</span></td><td class="gate"><span class="status promote"><span class="icon">✓</span>ready</span></td></tr>
-<tr><td class="short mono">a9</td><td class="cpa num">6.40</td><td class="t num">7.20</td><td class="decision"><span class="pill human">Promote → 2T</span></td><td class="gate"><span class="status human"><span class="icon">▲</span>conflict</span></td></tr>
-<tr><td class="short mono">a10</td><td class="cpa num">5.15</td><td class="t num">7.20</td><td class="decision"><span class="pill promote">Promote → 2T</span></td><td class="gate"><span class="status stop"><span class="icon">✗</span>not in effect</span></td></tr>
-<tr><td class="short mono">b1</td><td class="cpa num">5.20</td><td class="t num">5.76</td><td class="decision"><span class="pill hold">Hold · overflow</span></td><td class="gate"><span class="status muted"><span class="icon">·</span>advisory</span></td></tr>
 </tbody></table>
-<div class="fade"></div>
 </div>
 </div>
 </body>

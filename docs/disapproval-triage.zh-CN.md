@@ -6,7 +6,7 @@
 
 本页是广告、创意或媒体素材没能上线时 Agent 遵循的处理流程。它把状态栏里看起来相似的两种情况分开：技术上的上传或处理失败，以及政策拒审。两者处理方式不同，只有前者会再次上传文件。
 
-**范围：**这是宿主工作流程序，[creative-recovery.json](../contracts/creative-recovery.json) 是对应的设计契约。公开 Python 代码不调用任何平台，因此不会上传媒体、修改创意、提交复核或轮询审核状态。离线[巡检循环](operating-loop.zh-CN.md)只负责标记：广告组 configured status 为 `ACTIVE` 而 effective status 为 `DISAPPROVED` 时，输出 `AD_STATUS`。
+**范围：**这是宿主工作流程序，[disapproval-triage.json](../contracts/disapproval-triage.json) 是对应的设计契约。公开 Python 代码不调用任何平台，因此不会上传媒体、修改创意、提交复核或轮询审核状态。离线[巡检循环](operating-loop.zh-CN.md)只负责标记：广告组 configured status 为 `ACTIVE` 而 effective status 为 `DISAPPROVED` 时，输出 `AD_STATUS`。
 
 ## 分诊一览
 
@@ -65,6 +65,6 @@
 
 提交修改版和发起 Request Review 都是写操作，与其他变更走同一批次审阅：具体差异 → 负责人批准 → 通过已验证工具执行 → 读回。设计契约、过去的批准或模拟授权都不覆盖这些动作。
 
-相关：[实操卡](operations.md)（媒体、帖子、链接与状态） · [验收场景](../contracts/acceptance-scenarios.json)（`REC-*`） · [运行时知识库](knowledge-base.zh-CN.md)条目 `KB-META-08`。
+相关：[实操卡](operations.md)（媒体、帖子、链接与状态） · [验收场景](../contracts/acceptance-scenarios.json)（`DIS-*`） · [运行时知识库](knowledge-base.zh-CN.md)条目 `KB-META-08`。
 
 返回[文档导航](index.md)。

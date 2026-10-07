@@ -141,11 +141,9 @@ def decision_rows(data):
         else:
             label = ('no_change', None)
 
-        if gate in operating_rules.NEEDS_HUMAN:
-            tone = 'human'
-        elif downgraded:
-            tone = 'advisory'
-        elif code == 'LADDER_PROMOTE':
+        # The pill color encodes the decision only; the gate result has its own
+        # colored column, so one color never means two things.
+        if code == 'LADDER_PROMOTE':
             tone = 'promote'
         elif code in STOP_CODES:
             tone = 'stop'
@@ -172,6 +170,21 @@ def decision_rows(data):
     return rows
 
 
+def distinct_rows(rows):
+    """The first row of each (decision, gate result) pair, in report order.
+
+    Repeats of a pair add height without adding information, so the hero keeps
+    one of each; every gate result in the round still appears at least once.
+    """
+    seen, kept = set(), []
+    for row in rows:
+        pair = (row['label'][0], row['status'][1])
+        if pair not in seen:
+            seen.add(pair)
+            kept.append(row)
+    return kept
+
+
 def headline(data):
     summary = data['summary']
     gate = summary['gate']
@@ -181,13 +194,17 @@ def headline(data):
             'calls': summary['native_platform_calls'], 'round_id': summary['round_id']}
 
 
+# Fields the receipt image samples; the full receipt lists every field.
+RECEIPT_FIELDS = ('status', 'daily_budget', 'bid_amount', 'attribution', 'url_parameters')
+
+
 def receipt_rows(build):
-    """One row per field type that matched, plus every mismatch, in receipt order."""
+    """The first matching row of each field in ``RECEIPT_FIELDS``, plus every mismatch, in receipt order."""
     seen, chosen = set(), []
     for index, row in enumerate(build['rows']):
         if not row['match']:
             chosen.append(index)
-        elif row['field'] not in seen:
+        elif row['field'] in RECEIPT_FIELDS and row['field'] not in seen:
             seen.add(row['field'])
             chosen.append(index)
     return [build['rows'][index] for index in sorted(set(chosen))]
@@ -202,11 +219,12 @@ TEXT = {
         'html_lang': 'en',
         'eyebrow': 'META · TIKTOK · LEAD-GEN · AD OPS',
         'title': 'Ad Ops Agent',
-        'lede': "Turns yesterday's ad data into a gated change list, and checks every change actually landed",
-        'chip_ready': 'findings ready for review',
-        'chip_human': 'held for a human',
-        'chip_effect': "change that didn't take effect",
-        'chip_effect_n': "changes that didn't take effect",
+        'value_line': 'Launch QA, change control, reconciliation',
+        'lede': "Turns yesterday's ad data into a gated change list, and checks that every change actually landed",
+        'chip_ready': 'changes passed the write gate (of {total} findings); awaiting approval',
+        'chip_human': 'held for a human ({conflict} conflict, {unknown} unknown)',
+        'chip_effect': "change that didn't take effect, caught by the after-check",
+        'chip_effect_n': "changes that didn't take effect, caught by the after-check",
         'foot': 'Fictional data · replay of one 12-hour round · {calls} platform calls',
         'panel': 'Decisions by ad set',
         'columns': ('Ad set', 'Leads', 'CPA', 'T', 'Decision', 'Gate'),
@@ -224,10 +242,10 @@ TEXT = {
         'receipt_title': '{platform} · {account} · {currency}',
         'step_created': 'Created PAUSED', 'step_created_value': '{paused}/{objects} objects',
         'step_readback': 'Readback', 'step_readback_value': '{matched}/{fields} fields',
-        'step_decision': 'Decision', 'problems_one': '{n} problem: nothing is activated',
-        'problems_many': '{n} problems: nothing is activated',
+        'step_decision': 'Decision', 'problems_one': '{n} mismatch · nothing activated',
+        'problems_many': '{n} mismatches · nothing activated',
         'activate_sub': 'every field matches; still needs approval',
-        'receipt_foot': ('{shown} of {fields} fields shown: one per field type, plus every mismatch. '
+        'receipt_foot': ('{shown} of {fields} fields shown, including every mismatch. '
                          'Full receipt: {golden} · {calls} platform calls'),
         'missing': 'missing',
     },
@@ -235,11 +253,12 @@ TEXT = {
         'html_lang': 'zh-CN',
         'eyebrow': 'META · TIKTOK · 线索投放 · 广告运营',
         'title': 'Ad Ops Agent',
+        'value_line': '上线质检、变更管控、对账',
         'lede': '把昨天的投放数据，\n变成经过闸门核对的变更清单，\n并逐条确认变更真正生效',
-        'chip_ready': '条发现通过闸门\n待人审阅',
-        'chip_human': '条交人工处理',
-        'chip_effect': '条变更未生效\n已被发现',
-        'chip_effect_n': '条变更未生效\n已被发现',
+        'chip_ready': '条变更通过写入闸门（共 {total} 条发现），待批准',
+        'chip_human': '条交人工处理（冲突 {conflict}，未知 {unknown}）',
+        'chip_effect': '条变更未生效，被写后核对发现',
+        'chip_effect_n': '条变更未生效，被写后核对发现',
         'foot': '虚构数据 · 回放一轮 12 小时巡检 · 平台调用 {calls} 次',
         'panel': '判定明细（按广告组）',
         'columns': ('广告组', '线索', 'CPA', 'T', '判定', '闸门'),
@@ -253,14 +272,14 @@ TEXT = {
             'ready': '待审', 'satisfied': '已满足', 'conflict': '冲突', 'unknown': '未知',
             'advisory': '仅建议', 'unreconciled': '口径未对齐', 'not_effective': '未生效',
         },
-        'receipt_eyebrow': '搭建回执 · 回放，数值均为虚构',
+        'receipt_eyebrow': '建单回执 · 回放，数值均为虚构',
         'receipt_title': '{platform} · {account} · {currency}',
         'step_created': '暂停创建', 'step_created_value': '{paused}/{objects} 个对象',
-        'step_readback': '回读', 'step_readback_value': '{matched}/{fields} 个字段',
-        'step_decision': '结论', 'problems_one': '{n} 个问题：不启用任何对象',
-        'problems_many': '{n} 个问题：不启用任何对象',
+        'step_readback': '读回', 'step_readback_value': '{matched}/{fields} 个字段',
+        'step_decision': '结论', 'problems_one': '{n} 处不一致 · 不激活任何对象',
+        'problems_many': '{n} 处不一致 · 不激活任何对象',
         'activate_sub': '字段全部一致；仍需批准',
-        'receipt_foot': ('展示 {fields} 个字段中的 {shown} 个：每类字段一行，外加全部不一致项。'
+        'receipt_foot': ('展示 {fields} 个字段中的 {shown} 个，含全部不一致项。'
                          '完整回执：{golden} · 平台调用 {calls} 次'),
         'missing': '缺失',
     },
@@ -363,7 +382,7 @@ def decision_table(rows, text, columns=('short', 'results', 'cpa', 't', 'decisio
 def chips(numbers, text):
     effect = text['chip_effect'] if numbers['not_effective'] == 1 else text['chip_effect_n']
     items = [
-        ('promote', f'{numbers["ready"]}<span class="of">/{numbers["total"]}</span>', text['chip_ready']),
+        ('promote', str(numbers['ready']), text['chip_ready'].format(total=numbers['total'])),
         ('human', str(numbers['needs_human']),
          text['chip_human'].format(conflict=numbers['conflict'], unknown=numbers['unknown'])),
         ('stop', str(numbers['not_effective']), effect),
@@ -383,36 +402,36 @@ def chips(numbers, text):
 HERO_SIZE = (880, 440)
 HERO_CSS = """
 .card { width: 880px; height: 440px; border: 1px solid var(--line); border-radius: 20px; background: var(--bg);
-        padding: 30px 26px 26px 34px; display: flex; gap: 26px; overflow: hidden; }
+        padding: 28px 22px 22px 30px; display: flex; gap: 22px; overflow: hidden; }
 .left { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
 .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: var(--accent); }
-h1 { font-size: 44px; line-height: 1.05; font-weight: 760; letter-spacing: -0.024em; margin: 14px 0 14px; }
-.lede { font-size: 18px; line-height: 1.45; margin: 0; color: var(--ink); font-weight: 450; }
-.chips { display: flex; gap: 8px; margin-top: auto; }
-.chip { flex: 1 1 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
-        padding: 10px 10px 11px; }
-.chip .big { font-size: 22px; font-weight: 720; line-height: 1; letter-spacing: -0.01em; white-space: nowrap; }
-.chip .big .of { font-size: 14px; font-weight: 600; color: var(--muted); }
+h1 { font-size: 25px; line-height: 1.15; font-weight: 760; letter-spacing: -0.015em; margin: 12px 0 10px; }
+.lede { font-size: 16px; line-height: 1.45; margin: 0; color: var(--ink); font-weight: 450; }
+.chips { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; }
+.chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line);
+        border-radius: 11px; padding: 8px 12px 8px 10px; }
+.chip .big { flex: 0 0 46px; font-size: 22px; font-weight: 720; line-height: 1; letter-spacing: -0.01em;
+             white-space: nowrap; }
 .chip .icon { font-size: 13px; margin-right: 5px; position: relative; top: -3px; }
 .icon.promote { color: var(--promote); } .icon.human { color: var(--human); } .icon.stop { color: var(--stop); }
-.chip .label { font-size: 11px; line-height: 1.35; color: var(--muted); margin-top: 7px; }
-.foot { margin-top: 16px; font-size: 11px; color: var(--muted); letter-spacing: 0.01em; }
-.panel { flex: 0 0 452px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+.chip .label { font-size: 12.5px; line-height: 1.32; color: var(--muted); }
+.foot { margin-top: auto; font-size: 11px; color: var(--muted); letter-spacing: 0.01em; }
+.panel { flex: 0 0 468px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
          position: relative; overflow: hidden; }
-.panel .head { display: flex; justify-content: space-between; align-items: baseline; padding: 13px 16px 9px; }
-.panel .head .title { font-size: 12.5px; font-weight: 680; }
-.panel .head .round { font-size: 10.5px; color: var(--muted); }
-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-th { font-size: 10px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
-     text-align: left; padding: 7px 7px 6px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--line);
+.panel .head { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 16px 8px; }
+.panel .head .title { font-size: 13px; font-weight: 680; }
+.panel .head .round { font-size: 11px; color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { font-size: 11px; font-weight: 650; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted);
+     text-align: left; padding: 6px 7px 5px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--line);
      white-space: nowrap; }
-td { height: 24px; padding: 0 7px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+td { height: 26px; padding: 0 7px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
 th:first-child, td:first-child { padding-left: 16px; } th:last-child, td:last-child { padding-right: 14px; }
-td.short { font-size: 11.5px; color: var(--ink); width: 54px; }
-td.results { width: 44px; } td.cpa { width: 52px; } td.t { width: 50px; color: var(--muted); }
-th.decision, td.decision { padding-left: 14px; }
-.fade { position: absolute; left: 0; right: 0; bottom: 0; height: 56px;
-        background: linear-gradient(rgba(255,255,255,0), var(--surface) 88%); }
+td.short { font-size: 13px; color: var(--ink); width: 48px; }
+td.results { width: 40px; } td.cpa { width: 52px; } td.t { width: 46px; color: var(--muted); }
+th.decision, td.decision { padding-left: 12px; }
+.pill { height: 20px; font-size: 12px; }
+.status { font-size: 12.5px; }
 """
 
 
@@ -422,15 +441,14 @@ def render_hero(data, lang):
     body = f"""<div class="card">
 <div class="left">
 <div class="eyebrow">{esc(text['eyebrow'])}</div>
-<h1>{esc(text['title'])}</h1>
+<h1>{esc(text['value_line'])}</h1>
 <p class="lede">{lede(text)}</p>
 {chips(numbers, text)}
 <div class="foot">{esc(text['foot'].format(calls=numbers['calls']))}</div>
 </div>
 <div class="panel">
 <div class="head"><span class="title">{esc(text['panel'])}</span><span class="round mono">{esc(numbers['round_id'])}</span></div>
-{decision_table(decision_rows(data), text)}
-<div class="fade"></div>
+{decision_table(distinct_rows(decision_rows(data)), text)}
 </div>
 </div>"""
     return page(lang, f'{text["title"]} hero', HERO_SIZE[0], HERO_SIZE[1], HERO_CSS, body)
@@ -461,7 +479,7 @@ h1 .mono { font-size: 19px; font-weight: 600; }
 .step .k { font-size: 10.5px; line-height: 13px; font-weight: 650; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
 .step .v { font-size: 20px; line-height: 24px; font-weight: 720; margin-top: 5px; white-space: nowrap; }
 .step.hold .v { color: var(--stop); } .step.activate .v { color: var(--promote); }
-.step .s { font-size: 11px; line-height: 14px; color: var(--muted); margin-top: 4px; white-space: nowrap; }
+.step .s { font-size: 12.5px; line-height: 15px; color: var(--muted); margin-top: 4px; white-space: nowrap; }
 .arrow { flex: 0 0 34px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 18px; }
 .problem { height: 42px; line-height: 40px; margin-top: 12px; background: var(--stop-bg); border: 1px solid #F3C4BE;
            border-radius: 10px; padding: 0 14px; font-size: 13px; color: #7A1A12; white-space: nowrap;
@@ -469,15 +487,15 @@ h1 .mono { font-size: 19px; font-weight: 600; }
 .problem b { color: var(--stop); margin-right: 8px; }
 .problem .mono { font-size: 12.5px; font-weight: 600; }
 .panel { margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-.row { display: grid; grid-template-columns: 84px 178px 124px 1fr 1fr 54px; align-items: center;
-       height: 32px; border-top: 1px solid var(--rule); font-size: 12px; }
+.row { display: grid; grid-template-columns: 88px 116px 124px 1fr 1fr 58px; align-items: center;
+       height: 32px; border-top: 1px solid var(--rule); font-size: 13px; }
 .row > div { padding: 0 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .row > div:first-child { padding-left: 16px; } .row > div:last-child { text-align: center; padding: 0; }
-.row.head { height: 32px; border-top: 0; border-bottom: 1px solid var(--line); font-size: 10px; font-weight: 650;
+.row.head { height: 32px; border-top: 0; border-bottom: 1px solid var(--line); font-size: 11px; font-weight: 650;
             letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .row.head + .row { border-top: 0; }
-.row .object { font-family: var(--mono); font-size: 11.5px; padding-right: 2px; }
-.row .value { font-family: var(--mono); font-size: 11px; }
+.row .object { font-family: var(--mono); font-size: 13px; padding-right: 2px; }
+.row .value { font-family: var(--mono); font-size: 13px; }
 .row .level { color: var(--muted); }
 .row.bad { background: #FFF6F5; }
 .row.bad .field { color: var(--stop); font-weight: 650; }
@@ -487,7 +505,7 @@ h1 .mono { font-size: 19px; font-weight: 600; }
 .param { display: inline-block; }
 .param + .param { margin-left: 8px; }
 .param.missing { color: var(--stop); background: var(--stop-bg); border-radius: 4px; padding: 0 5px; font-weight: 650; }
-.foot { height: 16px; line-height: 16px; margin-top: 12px; font-size: 11px; color: var(--muted); white-space: nowrap;
+.foot { height: 16px; line-height: 16px; margin-top: 12px; font-size: 12px; color: var(--muted); white-space: nowrap;
         overflow: hidden; text-overflow: ellipsis; }
 """
 
@@ -593,22 +611,22 @@ def render_receipt(data, lang):
 
 
 SOCIAL_SIZE = (1280, 640)
-SOCIAL_ROWS = 11
+SOCIAL_ROWS = 6
 SOCIAL_CSS = """
 body { background: #10281F; }
 .frame { width: 1280px; height: 640px; background: #10281F; position: relative; overflow: hidden;
          padding: 64px 0 0 72px; display: flex; gap: 56px; }
 .left { flex: 0 0 560px; display: flex; flex-direction: column; height: 512px; }
 .eyebrow { font-size: 15px; font-weight: 700; letter-spacing: 0.16em; color: #6FD3A8; }
-h1 { font-size: 76px; line-height: 1; font-weight: 780; letter-spacing: -0.03em; color: #F4F7F4; margin: 22px 0 22px; }
-.lede { font-size: 26px; line-height: 1.38; color: #C8DCD2; margin: 0; font-weight: 450; }
-.chips { display: flex; gap: 12px; margin-top: 34px; }
-.chip { flex: 1 1 0; background: #173A2D; border: 1px solid #2D5646; border-radius: 14px; padding: 14px 14px 15px; }
-.chip .big { font-size: 34px; font-weight: 740; color: #F4F7F4; line-height: 1; white-space: nowrap; }
-.chip .big .of { font-size: 20px; color: #A9C6B8; font-weight: 600; }
+h1 { font-size: 64px; line-height: 1; font-weight: 780; letter-spacing: -0.03em; color: #F4F7F4; margin: 20px 0 20px; }
+.lede { font-size: 24px; line-height: 1.38; color: #C8DCD2; margin: 0; font-weight: 450; }
+.chips { display: flex; flex-direction: column; gap: 10px; margin-top: 26px; }
+.chip { display: flex; align-items: center; gap: 14px; background: #173A2D; border: 1px solid #2D5646;
+        border-radius: 14px; padding: 10px 16px 10px 14px; }
+.chip .big { flex: 0 0 66px; font-size: 34px; font-weight: 740; color: #F4F7F4; line-height: 1; white-space: nowrap; }
 .chip .icon { font-size: 18px; margin-right: 7px; position: relative; top: -5px; }
 .icon.promote { color: #5FD39C; } .icon.human { color: #F2B65A; } .icon.stop { color: #FF8A7A; }
-.chip .label { font-size: 14px; line-height: 1.35; color: #A9C6B8; margin-top: 9px; }
+.chip .label { font-size: 16px; line-height: 1.32; color: #A9C6B8; }
 .foot { margin-top: auto; font-size: 15px; color: #8DB1A1; }
 .foot .repo { color: #DDEBE3; font-weight: 600; }
 .panel { flex: 1 1 auto; margin-right: -2px; height: 640px; background: var(--surface); border-radius: 18px 0 0 0;
@@ -616,18 +634,16 @@ h1 { font-size: 76px; line-height: 1; font-weight: 780; letter-spacing: -0.03em;
 .panel .head { display: flex; justify-content: space-between; align-items: baseline; padding: 22px 26px 14px; }
 .panel .head .title { font-size: 19px; font-weight: 700; }
 .panel .head .round { font-size: 14px; color: var(--muted); }
-table { width: 100%; border-collapse: collapse; font-size: 17px; }
-th { font-size: 13px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
-     text-align: left; padding: 9px 10px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--line); }
-td { height: 44px; padding: 0 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
-th:first-child, td:first-child { padding-left: 26px; }
-td.short { font-size: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 22px; }
+th { font-size: 15px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+     text-align: left; padding: 11px 12px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--line); }
+td { height: 72px; padding: 0 12px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th:first-child, td:first-child { padding-left: 28px; }
+td.short { font-size: 21px; }
 td.t { color: var(--muted); }
-.pill { height: 28px; padding: 0 12px; border-radius: 14px; font-size: 15px; }
-.status { font-size: 15px; } .status .icon { width: 18px; }
+.pill { height: 36px; padding: 0 15px; border-radius: 18px; font-size: 19px; }
+.status { font-size: 19px; } .status .icon { width: 22px; }
 th:last-child, td:last-child { padding-right: 26px; }
-.fade { position: absolute; left: 0; right: 0; bottom: 0; height: 120px;
-        background: linear-gradient(rgba(255,255,255,0), var(--surface) 85%); }
 """
 
 
@@ -635,7 +651,7 @@ def render_social(data):
     lang = 'en'
     text = TEXT[lang]
     numbers = headline(data)
-    rows = decision_rows(data)[:SOCIAL_ROWS]
+    rows = distinct_rows(decision_rows(data))[:SOCIAL_ROWS]
     body = f"""<div class="frame">
 <div class="left">
 <div class="eyebrow">{esc(text['eyebrow'])}</div>
@@ -647,7 +663,6 @@ def render_social(data):
 <div class="panel">
 <div class="head"><span class="title">{esc(text['panel'])}</span><span class="round mono">{esc(numbers['round_id'])}</span></div>
 {decision_table(rows, text, columns=('short', 'cpa', 't', 'decision', 'gate'))}
-<div class="fade"></div>
 </div>
 </div>"""
     return page(lang, 'Ad Ops Agent social preview', SOCIAL_SIZE[0], SOCIAL_SIZE[1], SOCIAL_CSS, body)

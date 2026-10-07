@@ -15,7 +15,7 @@ This route can use the host's MCP, API, SDK or user-authorized platform UI. The 
 | “Prepare the next test from these videos” | Product, destination, account, event, test question and asset fit | Selection reasons, exclusions, batch configuration and budget |
 | “Build or update this confirmed batch” | Plan version, objects/actions, budget, dependencies, current state and authorization | Per-operation records, configuration readback, partial failures and open items |
 | “Review these accounts for changes” | Time window, account coverage, current method and previous open items | Evidence, recommendations, missing data and follow-ups |
-| “Restructure this campaign” | Current and target structure, access, reusable identities/events/media and overlapping spend | Object mapping, differences, authorized operations and checks |
+| “Restructure this campaign” | Current and target structure in the same account, objects affected, history to keep and overlapping spend | Object mapping, differences, authorized operations and checks |
 | “This ad is not spending / was rejected / is misconfigured” | Effective and parent state, review/error details and recent changes | Diagnosis, evidence and next steps; a rejection follows [disapproval triage](disapproval-triage.md) (fix or appeal) |
 | “Give me a daily report by product or offer” | Date/timezone, channels/accounts, cost/conversion/revenue sources and mapping rules | A readable report, coverage notes and traceable detail |
 
@@ -117,4 +117,4 @@ In a new host, begin with a read or preparation task, then validate writes and r
 
 **Next task:** after a report, ask the agent to collect the missing evidence before another review; for a new batch, reuse confirmed context and prepare the review in step 3. If the business or collaboration changes, update the relevant part of [business context and collaboration](first-run.md).
 
-**For developers:** for public-code checks of planning, recovery and data validation, use the [offline validation entry points](capability-status.md#offline-validation-entry-points). Simulation approvals and fictional accounts never authorize live work.
+**For developers:** for public-code checks of planning, recovery and data validation, use the [offline validation entry points](capability-status.md#the-pre-launch-prototype). Simulation approvals and fictional accounts never authorize live work.

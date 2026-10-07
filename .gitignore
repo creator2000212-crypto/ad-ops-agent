@@ -20,3 +20,5 @@ private/
 *.key
 *.zip
 
+# Owner-only patterns for scripts/check_repository.py (never committed)
+.private-patterns

@@ -1,6 +1,6 @@
 ## What and why
 
-<!-- The problem, the resulting behaviour, and what is out of scope. -->
+<!-- The problem, the resulting behavior, and what is out of scope. -->
 
 ## Decision impact
 

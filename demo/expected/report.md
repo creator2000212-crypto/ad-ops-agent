@@ -2,7 +2,7 @@
 
 > OFFLINE ANALYSIS ONLY — no ad platform is contacted, no account is written and no media is uploaded. The action list is a proposal for human review, not an executed instruction.
 
-**Data as of:** 2026-09-24T11:50:00+08:00 · **Method:** reference-1n1-ladder v2026-10-07.2 · **Snapshot hash:** `52ff73b9f09b`
+**Data as of:** 2026-09-24T11:50:00+08:00 · **Method:** reference-1n1-ladder v2026-10-07.3 · **Snapshot hash:** `52ff73b9f09b`
 
 **Observation window:** 2026-09-23 (settled_day; full delivery day: yes) — Calendar-day buckets. Hourly detail is not available through this connection, so the decision window is one calendar day; the approximation is stated here.
 
@@ -61,7 +61,7 @@ Settled CPA is spend per approved lead, so it is compared with the settled targe
 
 ## Decisions by ad set
 
-| Ad set | Stage | Spend | Impr. | Leads | CPA | T | Stop line | Utilisation | Rules fired |
+| Ad set | Stage | Spend | Impr. | Leads | CPA | T | Stop line | Utilization | Rules fired |
 |---|---|---|---|---|---|---|---|---|---|
 | `fictional-adset-a1` | T | 19.80 | 4600 | 3 | 6.60 | 7.20 | 21.60 | 99.0% | LADDER_PROMOTE(P1) |
 | `fictional-adset-a2` | T | 4.60 | 210 | 0 | — | 7.20 | 21.60 | 46.0% | TEST_UNDERTESTED(P2) |
@@ -80,9 +80,9 @@ Settled CPA is spend per approved lead, so it is compared with the settled targe
 
 ## Why CPA moved
 
-CPA = CPM ÷ (1000 × CTR × CVR), so the change in log CPA splits exactly into a CPM, a CTR and a CVR term. Each cell is that term in log-points (100 × change in the natural log; negative pushed CPA down) and its share of the total movement. The residual is what the quoted prior CPA leaves unexplained (rounding). It is an accounting identity, not a cause.
+CPA = CPM ÷ (1000 × CTR × CVR), so the change in log CPA splits exactly into a CPM, a CTR and a CVR term. Each cell is that term in log-points (100 × change in the natural log; positive pushed CPA up, negative pulled it down) and its share of the total movement. The residual is what the quoted prior CPA leaves unexplained (rounding). It is an accounting identity, not a cause.
 
-| Ad set | Prior window | CPA: prior → now | Δ log CPA | CPM | CTR | CVR | Residual | Main driver |
+| Ad set | Prior window | CPA: prior → now | Δ log CPA | CPM effect | CTR effect | CVR effect | Residual | Main driver |
 |---|---|---|---|---|---|---|---|---|
 | `fictional-adset-a1` | 2026-09-22 | 7.03 → 6.60 | -6.3 | +2.5 (22%) | -6.7 (60%) | -2.0 (18%) | -0.1 | **CTR** |
 | `fictional-adset-a4` | 2026-09-22 | 5.41 → 20.00 | +130.8 | +9.8 (7%) | +3.2 (2%) | +117.7 (90%) | +0.1 | **CVR** |

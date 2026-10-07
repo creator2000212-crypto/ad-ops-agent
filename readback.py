@@ -23,6 +23,9 @@ What it enforces:
   offset for the currency the *account* reports. There is no x100 default; an
   unknown currency is refused.
 * Every required URL parameter must be present with its planned value.
+* A declared special ad category must still be on the campaign after creation.
+* A planned field this module does not verify at that object's level, or on
+  that platform, is refused instead of being silently skipped.
 * An object in the readback that the plan does not contain (for example a
   duplicate left by a retried request) holds the build.
 
@@ -57,6 +60,7 @@ MINOR_UNIT_EXPONENT = dict(
 # same way. Order here is the order of rows in a receipt.
 FIELD_KINDS = {
     'objective': 'enum',
+    'special_ad_categories': 'categories',
     'optimization_goal': 'enum',
     'optimization_event': 'enum',
     'daily_budget': 'money',
@@ -71,7 +75,7 @@ FIELD_KINDS = {
     'status': 'enum',
 }
 LEVEL_FIELDS = {
-    'campaign': ('objective', 'status'),
+    'campaign': ('objective', 'special_ad_categories', 'status'),
     'adset': ('optimization_goal', 'optimization_event', 'daily_budget', 'bid_strategy',
               'bid_amount', 'attribution', 'geo', 'placements', 'status'),
     'ad': ('destination_url', 'url_parameters', 'cta', 'status'),
@@ -99,6 +103,7 @@ ADAPTERS = {
         'attribution': 'spec_list',
         'paths': {
             'objective': ('objective',),
+            'special_ad_categories': ('special_ad_categories',),
             'status': ('status',),
             'optimization_goal': ('optimization_goal',),
             'optimization_event': ('promoted_object', 'custom_event_type'),
@@ -158,7 +163,7 @@ TEXT = {
         'readback': 'Readback',
         'readback_result': '{matched} of {fields} fields match the plan',
         'decision': 'Decision',
-        'decision_hold': 'HOLD: {count} {problems}; nothing is activated',
+        'decision_hold': 'HOLD: {count} {problems} · nothing activated',
         'decision_activate': 'ACTIVATE: every field matches and every object is paused',
         'fields': 'Fields',
         'columns': ('Level', 'Object', 'Field', 'Planned', 'Read back', 'Match'),
@@ -178,6 +183,7 @@ TEXT = {
         'account': 'account',
         'field_labels': {
             'currency': 'Account currency', 'objective': 'Objective',
+            'special_ad_categories': 'Special ad categories',
             'optimization_goal': 'Optimization goal', 'optimization_event': 'Optimization event',
             'daily_budget': 'Daily budget', 'bid_strategy': 'Bid strategy', 'bid_amount': 'Bid amount',
             'attribution': 'Attribution', 'geo': 'Geo', 'placements': 'Placements',
@@ -188,43 +194,44 @@ TEXT = {
             'not_returned': 'not returned by the platform',
             'mismatch': 'planned {planned}, read back {read_back}',
             'not_paused': 'read back {read_back}, must be {planned} before activation',
-            'missing_url_parameter': 'required parameter missing: {names}',
+            'missing_url_parameter': 'missing required parameter {names}',
             'url_parameter_value': 'parameter value differs: {names}',
             'object_not_returned': 'planned object not found in the readback',
             'unexpected_object': 'object in the readback that the plan does not contain',
         },
     },
     'zh-CN': {
-        'title': '搭建回执 — 回放，数值均为虚构',
-        'meta_line': '{platform} · 账户 `{account}` · 币种 {currency} · 计划 `{plan}` · 回读 `{readback}`',
-        'scope': ('离线回放已保存的文件，没有调用任何平台。「回读值」一列全部来自回读文件；'
+        'title': '建单回执 — 回放，数值均为虚构',
+        'meta_line': '{platform} · 账户 `{account}` · 币种 {currency} · 计划 `{plan}` · 读回 `{readback}`',
+        'scope': ('离线回放已保存的文件，没有调用任何平台。「读回值」一列全部来自读回文件；'
                   '平台没有返回的字段一律记为不一致。'),
         'timeline': '时间线',
-        'chain': '暂停创建 {paused}/{objects} → 回读 {matched}/{fields} 个字段 → {decision}',
+        'chain': '暂停创建 {paused}/{objects} → 读回 {matched}/{fields} 个字段 → {decision}',
         'step': '步骤', 'time': '时间', 'result': '结果',
         'created': '暂停创建',
-        'created_result': '计划中 {objects} 个对象有 {returned} 个返回；{paused} 个回读为 `{paused_value}`',
-        'readback': '回读',
+        'created_result': '计划中 {objects} 个对象有 {returned} 个返回；{paused} 个读回为 `{paused_value}`',
+        'readback': '读回',
         'readback_result': '{fields} 个字段中 {matched} 个与计划一致',
         'decision': '结论',
-        'decision_hold': 'HOLD：{count} 个问题；不启用任何对象',
+        'decision_hold': 'HOLD：{count} 处不一致 · 不激活任何对象',
         'decision_activate': 'ACTIVATE：所有字段一致，所有对象均为暂停',
         'fields': '字段',
-        'columns': ('层级', '对象', '字段', '计划值', '回读值', '一致'),
+        'columns': ('层级', '对象', '字段', '计划值', '读回值', '一致'),
         'problems': '问题',
         'colon': '：',
-        'observed': '不参与判定：回读时的审核与投放状态',
+        'observed': '不参与判定：读回时的审核与投放状态',
         'observed_note': '上表已判定配置状态。下列值来自平台的审核与投放处理，只记录、不比较。',
         'observed_columns': ('对象', '字段', '值'),
         'next': '下一步',
-        'next_hold': ('HOLD：先在平台上修正上面列出的字段，重新回读全部对象后再跑一次本检查。'
-                      'HOLD 回执永远不会进入启用。'),
-        'next_activate': ('ACTIVATE：配置与计划一致。启用仍需负责人批准这一批次；之后分阶段启用、'
-                          '回读状态并跟进审核。本回执不等于批准。'),
+        'next_hold': ('HOLD：先在平台上修正上面列出的字段，重新读回全部对象后再跑一次本检查。'
+                      'HOLD 回执永远不会进入激活。'),
+        'next_activate': ('ACTIVATE：配置与计划一致。激活仍需负责人批准这一批次；之后分阶段激活、'
+                          '读回状态并跟进审核。本回执不等于批准。'),
         'not_returned': '*未返回*',
         'account': '账户',
         'field_labels': {
-            'currency': '账户币种', 'objective': '目标', 'optimization_goal': '优化目标',
+            'currency': '账户币种', 'objective': '目标', 'special_ad_categories': '特殊广告类别',
+            'optimization_goal': '优化目标',
             'optimization_event': '优化事件', 'daily_budget': '日预算', 'bid_strategy': '出价策略',
             'bid_amount': '出价金额', 'attribution': '归因设置', 'geo': '地区', 'placements': '版位',
             'destination_url': '落地页', 'url_parameters': '链接参数', 'cta': '行动号召',
@@ -232,12 +239,12 @@ TEXT = {
         },
         'reasons': {
             'not_returned': '平台没有返回该字段',
-            'mismatch': '计划 {planned}，回读 {read_back}',
-            'not_paused': '回读为 {read_back}，启用前必须是 {planned}',
-            'missing_url_parameter': '缺少必需参数：{names}',
+            'mismatch': '计划 {planned}，读回 {read_back}',
+            'not_paused': '读回为 {read_back}，激活前必须是 {planned}',
+            'missing_url_parameter': '缺少必需参数 {names}',
             'url_parameter_value': '参数值与计划不同：{names}',
-            'object_not_returned': '回读中找不到这个计划对象',
-            'unexpected_object': '回读中出现了计划里没有的对象',
+            'object_not_returned': '读回中找不到这个计划对象',
+            'unexpected_object': '读回中出现了计划里没有的对象',
         },
     },
 }
@@ -346,6 +353,13 @@ def plan_value(field, raw, exponent, currency, object_key):
             raise ReadbackError(f'{where} must be a non-empty list of strings')
         items = tuple(sorted(raw))
         return items, ', '.join(items)
+    if kind == 'categories':
+        # An empty list is a real declaration ("no special category"), so it is
+        # compared like any other value instead of being skipped.
+        if not isinstance(raw, list) or not all(isinstance(x, str) and x for x in raw):
+            raise ReadbackError(f'{where} must be a list of strings (empty for none)')
+        items = tuple(sorted(raw))
+        return items, ', '.join(items) or '(none)'
     if kind == 'url':
         if not isinstance(raw, str) or not urlsplit(raw).netloc:
             raise ReadbackError(f'{where} must be an absolute URL')
@@ -359,6 +373,15 @@ def plan_value(field, raw, exponent, currency, object_key):
     raise ReadbackError(f'unknown field kind for {field!r}')
 
 
+def check_url_parameters(value, where):
+    """URL parameters are a name -> value object of strings, when present."""
+    if value is None:
+        return
+    if not isinstance(value, dict) or not all(isinstance(k, str) and isinstance(v, str)
+                                              for k, v in value.items()):
+        raise ReadbackError(f'{where} url_parameters must map parameter names to string values')
+
+
 def validate_plan(plan):
     if not isinstance(plan, dict) or plan.get('kind') != 'build_plan':
         raise ReadbackError('plan kind must be build_plan')
@@ -368,6 +391,7 @@ def validate_plan(plan):
     for key in ('account_key', 'currency'):
         if not isinstance(plan.get(key), str) or not plan[key]:
             raise ReadbackError(f'plan needs {key}')
+    check_url_parameters(plan.get('url_parameters'), 'plan')
     objects = plan.get('objects')
     if not isinstance(objects, list) or not objects:
         raise ReadbackError('plan needs a non-empty objects list')
@@ -385,6 +409,18 @@ def validate_plan(plan):
             if item.get(field) is None:
                 raise ReadbackError(f'plan object {key!r} must state {field!r}; the readback is '
                                     'checked against what the plan says')
+        check_url_parameters(item.get('url_parameters'), f'plan object {key!r}')
+        # A planned value that would never be compared must not pass silently.
+        for field in FIELD_KINDS:
+            if field == 'status' or item.get(field) is None:
+                continue
+            if field not in LEVEL_FIELDS[item['level']]:
+                raise ReadbackError(f"plan object {key!r}: {field!r} is not verified at the "
+                                    f"{item['level']} level; move it to the level that owns it or "
+                                    'remove it')
+            if field not in adapter['paths']:
+                raise ReadbackError(f"plan object {key!r}: {field!r} is not read back on "
+                                    f"{adapter['name']}; remove it or add its response path")
         if item.get('status') not in (None, 'PAUSED'):
             raise ReadbackError(f'plan object {key!r}: the build protocol creates every object '
                                 'PAUSED; activation is a separate, approved step')
@@ -475,11 +511,11 @@ def read_value(field, response, adapter, currency, exponent):
         if currency is None:
             return ('unconverted', raw), f'{raw} (account currency not returned)'
         return (currency, value), f'{money_text(value, exponent)} {currency}'
-    if kind == 'set':
+    if kind in ('set', 'categories'):
         if not isinstance(raw, list):
             return ('invalid', repr(raw)), str(raw)
         items = tuple(sorted(str(x) for x in raw))
-        return items, ', '.join(items) or '(empty)'
+        return items, ', '.join(items) or ('(none)' if kind == 'categories' else '(empty)')
     if kind == 'url':
         if not isinstance(raw, str):
             return ('invalid', repr(raw)), str(raw)
@@ -669,7 +705,7 @@ def render_receipt(result, lang='en', plan_name='plan.json', readback_name='read
                                             objects=result['objects'], paused=result['objects_paused'],
                                             paused_value=result['paused_value'])
     readback = text['readback_result'].format(matched=result['fields_matched'], fields=result['fields'])
-    decision = (text['decision_hold'].format(count=count, problems='problem' if count == 1 else 'problems')
+    decision = (text['decision_hold'].format(count=count, problems='mismatch' if count == 1 else 'mismatches')
                 if hold else text['decision_activate'])
     lines = [
         f"# {text['title']}", '',

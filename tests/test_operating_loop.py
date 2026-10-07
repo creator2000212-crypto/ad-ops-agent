@@ -243,6 +243,17 @@ class StructureTests(unittest.TestCase):
                            bid_amount='5.00')]), methodology())
         self.assertIn('name_mismatch', [f['kind'] for f in found])
 
+    def test_tiktok_no_bid_is_a_max_strategy(self):
+        group = adset(name='1n1 | X | MAX | $20', bid_strategy='BID_TYPE_NO_BID')
+        self.assertFalse(rules.name_mismatch(group))
+        self.assertEqual(codes_for([group], platform='tiktok'), ['LADDER_PROMOTE'])
+
+    def test_max_inside_another_name_token_is_not_a_mismatch(self):
+        self.assertFalse(rules.name_mismatch(adset(name='1n1 | Maxwell | CC6 | $20',
+                                                   bid_strategy='COST_CAP', bid_amount='6.00')))
+        self.assertTrue(rules.name_mismatch(adset(name='1n1 | Maxwell | MAX | $20',
+                                                  bid_strategy='COST_CAP', bid_amount='6.00')))
+
     def test_effective_status_is_read_separately(self):
         found = rules.structure_findings(
             account([adset(configured_status='ACTIVE', effective_status='DISAPPROVED')]), methodology())
@@ -275,6 +286,50 @@ class DecisionTests(unittest.TestCase):
         self.assertEqual(len(promote), 1)
         self.assertEqual(promote[0]['baseline'], {'daily_budget': '20.00'})
         self.assertEqual(promote[0]['target'], {'daily_budget': '40.00'})
+
+    def test_promotion_from_2T_targets_3T(self):
+        # The ladder is 1x, 2x, 3x the base budget: 2T -> 3T is x1.5, not x2.
+        group = adset(ladder_stage='2T', daily_budget='40.00', spend='28.80', impressions=6000,
+                      clicks=400, results=4)
+        proposals, _ = rules.decide_account(account([group]), methodology())
+        promote = next(p for p in proposals if p['code'] == 'LADDER_PROMOTE')
+        self.assertEqual(promote['baseline'], {'daily_budget': '40.00'})
+        self.assertEqual(promote['target'], {'daily_budget': '60.00'})
+        self.assertIn('3T', promote['question'])
+
+    def test_top_stage_is_not_promoted(self):
+        group = adset(ladder_stage='3T', daily_budget='60.00', spend='43.20', impressions=9000,
+                      clicks=600, results=6)
+        self.assertEqual(codes_for([group]), [])
+
+    def test_adset_without_a_stage_does_not_block_the_round(self):
+        legacy = adset(adset_key='legacy', ladder_stage=None)
+        dead = adset(adset_key='dead', spend='22.40', impressions=640, clicks=41, results=0)
+        proposals, _ = rules.decide_account(account([legacy, dead]), methodology())
+        self.assertEqual([(p['object_key'], p['code']) for p in proposals],
+                         [('dead', 'TEST_STOP_NOCONV')])
+        with self.assertRaises(rules.RuleError):
+            rules.decide_account(account([adset(ladder_stage='4T')]), methodology())
+
+    def test_zero_lead_evidence_matches_its_numbers(self):
+        # Enough impressions but spend below the stop line: the text must not
+        # claim the sample is too small.
+        proposals, _ = rules.decide_account(
+            account([adset(spend='10.00', impressions=1000, clicks=30, results=0)]), methodology())
+        self.assertEqual(proposals[0]['code'], 'TEST_EARLY_STOP')
+        evidence = ' '.join(proposals[0]['evidence'])
+        self.assertIn('1000 impressions >= sample floor 300', evidence)
+        self.assertIn('spend 10.00 < stop line 21.60', evidence)
+        proposals, _ = rules.decide_account(
+            account([adset(spend='10.00', impressions=500, clicks=40, results=0)]), methodology())
+        self.assertEqual(proposals[0]['code'], 'TEST_UNDERTESTED')
+        evidence = ' '.join(proposals[0]['evidence'])
+        self.assertIn('500 impressions >= sample floor 300', evidence)
+        self.assertNotIn('sample too small', evidence)
+
+    def test_out_of_range_amount_is_a_rule_error(self):
+        with self.assertRaises(rules.RuleError):
+            rules.adset_metrics(adset(spend='1e40'), PRICE, methodology())
 
     def test_zero_conversion_below_sample_gate_is_not_judged(self):
         self.assertEqual(codes_for([adset(spend='3.10', impressions=180, clicks=12, results=0)]),
@@ -429,7 +484,7 @@ class PrecedenceTests(unittest.TestCase):
 
 class MethodologyTests(unittest.TestCase):
     def test_policy_missing_required_threshold_is_rejected(self):
-        for key in ('balance_alert_below', 'max_creatives_per_adset'):
+        for key in ('balance_alert_below', 'max_creatives_per_adset', 'quality_factor'):
             for value in ('delete', None):
                 with self.subTest(key=key, value=value):
                     document = methodology()
@@ -706,6 +761,20 @@ class SnapshotContractTests(unittest.TestCase):
         snapshot = operating_loop.load(EXAMPLES / 'snapshot-primary.json')
         broken = copy.deepcopy(snapshot)
         broken['accounts'][1]['account_key'] = broken['accounts'][0]['account_key']
+        with self.assertRaises(operating_loop.LoopError):
+            operating_loop.validate_snapshot(broken)
+
+    def test_snapshot_without_accounts_is_rejected(self):
+        # A pull that returned 0 accounts is an outage, not a quiet round.
+        empty = {'kind': 'operating_snapshot', 'as_of': '2026-09-24T00:00:00+00:00', 'accounts': []}
+        with self.assertRaises(operating_loop.LoopError) as caught:
+            operating_loop.validate_snapshot(empty)
+        self.assertIn('at least one account', str(caught.exception))
+
+    def test_non_object_account_is_rejected_not_crashed(self):
+        snapshot = operating_loop.load(EXAMPLES / 'snapshot-primary.json')
+        broken = copy.deepcopy(snapshot)
+        broken['accounts'].append('fictional-account')
         with self.assertRaises(operating_loop.LoopError):
             operating_loop.validate_snapshot(broken)
 
@@ -1059,14 +1128,15 @@ class DecisionMatrixTests(unittest.TestCase):
         document['sample_gate']['impressions_for_dead'] = 450
         document['creative_rules']['circuit_breaker_spend_share_above'] = '0.55'
         page = matrix.render(document, 'copy.json')
-        self.assertIn('Zero leads, at least 450 impressions and spend >= 3T', page)
+        self.assertIn('Zero leads, at least 450 impressions and spend ≥ 3T', page)
         self.assertIn('more than 55% of ad-set spend', page)
 
     def test_who_decides_is_derived_from_the_engine(self):
         page = matrix.render(methodology(), 'm.json')
         rows = {line.split(' | ')[0].strip('| `'): line for line in page.splitlines()
                 if line.startswith('| `') and line.count(' | ') >= 7}
-        self.assertIn('Engine: proposes `daily_budget` ×2 through the write gate', rows['LADDER_PROMOTE'])
+        self.assertIn('Engine: proposes `daily_budget` to the next ladder step through the write gate',
+                      rows['LADDER_PROMOTE'])
         self.assertIn('advisory when the settlement does not reconcile', rows['LADDER_PROMOTE'])
         self.assertIn('Engine: proposes `status` → PAUSED', rows['TEST_STOP_NOCONV'])
         self.assertNotIn('settlement', rows['TEST_STOP_NOCONV'])

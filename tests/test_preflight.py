@@ -218,6 +218,19 @@ class InputTests(unittest.TestCase):
         with self.assertRaises(preflight.PreflightError):
             preflight.lint(checklist([adset(), adset()]), policy())
 
+    def test_special_categories_must_be_a_list(self):
+        # 'EMPLOYMENT' in 'EMPLOYMENT_X' is True for a string, so a scalar would
+        # pass the declaration check by substring.
+        with self.assertRaises(preflight.PreflightError):
+            preflight.lint(checklist(offer_category='job_listings',
+                                     special_ad_categories='EMPLOYMENT_X'), policy())
+
+    def test_url_parameters_object_is_refused_not_crashed(self):
+        bad = ad()
+        bad['url_parameters'] = {'utm_source': 'meta'}
+        with self.assertRaises(preflight.PreflightError):
+            preflight.lint(checklist([adset(ads=[bad])]), policy())
+
 
 class ReportTests(unittest.TestCase):
     def test_goldens_match_a_fresh_render(self):

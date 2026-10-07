@@ -102,9 +102,9 @@ TEXT = {
         },
     },
     'zh-CN': {
-        'title': '搭建前检查 — 回放，数值均为虚构',
+        'title': '预检 — 回放，数值均为虚构',
         'meta_line': '{platform} · 清单 `{checklist}` · 规则 `{policy}`（版本 {version}）',
-        'scope': '在创建任何对象之前，只检查搭建清单。没有调用平台；通过不代表平台审核结果，也不代表可以创建。',
+        'scope': '在创建任何对象之前，只检查建单清单。没有调用平台；通过不代表平台审核结果，也不代表可以创建。',
         'result': '结果：{result} — 不通过 {fail} · 警告 {warn} · 通过 {passed}',
         'matrix': '检查矩阵',
         'columns': ('层级', '对象', '名称'),
@@ -121,7 +121,7 @@ TEXT = {
         'next': '下一步',
         'next_fail': 'FAIL：修正清单后重新检查。不通过的清单不创建任何对象。',
         'next_warn': 'WARN：由人逐条复核警告，修正或记录可接受的理由后，再以暂停状态创建。',
-        'next_pass': 'PASS：以暂停状态创建全部对象，启用前先用 `readback.py` 逐字段回读比对。',
+        'next_pass': 'PASS：以暂停状态创建全部对象，激活前先用 `readback.py` 逐字段读回比对。',
         'codes': {
             'name_unparsed': '名称不符合命名规范（{pattern}）',
             'bid_token_unknown': '出价标记 {token} 不在命名规范中',
@@ -218,6 +218,11 @@ def validate_checklist(checklist):
         key_of(campaign, 'campaign_key', 'campaign')
         if not isinstance(campaign.get('adsets'), list) or not campaign['adsets']:
             raise PreflightError(f"campaign {campaign['campaign_key']!r} needs adsets")
+        # A scalar would pass ``required in declared`` as a substring match.
+        declared = campaign.get('special_ad_categories', [])
+        if not isinstance(declared, list) or not all(isinstance(item, str) for item in declared):
+            raise PreflightError(f"campaign {campaign['campaign_key']!r}: special_ad_categories must "
+                                 'be a list of strings')
         for adset in campaign['adsets']:
             key = key_of(adset, 'adset_key', 'ad set')
             for field in ('name', 'bid_strategy'):
@@ -231,6 +236,9 @@ def validate_checklist(checklist):
                 ad_key = key_of(ad, 'ad_key', 'ad')
                 if not isinstance(ad.get('destination_url'), str):
                     raise PreflightError(f'ad {ad_key!r} needs destination_url')
+                if not isinstance(ad.get('url_parameters', ''), (str, type(None))):
+                    raise PreflightError(f'ad {ad_key!r}: url_parameters must be a query string '
+                                         '(for example "utm_source=meta&utm_medium=paid")')
     return checklist
 
 

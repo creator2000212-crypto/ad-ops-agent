@@ -76,7 +76,7 @@
 | 文件 | 定位 |
 | --- | --- |
 | [connector-contract.json](../contracts/connector-contract.json) | 供应商中立的连接器与能力映射 |
-| [creative-recovery.json](../contracts/creative-recovery.json) | 拒审分诊路线、禁止动作、记录与停止条件 |
+| [disapproval-triage.json](../contracts/disapproval-triage.json) | 拒审分诊路线、禁止动作、记录与停止条件 |
 | [acceptance-scenarios.json](../contracts/acceptance-scenarios.json) | 集成验收场景，不是已执行测试报告 |
 | [experience-catalog.json](../contracts/experience-catalog.json) | 有适用范围的经验候选，不是自动优化规则 |
 | [onboarding-extensions.json](../contracts/onboarding-extensions.json) | 字段扩展建议，不代表 CLI 接受全部字段 |
@@ -86,4 +86,4 @@
 
 ### 使用原则
 
-只读任务只检查所需读取能力；新建、调整或重组结构需要具体方案、操作范围与用户确认。相关上一轮待办先回验，未执行不能写成效果无效。首次接入可参考托管或自建路线；已有接口直接核验。实际能力以当前宿主、工具、账户和广告产品的验收为准。
+只读任务只检查所需读取能力；新建、调整或重组结构需要具体方案、操作范围与用户确认。相关上一轮待办先回验，未执行不能写成效果无效。尚无连接时，官方平台 API、自托管 MCP 服务器与托管 MCP 连接器按取舍自行选择，不分先后；已有接口直接核验。实际能力以当前宿主、工具、账户和广告产品的验收为准。

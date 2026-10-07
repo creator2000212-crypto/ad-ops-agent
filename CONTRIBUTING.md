@@ -38,9 +38,9 @@ python3 scripts/demo_methods.py
 python3 scripts/check_repository.py
 ```
 
-After an intended behaviour change, regenerate instead of hand-editing: `python3 demo/run_demo.py --refresh`, `python3 scripts/render_decision_matrix.py`, `readback.py ... --receipt <expected file>`, `preflight.py ... --report <expected file>`, and `python3 scripts/render_visuals.py` (needs Google Chrome). Read the diff, then run `--check`.
+After an intended behavior change, regenerate instead of hand-editing: `python3 demo/run_demo.py --refresh`, `python3 scripts/render_decision_matrix.py`, `readback.py ... --receipt <expected file>`, `preflight.py ... --report <expected file>`, and `python3 scripts/render_visuals.py` (needs Google Chrome). Read the diff, then run `--check`.
 
-`scripts/check_repository.py` fails on, among other things, a local home-directory path, a token or key, a Meta ad account ID, a standalone 15–19-digit ID, a token in a URL, a referral fragment, or wording about getting unchanged media past ad review in docs and fixtures. When you add a module, test, doc, fixture or script, add it to `REQUIRED` in that file; `tests/test_check_repository.py` fails until you do.
+`scripts/check_repository.py` fails on, among other things, a local home-directory path, a token or key, a Meta ad account ID or access token, a Google Ads customer ID, a standalone 15–19-digit ID, an email address other than `example.com` or GitHub noreply, a link to a host outside its documentation allowlist, a token in a URL, a referral fragment, PNG text or EXIF metadata, or wording about getting unchanged media past ad review in docs, fixtures and top-level modules. When you add a module, test, doc, fixture or script, add it to `REQUIRED` in that file; `tests/test_check_repository.py` fails until you do. Patterns that would identify your own private material belong in an untracked `.private-patterns` file (one regular expression per line, ignored by Git), not in the checker.
 
 Use fictional fixtures and `example.com`, and keep generated state under the ignored `runs/` and `demo/out/` directories. Never include credentials, raw customer data, account exports or private campaign/media files in a commit, issue or pull request.
 
@@ -52,7 +52,7 @@ Enable the repository's hook once per clone:
 git config core.hooksPath .githooks
 ```
 
-[`.githooks/pre-commit`](.githooks/pre-commit) rejects a commit whose author or committer email is not a GitHub noreply address (`<id>+<username>@users.noreply.github.com`) and runs `scripts/check_repository.py`. CI runs the same checker, so `--no-verify` only moves the failure later.
+[`.githooks/pre-commit`](.githooks/pre-commit) rejects a commit whose author or committer email is not a GitHub noreply address (`<id>+<username>@users.noreply.github.com`) and runs `scripts/check_repository.py`. [`.githooks/commit-msg`](.githooks/commit-msg) runs the same disclosure scan on the commit message, which is public history too. CI runs the checker on every push and pull request and rejects a pull request whose commits use a non-noreply email; a commit made with `--no-verify` and pushed straight to a branch escapes the email rules, so keep the hooks on.
 
 ## Workflow and case contributions
 

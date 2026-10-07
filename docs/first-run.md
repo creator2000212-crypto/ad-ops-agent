@@ -91,7 +91,7 @@ Ordinary users can skip this section. The host turns conversation into private i
 
 ### Connection preferences and simulated capabilities
 
-`setup_preferences.route` records `undecided`, `existing`, `self_managed` (official APIs/SDKs), `self_hosted_mcp` or `managed_mcp` (hosted MCP connector); older values `pipeboard` and `other_mcp` are read as `managed_mcp` and `self_hosted_mcp`. While the route is `undecided`, `guidance.connection_options` lists every route unranked with plain documentation links; `setup_preferences.options_dismissed` (older name `recommendation_dismissed`) hides the list. After a route is selected or the list is dismissed, it is not shown again. Choosing a route does not prove access.
+`setup_preferences.route` records `undecided`, `existing`, `self_managed` (official APIs/SDKs), `self_hosted_mcp` or `managed_mcp` (hosted MCP connector); the older value `other_mcp` is read as `self_hosted_mcp`. While the route is `undecided`, `guidance.connection_options` lists every route unranked with plain documentation links; `setup_preferences.options_dismissed` (older name `recommendation_dismissed`) hides the list. After a route is selected or the list is dismissed, it is not shown again. Choosing a route does not prove access.
 
 `onboarding.py` uses `connection_gate` to check simulated reading and `create_simulated_draft` capabilities for four readiness evaluations; `guidance` stays at connection setup when that gate fails. This contract is unchanged. It does not require real read-only tasks to have write permission, and `ready_simulation` is not a live account check.
 

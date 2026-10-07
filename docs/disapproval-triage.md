@@ -6,13 +6,13 @@
 
 This page is the procedure the agent follows when an ad, creative or media asset does not go live. It separates two situations that can look the same in a status column: a technical upload or processing failure, and a policy disapproval. They need different actions, and only the first one is ever handled by uploading a file again.
 
-**Scope:** this is a host-workflow procedure; [creative-recovery.json](../contracts/creative-recovery.json) is its design contract. The public Python code makes no platform calls, so it does not upload media, edit creatives, submit reviews or poll review state. The offline [operating loop](operating-loop.md) only flags the condition: an ad set whose configured status is `ACTIVE` while its effective status is `DISAPPROVED` raises `AD_STATUS`.
+**Scope:** this is a host-workflow procedure; [disapproval-triage.json](../contracts/disapproval-triage.json) is its design contract. The public Python code makes no platform calls, so it does not upload media, edit creatives, submit reviews or poll review state. The offline [operating loop](operating-loop.md) only flags the condition: an ad set whose configured status is `ACTIVE` while its effective status is `DISAPPROVED` raises `AD_STATUS`.
 
 ## Triage at a glance
 
 | | A. Upload or processing failure | B. Policy disapproval |
 |---|---|---|
-| How you recognise it | Decode or format error, upload timeout, media stuck in processing, wrong asset reference. The object has **no** review decision | The platform's review state is disapproved or rejected and names a reason or policy |
+| How you recognize it | Decode or format error, upload timeout, media stuck in processing, wrong asset reference. The object has **no** review decision | The platform's review state is disapproved or rejected and names a reason or policy |
 | Action | Reconcile, then re-export to spec or re-upload **once**; log it; read back | Read the reason, then either fix the substance and submit the edited version, or Request Review with evidence |
 | Done when | Media reads back ready and the ad references the intended asset | The review state reads back approved, with the edit or the appeal on record |
 | Stop | A second technical failure on the same asset: stop and report the error | A second rejection for the same reason: stop; a human does the policy review |
@@ -65,6 +65,6 @@ A local file digest, a platform media reference (`image_hash` or `video_id`), a 
 
 Submitting an edited version and filing a Request Review are writes. They go through the same batch review as any other change: concrete difference, owner approval, execution through verified tools, then readback. A design contract, a past approval or a simulated authorization does not cover them.
 
-Related: [operations cards](operations.md) for media, posts, links and states · [acceptance scenarios](../contracts/acceptance-scenarios.json) (`REC-*`) · [runtime knowledge base (Chinese)](knowledge-base.zh-CN.md), entry `KB-META-08`.
+Related: [operations cards](operations.md) for media, posts, links and states · [acceptance scenarios](../contracts/acceptance-scenarios.json) (`DIS-*`) · [runtime knowledge base (Chinese)](knowledge-base.zh-CN.md), entry `KB-META-08`.
 
 Back to the [documentation guide](index.en.md).

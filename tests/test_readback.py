@@ -271,6 +271,52 @@ class MissingAndExtraTests(unittest.TestCase):
         with self.assertRaises(readback.ReadbackError):
             readback.verify_build(plan, read)
 
+    def test_planned_field_at_unchecked_level_is_refused(self):
+        # A CBO-style campaign budget, or a geo stated on an ad, is never compared,
+        # so the plan is refused instead of passing with "every field matches".
+        for key, field, value in (('cmp-t', 'daily_budget', '500.00'),
+                                  ('cmp-t', 'bid_strategy', 'BID_TYPE_CUSTOM'),
+                                  ('ad-t1', 'geo', ['XX'])):
+            plan, read = tiktok()
+            for item in plan['objects']:
+                if item['level'] == ('campaign' if key.startswith('cmp') else 'ad'):
+                    item[field] = value
+                    break
+            with self.subTest(field=field):
+                with self.assertRaises(readback.ReadbackError) as caught:
+                    readback.verify_build(plan, read)
+                self.assertIn('is not verified at the', str(caught.exception))
+
+    def test_field_without_a_platform_path_is_refused(self):
+        plan, read = tiktok()
+        campaign = next(item for item in plan['objects'] if item['level'] == 'campaign')
+        campaign['special_ad_categories'] = ['EMPLOYMENT']
+        with self.assertRaises(readback.ReadbackError) as caught:
+            readback.verify_build(plan, read)
+        self.assertIn('is not read back on TikTok', str(caught.exception))
+
+    def test_cleared_special_category_holds_activation(self):
+        plan, read = meta()
+        fix_meta_url_tags(read)
+        plan['objects'][0]['special_ad_categories'] = ['EMPLOYMENT']
+        result = readback.verify_build(plan, read)
+        self.assertEqual(result['decision'], 'hold')
+        categories = row(result, 'cmp-quote-01', 'special_ad_categories')
+        self.assertFalse(categories['match'])
+        self.assertEqual(categories['planned'], 'EMPLOYMENT')
+        self.assertEqual(categories['read_back'], '(none)')
+
+    def test_url_parameters_must_be_an_object_of_strings(self):
+        for where in ('plan', 'object'):
+            plan, read = meta()
+            if where == 'plan':
+                plan['url_parameters'] = [['utm_source', 'meta']]
+            else:
+                plan['objects'][4]['url_parameters'] = {'utm_source': 1}
+            with self.subTest(where=where):
+                with self.assertRaises(readback.ReadbackError):
+                    readback.verify_build(plan, read)
+
 
 class ReceiptTests(unittest.TestCase):
     def test_goldens_match_a_fresh_render(self):
@@ -291,7 +337,7 @@ class ReceiptTests(unittest.TestCase):
         receipt = readback.render_receipt(readback.verify_build(plan, read),
                                           plan_name='meta-plan.json', readback_name='meta-readback.json')
         self.assertTrue(receipt.startswith('# Build receipt — replay, fictional values\n'))
-        self.assertIn('**Created PAUSED 7/7 → Readback 39/40 fields → HOLD**', receipt)
+        self.assertIn('**Created PAUSED 7/7 → Readback 40/41 fields → HOLD**', receipt)
         self.assertEqual(receipt.count('| ✗ |'), 1)
 
     def test_check_reports_a_difference(self):

@@ -1,0 +1,26 @@
+#!/bin/sh
+# Commit-message guard for this repository, enabled together with pre-commit by
+#
+#     git config core.hooksPath .githooks
+#
+# A commit message lands in public history just like the tree, so it gets the
+# same disclosure scan (IDs, tokens, email addresses, local paths, link hosts and
+# any untracked .private-patterns). Comment lines are ignored.
+set -eu
+
+root=$(git rev-parse --show-toplevel)
+if command -v python3 >/dev/null 2>&1; then
+    python=python3
+else
+    python=python
+fi
+exec "$python" - "$1" "$root" <<'PY'
+import sys
+sys.path.insert(0, sys.argv[2] + '/scripts')
+import check_repository as checker
+with open(sys.argv[1], encoding='utf-8') as handle:
+    message = ''.join(line for line in handle if not line.startswith('#'))
+labels = checker.scan_text('COMMIT_MSG', message)
+if labels:
+    sys.exit('commit-msg: the message matches: ' + ', '.join(labels) + '; reword it.')
+PY

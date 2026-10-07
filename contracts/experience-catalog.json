@@ -192,7 +192,7 @@
         "账户与父对象归属",
         "派生素材和对象 lineage"
       ],
-      "automation_boundary": "本地字节变化不证明任何广告 ID 已变；换绑定不等于新广告，换广告不保证历史延续。",
+      "automation_boundary": "本地字节变化不证明任何平台对象已变；各层标识以实际回执和读回为准，新标识不代表新内容。",
       "artifact_type": "design_only",
       "runtime_loaded": false,
       "enabled": false
@@ -305,7 +305,7 @@
       "title": "创建可能直接带来花费",
       "target_layer": "core",
       "classification": "design_requirement",
-      "principle": "非暂停创建、换绑或启用可能在其他条件满足时产生投放；逐动作评估实际影响。",
+      "principle": "非暂停创建、更改广告引用的创意或启用，都可能在其他条件满足时产生投放；逐动作评估实际影响。",
       "verification_needed": [
         "创建状态和父级状态",
         "预算与时段",
@@ -379,7 +379,7 @@
         "审核理由",
         "实际消耗与交付证据"
       ],
-      "automation_boundary": "ACTIVE 不是永久通过或已投放；恢复旧绑定也是新的写入，不能撤销已花费或保证恢复旧学习状态。",
+      "automation_boundary": "ACTIVE 不是永久通过或已投放；把广告改回此前的创意也是新的写入，需重新审核与读回，不能撤销已花费或保证恢复旧学习状态。",
       "artifact_type": "design_only",
       "runtime_loaded": false,
       "enabled": false
@@ -538,7 +538,7 @@
       "enabled": false
     },
     {
-      "id": "EXP-032",
+      "id": "EXP-031",
       "stage": "diagnosis",
       "title": "自动规则和后续动作也需验收",
       "target_layer": "core",
@@ -555,7 +555,7 @@
       "enabled": false
     },
     {
-      "id": "EXP-033",
+      "id": "EXP-032",
       "stage": "diagnosis",
       "title": "拒审只走修正或官方复核",
       "target_layer": "core",
@@ -574,7 +574,7 @@
   ],
   "documentation_refs": [
     "connector-contract.json",
-    "creative-recovery.json",
+    "disapproval-triage.json",
     "onboarding-extensions.json"
   ]
 }

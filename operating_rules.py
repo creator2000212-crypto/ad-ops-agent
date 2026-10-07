@@ -125,14 +125,19 @@ TEXT = {
         'early_sep': '; ',
         'early': ('Early-stop line crossed ({parts}), but {impressions} impressions < sample floor '
                   '{floor} ⇒ stop new spend; no verdict on the creative.'),
+        'early_sampled': ('Early-stop line crossed ({parts}); {impressions} impressions >= sample floor '
+                          '{floor} but spend {spend} < stop line {line} ⇒ stop new spend; no verdict on '
+                          'the creative.'),
         'q_bid_or_budget': 'Is the bid failing to enter auctions, or is the budget capped?',
         'undertested_zero': ('Zero leads but {impressions} impressions < sample floor {floor} ⇒ sample '
                              'too small; record only.'),
+        'undertested_below_line': ('Zero leads with {impressions} impressions >= sample floor {floor}, '
+                                   'but spend {spend} < stop line {line} ⇒ record only.'),
         'q_overcost': 'Has conversion reporting matured?',
         'overcost': 'Spend − T × leads = {margin} >= stop line {line}.',
         'q_sample_time': 'How long until the current budget gathers enough sample?',
         'undertested_few': '{results} leads < minimum sample {min} ⇒ too few to judge the creative.',
-        'undertested_util': ('Budget utilisation {utilisation} <= {under} ⇒ limited delivery; fix whether '
+        'undertested_util': ('Budget utilization {utilisation} <= {under} ⇒ limited delivery; fix whether '
                              'it can spend before changing creatives.'),
         'q_promote': 'This step\'s CPA {cpa} <= T {t}; move up to {stage}?',
         'promote': 'Leads {results} >= {min}, full delivery day = {day}, CPA {cpa} <= T {t}.',
@@ -222,8 +227,10 @@ TEXT = {
         'early_ctr': 'CTR {ctr} < {limit}',
         'early_sep': '；',
         'early': '早停触线（{parts}），但展示 {impressions} < 判死门槛 {floor} ⇒ 停新增花费、不下「素材无效」结论。',
+        'early_sampled': '早停触线（{parts}）；展示 {impressions} >= 判死门槛 {floor}，但花费 {spend} < 止损线 {line} ⇒ 停新增花费、不下「素材无效」结论。',
         'q_bid_or_budget': '是出价进不了场，还是预算撞顶？',
         'undertested_zero': '零转化但展示 {impressions} < 判死门槛 {floor} ⇒ 样本不足，只记录。',
+        'undertested_below_line': '零转化，展示 {impressions} >= 判死门槛 {floor}，但花费 {spend} < 止损线 {line} ⇒ 只记录。',
         'q_overcost': '回传是否已成熟？',
         'overcost': '累计花费 − T x 转化数 = {margin} >= 止损线 {line}。',
         'q_sample_time': '现有预算下还要多久才能攒够样本？',
@@ -327,14 +334,20 @@ def ratio(numerator, denominator):
 def money(value):
     if value is None:
         return None
-    return value.quantize(MONEY, rounding=ROUND_HALF_UP)
+    try:
+        return value.quantize(MONEY, rounding=ROUND_HALF_UP)
+    except InvalidOperation as exc:
+        raise RuleError(f'value out of range: {value}') from exc
 
 
 def num(value, digits='0.0001'):
     """Render a Decimal for JSON without float artefacts."""
     if value is None:
         return None
-    return str(value.quantize(Decimal(digits), rounding=ROUND_HALF_UP))
+    try:
+        return str(value.quantize(Decimal(digits), rounding=ROUND_HALF_UP))
+    except InvalidOperation as exc:
+        raise RuleError(f'value out of range: {value}') from exc
 
 
 def num2(value):
@@ -385,7 +398,7 @@ def same_number(left, right):
 REQUIRED_METHODOLOGY_KEYS = (
     'methodology_id', 'version', 'target_roas', 'ladder', 'sample_gate',
     'promotion', 'stop_loss', 'utilisation', 'creative_rules', 'actions',
-    'balance_alert_below', 'max_creatives_per_adset',
+    'balance_alert_below', 'max_creatives_per_adset', 'quality_factor',
 )
 REQUIRED_ACTION_KEYS = ('code', 'level', 'action', 'window', 'acceptance', 'stop_condition')
 ACTION_TEXT_KEYS = ('action', 'window', 'acceptance', 'stop_condition')
@@ -407,10 +420,7 @@ def validate_methodology(document):
         raise RuleError('Methodology document is missing required fields: ' + ', '.join(missing))
     if dec(document['target_roas'], 'target_roas') <= 0:
         raise RuleError('target_roas must be positive.')
-    if 'quality_factor' in document:
-        quality = dec(document['quality_factor'], 'quality_factor')
-        if quality is None or quality <= 0 or quality > 1:
-            raise RuleError('quality_factor (lead approval rate) must be in (0, 1].')
+    quality_factor(document)
     if dec(document['balance_alert_below'], 'balance_alert_below') < 0:
         raise RuleError('balance_alert_below cannot be negative.')
     if integer(document['max_creatives_per_adset'], 'max_creatives_per_adset') < 1:
@@ -485,7 +495,7 @@ def target_cost(unit_price, methodology):
     approves, and the target ROAS is the return required on spend. A 10.00 lead
     with a 0.90 approval rate against a 1.25 target gives ``T = 7.20``, safely
     below the value of the lead; the ladder then multiplies T by 2 and 3.
-    An omitted quality factor means no deduction (1).
+    The quality factor is required, like every other threshold.
     """
     price = dec(unit_price, 'unit_price')
     if price is None or price <= 0:
@@ -498,7 +508,7 @@ def target_cost(unit_price, methodology):
 
 
 def quality_factor(methodology):
-    quality = dec(methodology.get('quality_factor', '1'), 'quality_factor')
+    quality = dec(required(methodology, 'quality_factor'), 'quality_factor')
     if quality is None or quality <= 0 or quality > 1:
         raise RuleError('quality_factor (lead approval rate) must be in (0, 1].')
     return quality
@@ -754,11 +764,20 @@ def creative_findings(adset, values, methodology, lang='en'):
     return findings
 
 
+# Bid strategies that mean "no cap" on each platform: Meta's lowest cost without
+# a cap and TikTok's no-bid (maximum delivery) bid type.
+NO_CAP_STRATEGIES = ('LOWEST_COST_WITHOUT_CAP', 'BID_TYPE_NO_BID')
+
+
 def name_mismatch(adset):
-    """The ad set name promises MAX (no cap) but the bid strategy says otherwise."""
-    name = adset.get('name') or ''
+    """The ad set name promises MAX (no cap) but the bid strategy says otherwise.
+
+    Names follow the ``part | part | ...`` convention, so ``MAX`` is matched as a
+    whole segment, never as a substring of another segment (``Maxwell``).
+    """
+    tokens = [part.strip().upper() for part in (adset.get('name') or '').split('|')]
     strategy = adset.get('bid_strategy')
-    return 'MAX' in name.upper() and bool(strategy) and strategy != 'LOWEST_COST_WITHOUT_CAP'
+    return 'MAX' in tokens and bool(strategy) and strategy not in NO_CAP_STRATEGIES
 
 
 def structure_findings(account, methodology, lang='en'):
@@ -982,10 +1001,12 @@ def _classify_adset(adset, values, methodology, min_results, require_full_day, d
                              limit=num(early_ctr, '0.0001')))
         if early:
             return ('TEST_EARLY_STOP', say(lang, 'q_early'),
-                    [say(lang, 'early', parts=say(lang, 'early_sep').join(early),
-                         impressions=impressions, floor=dead_impressions)])
+                    [say(lang, 'early_sampled' if enough_sample else 'early',
+                         parts=say(lang, 'early_sep').join(early), impressions=impressions,
+                         floor=dead_impressions, spend=num2(spend), line=line)])
         return ('TEST_UNDERTESTED', say(lang, 'q_bid_or_budget'),
-                [say(lang, 'undertested_zero', impressions=impressions, floor=dead_impressions)])
+                [say(lang, 'undertested_below_line' if enough_sample else 'undertested_zero',
+                     impressions=impressions, floor=dead_impressions, spend=num2(spend), line=line)])
     if values['_overcost_margin'] is not None and values['_overcost_margin'] >= stop_line:
         return ('TEST_STOP_OVERCOST', say(lang, 'q_overcost'),
                 [say(lang, 'overcost', margin=num2(values['_overcost_margin']), line=line)])
@@ -994,8 +1015,11 @@ def _classify_adset(adset, values, methodology, min_results, require_full_day, d
         return ('TEST_UNDERTESTED', say(lang, 'q_sample_time'),
                 [say(lang, 'undertested_few', results=results, min=min_results)])
 
+    # An ad set without a declared stage (for example a legacy structure) cannot
+    # be promoted, but still gets its stop and under-tested verdicts; an unknown
+    # non-null stage is still an input error.
     stage = adset.get('ladder_stage')
-    target_stage = next_stage(stage, methodology)
+    target_stage = next_stage(stage, methodology) if stage is not None else None
     utilisation = values['_utilisation']
     under = dec(methodology['utilisation']['under_delivering_below'], 'under_delivering_below')
     if utilisation is not None and under is not None and utilisation <= under:
@@ -1018,12 +1042,27 @@ def _classify_adset(adset, values, methodology, min_results, require_full_day, d
     return (None, None, [])
 
 
+def ladder_step(stage, methodology):
+    """Budget factor for one move up the ladder from ``stage``.
+
+    The ladder declares multiples of the base budget (``T``, ``2T``, ``3T`` are
+    1, 2 and 3 times it), so each move is the ratio of the next stage's multiple
+    to the current one: x2 from T to 2T, x1.5 from 2T to 3T. ``None`` at the top.
+    """
+    target = next_stage(stage, methodology)
+    if target is None:
+        return None
+    return ladder_multiplier(target, methodology) / ladder_multiplier(stage, methodology)
+
+
 def _write_intent(code, adset, values, methodology):
     """Translate a rule into the field change the gate must verify."""
     budget = values['_daily_budget']
     if code == 'LADDER_PROMOTE' and budget is not None:
-        multiple = dec(methodology['promotion']['budget_multiple'], 'promotion.budget_multiple')
-        new_budget = money(budget * multiple)
+        step = ladder_step(adset.get('ladder_stage'), methodology)
+        if step is None:
+            return (None, None)
+        new_budget = money(budget * step)
         return ({'daily_budget': num2(new_budget)},
                 {'daily_budget': num2(budget)})
     if code in ('TEST_STOP_NOCONV', 'TEST_STOP_OVERCOST', 'TEST_EARLY_STOP'):

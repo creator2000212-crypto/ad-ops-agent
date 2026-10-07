@@ -10,7 +10,7 @@ This page documents the **public Python M2 module**, an optional offline path al
 
 For an M2 exercise or supported check, the host organizes the user's answers, the program proposes structured methods, the user explicitly adopts one, and the compiler selects assets and builds test units for review and local simulation. The host prepares files and runs commands so users do not have to edit JSON.
 
-The local program supports only the two templates below. `methodology.py` has no LLM: it accepts structured answers or explicitly labelled SOP lines. Extraction from conversation belongs to the host and needs review; offline fixtures do not establish cross-host usability. M2 execution is offline, with no live API, media understanding, automatic performance assessment or production advertising authority. This limitation does not describe all capabilities available in a connected host.
+The local program supports only the two templates below. `methodology.py` has no LLM: it accepts structured answers or explicitly labeled SOP lines. Extraction from conversation belongs to the host and needs review; offline fixtures do not establish cross-host usability. M2 execution is offline, with no live API, media understanding, automatic performance assessment or production advertising authority. This limitation does not describe all capabilities available in a connected host.
 
 ## Supported test methods
 
@@ -59,7 +59,7 @@ The demonstration uses complete fictional App, ecommerce and lead-generation pro
 3. Adopt a corrected method and check that asset selection and compiled operations change. Reject the old plan before creating execution state.
 4. Prepare a revised `ready` plan and stop at review. **The revised plan is not automatically simulated.** The original source profile and old plan stay unchanged.
 
-Outputs stay in a fresh directory under the ignored `runs/` path. `demo-summary.json` contains machine-readable results, and `review.md` links to each revised plan review. Use `--out NEWDIR` to choose a new output directory. Fixtures use pre-extracted guided answers and labelled SOPs; they do not demonstrate intake from scratch, live account access, arbitrary conversation extraction or method effectiveness.
+Outputs stay in a fresh directory under the ignored `runs/` path. `demo-summary.json` contains machine-readable results, and `review.md` links to each revised plan review. Use `--out NEWDIR` to choose a new output directory. Fixtures use pre-extracted guided answers and labeled SOPs; they do not demonstrate intake from scratch, live account access, arbitrary conversation extraction or method effectiveness.
 
 ## The host's role when using M2
 

@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 import check_repository as checker
 
 HOOK = ROOT / '.githooks' / 'pre-commit'
+MSG_HOOK = ROOT / '.githooks' / 'commit-msg'
 
 
 def digits(count, first='4'):
@@ -89,6 +90,49 @@ class DisclosurePatternTests(unittest.TestCase):
         self.assertIn('referral link fragment', self.labels(text))
         self.assertNotIn('referral link fragment', self.labels('https://connector.example.com/#pricing'))
 
+    def test_long_numeric_id_after_an_underscore_is_flagged(self):
+        self.assertIn('long numeric ID', self.labels('adset' + '_' + digits(18)))
+
+    def test_google_ads_customer_id_is_flagged(self):
+        dashed = digits(3) + '-' + digits(3, '5') + '-' + digits(4, '6')
+        self.assertIn('Google Ads customer ID', self.labels('customer ' + dashed))
+        for text in ('2026-09-24', digits(3) + '-' + digits(3) + '-' + digits(5), 'v1-2-3'):
+            with self.subTest(text=text):
+                self.assertNotIn('Google Ads customer ID', self.labels(text))
+
+    def test_meta_access_token_is_flagged(self):
+        self.assertIn('Meta access token', self.labels('token: ' + 'EA' + 'A' + 'Bc1' * 10))
+        self.assertNotIn('Meta access token', self.labels('EA' + 'A'))
+
+    def test_email_address_is_flagged_except_reserved_and_noreply(self):
+        at = '@'
+        for text in ('someone.real' + at + 'gmail.com', 'ops' + at + 'agency-name.co.uk'):
+            with self.subTest(text=text):
+                self.assertIn('email address', self.labels(text))
+        for text in ('someone' + at + 'example.com', '1000+someone' + at + 'users.noreply.github.com',
+                     'noreply' + at + 'github.com', 'a' + at + 'b'):
+            with self.subTest(text=text):
+                self.assertNotIn('email address', self.labels(text))
+
+    def test_link_to_an_unlisted_host_is_flagged(self):
+        label = 'link to a host outside the allowlist'
+        self.assertIn(label, self.labels('https://' + 'offer-tracker.xyz/click?sub=1'))
+        self.assertIn(label, self.labels('see http://' + 'partner-network.net/'))
+        for text in ('https://example.com/quote', 'https://connector.example.com/mcp',
+                     'https://developers.facebook.com/docs/marketing-api/', 'https://pipeboard.co'):
+            with self.subTest(text=text):
+                self.assertNotIn(label, self.labels(text))
+
+    def test_private_patterns_load_from_an_untracked_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'patterns'
+            path.write_text('# comment\n\nmy-private-' + 'notes_\\d{8}\n', encoding='utf-8')
+            patterns = checker.load_private_patterns(path)
+        self.assertEqual([label for label, _ in patterns], ['private pattern'])
+        self.assertTrue(patterns[0][1].search('my-private-' + 'notes_20260924'))
+        self.assertEqual(checker.load_private_patterns(Path('/nonexistent') / 'none'), [])
+        self.assertIn('.private-patterns', checker.SKIP)
+
     def test_existing_patterns_still_fire(self):
         samples = {
             'personal workspace path': '/' + 'Users/someone/project',
@@ -115,8 +159,8 @@ class PolicyWordingTests(unittest.TestCase):
                 with self.subTest(path=path, text=text):
                     self.assertIn('ad-review circumvention wording', checker.scan_text(path, text))
 
-    def test_circumvention_wording_is_out_of_scope_in_code_and_tests(self):
-        for path in ('operating_rules.py', 'tests/test_x.py', 'scripts/x.py', '.github/workflows/ci.yml'):
+    def test_circumvention_wording_is_out_of_scope_in_tests_and_scripts(self):
+        for path in ('tests/test_x.py', 'scripts/x.py', '.github/workflows/ci.yml'):
             with self.subTest(path=path):
                 self.assertEqual(checker.scan_text(path, '改' + self.HASH), [])
 
@@ -125,6 +169,16 @@ class PolicyWordingTests(unittest.TestCase):
                      're-encode', 'Request Review'):
             with self.subTest(text=text):
                 self.assertNotIn('ad-review circumvention wording', checker.scan_text('docs/a.md', text))
+
+    def test_removed_review_wording_is_flagged(self):
+        for text in ('疑似' + '误拒', '换' + '绑' + '素材', '恢复' + '旧' + '绑定'):
+            with self.subTest(text=text):
+                self.assertIn('ad-review circumvention wording', checker.scan_text('docs/a.md', text))
+
+    def test_incentive_vertical_jargon_is_flagged(self):
+        for text in ('奖' + '品', '抽' + '奖', 'Sweep' + 'stakes', 'sweep' + 'stake', 'deal' + '_wall', 'Deal ' + 'Wall'):
+            with self.subTest(text=text):
+                self.assertIn('incentive-vertical jargon', checker.scan_text('examples/a.json', text))
 
     def test_traffic_mixing_jargon_is_flagged(self):
         for text in ('混' + '量', 'mixed ' + 'traffic', 'mixed_' + 'traffic_share'):
@@ -135,7 +189,8 @@ class PolicyWordingTests(unittest.TestCase):
         self.assertTrue(checker.in_policy_scope('CHANGELOG.md'))
         self.assertTrue(checker.in_policy_scope('docs/disapproval-triage.md'))
         self.assertFalse(checker.in_policy_scope('LICENSE'))
-        self.assertFalse(checker.in_policy_scope('readback.py'))
+        self.assertTrue(checker.in_policy_scope('operating_loop.py'))
+        self.assertFalse(checker.in_policy_scope('scripts/check_repository.py'))
         self.assertFalse(checker.in_policy_scope('tests/test_readback.py'))
 
 
@@ -167,6 +222,25 @@ class TreeTests(unittest.TestCase):
             path.write_bytes(header + b'\0' * padding)
             errors, _ = checker.check_tree(tmp)
         return [error for error in errors if not error.startswith('missing required file')]
+
+    def test_png_text_metadata_is_rejected(self):
+        def chunk(kind, body):
+            return struct.pack('>I', len(body)) + kind + body + b'\0\0\0\0'
+        png = (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>II', 1760, 880) + b'\x08\x06\0\0\0')
+               + chunk(b'tEXt', b'Software\0Screenshot tool') + chunk(b'IEND', b''))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'docs' / 'assets' / 'hero' / 'hero.en.png'
+            path.parent.mkdir(parents=True)
+            path.write_bytes(png)
+            errors, _ = checker.check_tree(tmp)
+        found = [error for error in errors if not error.startswith('missing required file')]
+        self.assertEqual(found, ['PNG metadata chunk tEXt: ' + str(Path('docs/assets/hero/hero.en.png'))])
+
+    def test_committed_pngs_carry_no_metadata(self):
+        for path in sorted((ROOT / 'docs' / 'assets').rglob('*.png')):
+            with self.subTest(path.name):
+                chunks = checker.png_chunks(path.read_bytes())
+                self.assertFalse(set(chunks) & set(checker.PNG_METADATA_CHUNKS))
 
     def test_asset_allowlist(self):
         cases = [
@@ -210,6 +284,7 @@ class TreeTests(unittest.TestCase):
 
     def test_hook_is_executable(self):
         self.assertTrue(os.access(str(HOOK), os.X_OK), 'chmod +x .githooks/pre-commit')
+        self.assertTrue(os.access(str(MSG_HOOK), os.X_OK), 'chmod +x .githooks/commit-msg')
 
 
 @unittest.skipUnless(shutil.which('git') and shutil.which('sh') and (ROOT / '.git').exists(),
@@ -235,6 +310,32 @@ class PreCommitHookTests(unittest.TestCase):
 
     def test_noreply_identity_runs_the_checker_and_passes(self):
         completed = self.run_hook(self.NOREPLY, self.NOREPLY)
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+
+
+@unittest.skipUnless(shutil.which('git') and shutil.which('sh') and (ROOT / '.git').exists(),
+                     'needs git, sh and a git checkout')
+class CommitMessageHookTests(unittest.TestCase):
+    def run_hook(self, message):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'COMMIT_EDITMSG'
+            path.write_text(message, encoding='utf-8')
+            return subprocess.run(['sh', str(MSG_HOOK), str(path)], cwd=str(ROOT),
+                                  capture_output=True, text=True, timeout=60)
+
+    def test_clean_message_passes(self):
+        completed = self.run_hook('Address review findings\n\nReadback: refuse unchecked fields.\n')
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+
+    def test_message_with_an_id_is_rejected_without_echoing_it(self):
+        value = account_id()
+        completed = self.run_hook('Fix build for ' + value + '\n')
+        self.assertEqual(completed.returncode, 1)
+        self.assertIn('ad account ID', completed.stderr)
+        self.assertNotIn(value, completed.stderr)
+
+    def test_comment_lines_are_ignored(self):
+        completed = self.run_hook('Clean subject\n# ' + account_id() + '\n')
         self.assertEqual(completed.returncode, 0, completed.stderr)
 
 

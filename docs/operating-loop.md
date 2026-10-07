@@ -35,7 +35,7 @@ snapshot is a file comparison, not proof of a live change.
 |---|---|
 | `operating_rules.py` | Pure decision layer. Parses numbers as `Decimal`, derives metrics, decomposes CPA changes into CPM/CTR/CVR terms, evaluates creative rules, classifies every ad set, applies rule precedence, reconciles platform totals with the settlement and runs the write gate. Holds the English and Chinese message tables. No file IO except loading a methodology document. |
 | `operating_loop.py` | Orchestration and IO: snapshot validation, account signals, the ledger, the report and the CLI. |
-| `examples/operating/methodology-reference.json` | Thresholds and economics as data: target ROAS, lead approval rate, ladder, sample gate, promotion rule, stop loss, utilisation bands, creative rules, balance alert, creative cap, reconciliation tolerances, and the action catalogue with each action's English text, trigger, acceptance and stop condition. |
+| `examples/operating/methodology-reference.json` | Thresholds and economics as data: target ROAS, lead approval rate, ladder, sample gate, promotion rule, stop loss, utilization bands, creative rules, balance alert, creative cap, reconciliation tolerances, and the action catalogue with each action's English text, trigger, acceptance and stop condition. |
 | `examples/operating/snapshot-primary.json` | One settled observation window: 3 fictional Meta accounts and 1 TikTok account, 14 ad sets and ad groups, prior windows on a1, a4, a10 and d1. |
 | `examples/operating/writeback-snapshot.json` | The supplied pre-write state: a9's budget was hand-edited to 30, and b2 is missing. |
 | `examples/operating/after-snapshot.json` | The supplied after state: a10 still reads its old budget. It is not produced by `apply`. |
@@ -82,18 +82,21 @@ are `offer.unit_price` (per account), `quality_factor` and `target_roas`. The
 reference uses a 10.00 lead, a 0.90 approval rate and a 1.25 target, so
 `T = 10.00 x 0.90 / 1.25 = 7.20`; account B's 8.00 lead gives `T = 5.76` and
 account D's 12.00 lead `T = 8.64`. T must stay below the value of a lead,
-otherwise every lead at target cost loses money. All prices are fictional; the
-structure and thresholds are the ones I used.
+otherwise every lead at target cost loses money. All prices and unit economics
+are fictional; the rule structure and the thresholds expressed relative to T
+follow the playbook I used.
 
-The ladder is declared as a list; `T`, `2T`, `3T` become multipliers 1, 2 and 3,
-and the stop-loss line is declared in multiples of `T` (3T = 21.60 for account A).
+The ladder is declared as a list; `T`, `2T`, `3T` become multipliers 1, 2 and 3
+of the base budget, so a promotion moves the budget by the ratio of the next
+stage to the current one (×2 from T to 2T, ×1.5 from 2T to 3T). An ad set with
+no declared stage is judged but never promoted. The stop-loss line is declared in multiples of `T` (3T = 21.60 for account A).
 A changed price or approval rate therefore recalculates T and every threshold
 derived from it.
 
 ### Metrics
 
 `spend`, `impressions`, `clicks`, `results`, `value` and `frequency` are read from
-the snapshot. `CPM`, `CTR`, `CPC`, `CVR`, `CPA`, `ROAS`, utilisation, expected
+the snapshot. `CPM`, `CTR`, `CPC`, `CVR`, `CPA`, `ROAS`, utilization, expected
 results and the over-cost margin are derived. A value that cannot be computed is
 `None` and is reported as missing evidence.
 
@@ -161,7 +164,7 @@ with configured ad sets (`ACC_NO_DELIVERY`) and a balance at or below
 2. Disapproval (`AD_STATUS`) and link/tracking failure (`LINK_OR_TRACKING_BAD`) end the ad set's evaluation.
 3. Missing spend, impressions or results block the ad set; nothing is guessed.
 4. Zero leads: `TEST_STOP_NOCONV` only when the impression floor **and** the stop-loss line are met; otherwise the declared CPC/CTR early-stop thresholds (`TEST_EARLY_STOP`, pause and review the hook); otherwise `TEST_UNDERTESTED`.
-5. With leads: over-cost stop loss, then the minimum lead count, then utilisation (limited delivery), then promotion.
+5. With leads: over-cost stop loss, then the minimum lead count, then utilization (limited delivery), then promotion.
 
 Then the account's settlement status may downgrade promotions and over-cost
 pauses. See `decide_account`, `_classify_adset` and `downgrade_unreconciled`.

@@ -76,7 +76,7 @@ Developer references: [Python method planning](method-planning.md) · [Onboardin
 | File | Purpose |
 | --- | --- |
 | [connector-contract.json](../contracts/connector-contract.json) | Vendor-neutral connector and capability mapping |
-| [creative-recovery.json](../contracts/creative-recovery.json) | Disapproval triage routes, prohibited actions, records and stop conditions |
+| [disapproval-triage.json](../contracts/disapproval-triage.json) | Disapproval triage routes, prohibited actions, records and stop conditions |
 | [acceptance-scenarios.json](../contracts/acceptance-scenarios.json) | Integration scenarios, not completed test results |
 | [experience-catalog.json](../contracts/experience-catalog.json) | Scoped candidate experience, not automatic optimization rules |
 | [onboarding-extensions.json](../contracts/onboarding-extensions.json) | Proposed field extensions, not a list of fields the CLI already accepts |
@@ -86,4 +86,4 @@ Developer references: [Python method planning](method-planning.md) · [Onboardin
 
 ### Working rule
 
-A read-only task checks only the access it needs. Creating, changing or restructuring objects requires a concrete plan, an action scope and user confirmation. Verify prior actions before judging outcomes. Actual capability depends on the current host, tools, accounts and ad product.
+A read-only task checks only the access it needs. Creating, changing or restructuring objects requires a concrete plan, an action scope and user confirmation. Verify prior actions before judging outcomes. Without a connection, choose among the official platform APIs, a self-hosted MCP server and a hosted MCP connector by their trade-offs, in no particular order; verify an existing connection directly. Actual capability depends on the current host, tools, accounts and ad product.

@@ -1,8 +1,8 @@
 {
   "methodology_id": "reference-1n1-ladder",
-  "version": "2026-10-07.2",
-  "status_note": "规则结构与阈值沿用我 2026 年 9 月实盘 Meta/TikTok 线索投放所用的打法；账户、广告组、素材与价格均为虚构。",
-  "status_note_en": "The rule structure and thresholds follow the playbook I used on live Meta/TikTok lead-gen accounts in September 2026; accounts, ad sets, creatives and prices are fictional. The reconciliation tolerances are reference values for this offline replay.",
+  "version": "2026-10-07.3",
+  "status_note": "规则结构与以 T 表示的阈值沿用我 2026 年 9 月实盘 Meta/TikTok 线索投放所用的打法；账户、广告组、素材、价格以及单位经济参数（线索价值、通过率、目标 ROAS）均为虚构。",
+  "status_note_en": "Accounts, ad sets, creatives, prices and the unit economics (value per lead, approval rate, target ROAS) are fictional; the rule structure and the thresholds expressed relative to T follow the playbook I used on live Meta/TikTok lead-gen accounts in September 2026. The reconciliation tolerances are reference values for this offline replay.",
   "target_roas": "1.25",
   "quality_factor": "0.90",
   "economics_note": "T = 每条线索价值（offer.unit_price）× 线索通过率（quality_factor）÷ 目标 ROAS。quality_factor 是结算方认可的线索占比；目标 ROAS 1.25 表示每花 1 元要收回 1.25 元结算收入。因此 T 必须低于每条线索的价值：本参考口径下 10.00 → T = 7.20，8.00 → T = 5.76。",
@@ -27,8 +27,9 @@
     "_why": "晋级的三个条件必须同时成立，缺一个就只记录。",
     "min_results": 3,
     "require_full_day": true,
-    "budget_multiple": "2",
-    "rule": "转化数够 + 覆盖完整投放日 + 该档独立算 CPA <= T。"
+    "rule": "转化数够 + 覆盖完整投放日 + 该档独立算 CPA <= T。",
+    "budget_rule": "每次晋级把预算升到下一档：ladder 中各档是基础预算的 1、2、3 倍，所以 T -> 2T 为 x2，2T -> 3T 为 x1.5。",
+    "budget_rule_en": "Each promotion moves the budget to the next ladder step. The ladder stages are 1, 2 and 3 times the base budget, so T → 2T is ×2 and 2T → 3T is ×1.5."
   },
   "stop_loss": {
     "_why": "这是超过目标成本的测试止损线，不等于财务净亏损，也不证明素材永远无效。暂停可恢复。",
@@ -94,16 +95,16 @@
       "code": "LADDER_PROMOTE",
       "level": "P1",
       "implemented": true,
-      "action": "原组预算 x2（T -> 2T -> 3T）",
+      "action": "原组预算升到下一档（T -> 2T -> 3T，即基础预算的 1 / 2 / 3 倍）",
       "window": "2-3 个完整投放日",
       "acceptance": "回读 daily_budget = 目标档位金额，且变更流水可查（某一天必须用 since=D, until=D+1 拉取）。两者不一致视为未执行。",
       "stop_condition": "回读发现 bid_strategy / bid_amount 被默认覆盖，或该档未覆盖完整投放日 -> 本轮不晋级，先修结构。",
       "en": {
-        "trigger": "At least {promotion.min_results} leads over a full delivery day and the step's own CPA <= T",
-        "action": "Double the original ad set's budget (T -> 2T -> 3T)",
-        "window": "2-3 full delivery days",
+        "trigger": "At least {promotion.min_results} leads over a full delivery day and the step's own CPA ≤ T",
+        "action": "Raise the original ad set's budget to the next ladder step (T → 2T → 3T: 1, 2 and 3 times the base budget)",
+        "window": "After 2-3 full delivery days",
         "acceptance": "Readback shows daily_budget at the target step and the change appears in the activity log (pull one day as since=D, until=D+1). If either is missing, treat it as not executed.",
-        "stop_condition": "Readback shows bid_strategy / bid_amount reset to a default, or the step has not covered a full delivery day -> do not promote this round; fix the structure first."
+        "stop_condition": "Readback shows bid_strategy / bid_amount reset to a default, or the step has not covered a full delivery day → do not promote this round; fix the structure first."
       }
     },
     {
@@ -131,7 +132,7 @@
       "acceptance": "status=PAUSED 回读确认，且链路与回传已核对。",
       "stop_condition": "展示 < 判死门槛时不得按「素材无效」下结论；样本不够只标「未测充分」。",
       "en": {
-        "trigger": "Zero leads, at least {sample_gate.impressions_for_dead} impressions and spend >= {stop_loss.measured_in_t}T",
+        "trigger": "Zero leads, at least {sample_gate.impressions_for_dead} impressions and spend ≥ {stop_loss.measured_in_t}T",
         "action": "Pause and review (check the destination and conversion tracking before giving up)",
         "window": "Immediately",
         "acceptance": "status=PAUSED confirmed by readback, and the destination and tracking have been checked.",
@@ -147,7 +148,7 @@
       "acceptance": "status=PAUSED 回读确认；暂停只停新增花费。",
       "stop_condition": "回传未成熟时不得作确定性排名或停投结论，只保留可靠的花费/展示字段。",
       "en": {
-        "trigger": "Spend - T x leads >= {stop_loss.measured_in_t}T",
+        "trigger": "Spend − T × leads ≥ {stop_loss.measured_in_t}T",
         "action": "Pause and review; if conversions are still arriving, stop new spend first",
         "window": "Immediately",
         "acceptance": "status=PAUSED confirmed by readback; the pause only stops new spend.",
@@ -179,11 +180,11 @@
       "acceptance": "已把「花不动」定位到具体一项：出价进不了场 / 预算撞顶 / 受众过窄 / 素材被拒。",
       "stop_condition": "未定位就加预算 -> 停手。期望转化不足时一律标「样本不足」，不得据此判素材好坏。",
       "en": {
-        "trigger": "Zero leads below {sample_gate.impressions_for_dead} impressions; or fewer than {promotion.min_results} leads; or budget utilisation <= {utilisation.under_delivering_below|pct}; or CPA above T but below the stop line",
+        "trigger": "Zero leads below {sample_gate.impressions_for_dead} impressions; or fewer than {promotion.min_results} leads; or budget utilization ≤ {utilisation.under_delivering_below|pct}; or CPA above T but below the stop line",
         "action": "Mark as under-tested, not failed; first solve whether the budget can be spent",
         "window": "Next round",
         "acceptance": "The spend problem is traced to one cause: the bid cannot enter auctions / the budget is capped / the audience is too narrow / the creative is disapproved.",
-        "stop_condition": "Adding budget before the cause is found -> stop. When expected leads are too few, mark the sample as too small and never judge the creative from it."
+        "stop_condition": "Adding budget before the cause is found → stop. When expected leads are too few, mark the sample as too small and never judge the creative from it."
       }
     },
     {
@@ -199,7 +200,7 @@
         "action": "Pause and inspect now; no need to wait for the observation window",
         "window": "Immediately",
         "acceptance": "The destination actually opens and matches the offer, and conversion parameters arrive complete. \"URL loads but parameters are lost\" does not pass.",
-        "stop_condition": "Parameters stripped / macros landing unexpanded / wrong deep-link fallback -> pause the row; never fix it while it keeps spending."
+        "stop_condition": "Parameters stripped / macros landing unexpanded / wrong deep-link fallback → pause the row; never fix it while it keeps spending."
       }
     },
     {
@@ -215,7 +216,7 @@
         "action": "Read the disapproval reason; fix the substance in the creative, copy or landing page and resubmit, or appeal through the platform's official review channel (Request Review). Never re-upload unchanged or merely re-encoded media.",
         "window": "Within 2 hours",
         "acceptance": "The disapproval reason is recorded; the edit or appeal is submitted; a re-read shows effective_status and the review result updated.",
-        "stop_condition": "A second rejection for the same reason -> stop and hand over to a human policy review."
+        "stop_condition": "A second rejection for the same reason → stop and hand over to a human policy review."
       }
     },
     {
@@ -227,7 +228,7 @@
       "acceptance": "该素材已不在组内投放，组内其余素材花费占比重新分布。",
       "stop_condition": "只满足「花费占比高」或只满足「CPA 高」时不得熔断，两条必须同时成立。",
       "en": {
-        "trigger": "At least 2 creatives; one takes more than {creative_rules.circuit_breaker_spend_share_above|pct} of ad-set spend at CPA above {creative_rules.circuit_breaker_cpa_multiple_above} x T",
+        "trigger": "At least 2 creatives; one takes more than {creative_rules.circuit_breaker_spend_share_above|pct} of ad-set spend at CPA above {creative_rules.circuit_breaker_cpa_multiple_above} × T",
         "action": "Switch off that one creative; leave the ad set running",
         "window": "Next round",
         "acceptance": "The creative no longer delivers in the ad set, and spend redistributes across the remaining creatives.",
@@ -243,10 +244,10 @@
       "acceptance": "新素材已在组内产出转化，且 CVR >= 该链接基线 +20%。",
       "stop_condition": "频次、CTR 降幅、CVR 降幅三条未同时满足时不得判衰竭。",
       "en": {
-        "trigger": "Frequency >= {creative_rules.fatigue_frequency_at_least}, with CTR and CVR both down at least {creative_rules.fatigue_drop_at_least|pct} against the prior window",
+        "trigger": "Frequency ≥ {creative_rules.fatigue_frequency_at_least}, with CTR and CVR both down at least {creative_rules.fatigue_drop_at_least|pct} against the prior window",
         "action": "Add a new creative (add, do not replace); judge the new creative on CVR only",
-        "window": "2-3 full delivery days",
-        "acceptance": "The new creative has produced leads in the ad set, with CVR >= the link's baseline +20%.",
+        "window": "After 2-3 full delivery days",
+        "acceptance": "The new creative has produced leads in the ad set, with CVR ≥ the link's baseline +20%.",
         "stop_condition": "Do not call fatigue unless frequency, CTR decline and CVR decline all meet their thresholds together."
       }
     },
@@ -270,13 +271,13 @@
       "code": "ACC_NO_DELIVERY",
       "level": "P0",
       "implemented": true,
-      "action": "查被拒审 / 学习受限 / 余额与支付 / 竞价过低；复拉仍为 0 才重启",
+      "action": "查被拒审 / 学习受限 / 余额与支付 / 竞价过低；被拒审的按 AD_STATUS 修正或申诉，不靠关停再开启触发重审；其余原因处理后复拉仍为 0 才重启",
       "window": "2h",
       "acceptance": "已定位到四项中的具体一项；复拉仍为 0 才激活。",
       "stop_condition": "额度字段读回为 null 时不得对余量下结论，如实说明能力缺口。",
       "en": {
         "trigger": "At least one ad set configured ACTIVE, but today's spend is 0",
-        "action": "Check disapprovals / learning limited / balance and payment / bids too low; restart only if a re-pull still shows 0",
+        "action": "Check disapprovals / learning limited / balance and payment / bids too low. A disapproval goes to AD_STATUS (fix or appeal), never an off/on toggle to trigger a new review; for the other causes, restart only if a re-pull still shows 0",
         "window": "Within 2 hours",
         "acceptance": "Traced to one of the four causes; reactivate only if a re-pull still shows 0.",
         "stop_condition": "If the spend-cap field reads back null, draw no conclusion about the remaining headroom; state the capability gap."
@@ -286,16 +287,16 @@
       "code": "ACC_STOPPED",
       "level": "P0",
       "implemented": true,
-      "action": "确认真断档还是暂停尾巴；恢复走 build-paused -> verify -> activate",
+      "action": "确认真断档还是暂停尾巴；先读账户状态：账户被停用或受限时停止，交人工走平台官方申诉，不在本账户或其他账户重建投放；账户正常且确认需要恢复时，按 build-paused -> verify -> activate 执行",
       "window": "2h",
       "acceptance": "已区分真断档与暂停尾巴，且恢复过程有回读确认。",
-      "stop_condition": "看到 PAUSED 先核对操作来源与暂停原因，未经确认不得当异常自动恢复。",
+      "stop_condition": "看到 PAUSED 先核对操作来源与暂停原因，未经确认不得当异常自动恢复。账户被停用或受限时不得重建、复制或转移投放。",
       "en": {
         "trigger": "No ad set returned, or none configured ACTIVE",
-        "action": "Tell a real delivery gap from the tail of a deliberate pause; recover through build paused -> verify -> activate",
+        "action": "Tell a real delivery gap from the tail of a deliberate pause. Read the account status first: if the account is disabled or restricted, stop and hand it to a person for the platform's own account review; never rebuild delivery in this or another account. Only when the account is in good standing, recover through build paused → verify → activate",
         "window": "Within 2 hours",
         "acceptance": "A real gap is told apart from a pause tail, and recovery is confirmed by readback.",
-        "stop_condition": "On seeing PAUSED, check who paused it and why; never auto-resume it as an anomaly without confirmation."
+        "stop_condition": "On seeing PAUSED, check who paused it and why; never auto-resume it as an anomaly without confirmation. If the account is disabled or restricted, do not rebuild, copy or move delivery."
       }
     },
     {
@@ -307,7 +308,7 @@
       "acceptance": "充值到账，复拉余额与当日消耗已恢复。",
       "stop_condition": "余额字段不等于剩余额度，不得用它反推额度上限。",
       "en": {
-        "trigger": "Balance <= {balance_alert_below}",
+        "trigger": "Balance ≤ {balance_alert_below}",
         "action": "Top up now (an exhausted balance or spend limit stops delivery abruptly)",
         "window": "Within 2 hours",
         "acceptance": "The funds have arrived; a re-pull shows the balance and today's spend recovering.",
@@ -323,11 +324,11 @@
       "acceptance": "回读新预算已生效，覆盖 >= 2 个完整投放日，且该档独立算 CPA <= T。",
       "stop_condition": "撞额度上限或利用率顶满时先确认账户额度再加。扩量只加预算，不加 adset。",
       "en": {
-        "trigger": "A proven ad set past the ladder that keeps its CPA <= T",
+        "trigger": "A proven ad set past the ladder that keeps its CPA ≤ T",
         "action": "Raise the original ad set's budget by 20%",
-        "window": ">= 2 full delivery days",
-        "acceptance": "Readback shows the new budget in effect over >= 2 full delivery days, and the step's own CPA <= T.",
-        "stop_condition": "At the spend limit or full utilisation, confirm the account limit first. Scale by budget only, never by adding ad sets."
+        "window": "After at least 2 full delivery days",
+        "acceptance": "Readback shows the new budget in effect over ≥ 2 full delivery days, and the step's own CPA ≤ T.",
+        "stop_condition": "At the spend limit or full utilization, confirm the account limit first. Scale by budget only, never by adding ad sets."
       }
     },
     {
@@ -357,7 +358,7 @@
       "en": {
         "trigger": "A proven MAX ad set where a controlled bid is worth testing",
         "action": "Keep the original MAX ad set; open one controlled-bid test with an initial budget close to the proven profitable budget",
-        "window": ">= 2 full delivery days",
+        "window": "After at least 2 full delivery days",
         "acceptance": "The original ad set is untouched; the new ad set reads back bid_strategy / bid_amount / optimization_goal as planned, and its budget counts toward the total test budget.",
         "stop_condition": "A bid below the proven cost risks not spending, not saving money; without enough sample, do not conclude that a controlled bid cannot hold cost."
       }
@@ -375,22 +376,22 @@
         "action": "Identify only, propose nothing; the new structure replaces it, except for hard anomalies",
         "window": "Not applicable",
         "acceptance": "The new structure covers the offer; the old structure needs no action.",
-        "stop_condition": "Do not touch the old structure in the name of optimisation (no rebuild, no patching)."
+        "stop_condition": "Do not touch the old structure in the name of optimization (no rebuild, no patching)."
       }
     },
     {
       "code": "CAMP_GHOST_SPEND",
       "level": "P2",
       "implemented": false,
-      "action": "确认是主动下线；若误删而它本来在出转化则重建同素材",
+      "action": "确认是我方主动关停；若是我方误删且它本来在出转化，按原批准方案以暂停状态重建、读回后再启用；被平台拒审或移除的对象不重建，按拒审分诊处理",
       "window": "次轮",
-      "acceptance": "已确认是主动下线，且该 campaign 当日消耗归零。",
+      "acceptance": "已确认是我方主动关停，且该 campaign 当日消耗归零。",
       "stop_condition": "先建后删，不得先删后查。",
       "en": {
-        "trigger": "A campaign that was taken down still shows spend",
-        "action": "Confirm it was taken down on purpose; if it was removed by mistake while still producing leads, rebuild it with the same creative",
+        "trigger": "A campaign we turned off or deleted still shows spend",
+        "action": "Confirm we turned it off on purpose; if we deleted it by mistake while it was still producing leads, recreate it from the approved plan, paused, and read it back before activating. Never recreate an object the platform disapproved or removed; that goes to disapproval triage",
         "window": "Next round",
-        "acceptance": "Confirmed as a deliberate takedown, and the campaign's spend for the day is zero.",
+        "acceptance": "Confirmed as a deliberate shutdown by us, and the campaign's spend for the day is zero.",
         "stop_condition": "Build before removing; never remove first and check later."
       }
     }

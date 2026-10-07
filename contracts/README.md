@@ -7,7 +7,7 @@
 | 文件 | 设计范围 |
 | --- | --- |
 | [connector-contract.json](connector-contract.json) | 业务、平台适配、连接器和执行证据的分层；能力快照、对象身份、金额、分页、错误、范围授权与连接器切换。 |
-| [creative-recovery.json](creative-recovery.json) | 拒审分诊：没有审核结论的技术故障一次修复并读回；政策拒审修正实质内容后提交或通过官方复核申诉；同一原因第二次被拒交人工政策复核。 |
+| [disapproval-triage.json](disapproval-triage.json) | 拒审分诊：没有审核结论的技术故障一次修复并读回；政策拒审修正实质内容后提交或通过官方复核申诉；同一原因第二次被拒交人工政策复核。 |
 | [acceptance-scenarios.json](acceptance-scenarios.json) | 25 个未来实现的验收场景，涵盖未知写结果、能力范围、数值口径、拒审分诊、上下文变化与批次授权。 |
 | [experience-catalog.json](experience-catalog.json) | 32 条按工作流阶段组织的通用经验，区分工程要求、版本化能力、业务选择和诊断假设。 |
 | [onboarding-extensions.json](onboarding-extensions.json) | 业务事实与来源、连接读写验证、条件问题、工作流 readiness、方法选择和上下文指纹的设计。 |
@@ -27,7 +27,7 @@
 
 ## 拒审分诊的适用边界
 
-**拒审只能通过修正内容或平台官方复核流程解决。**[拒审分诊](../docs/disapproval-triage.zh-CN.md)（[English](../docs/disapproval-triage.md)）与 `creative-recovery.json` 共同区分两类情况：
+**拒审只能通过修正内容或平台官方复核流程解决。**[拒审分诊](../docs/disapproval-triage.zh-CN.md)（[English](../docs/disapproval-triage.md)）与 `disapproval-triage.json` 共同区分两类情况：
 
 - **技术上传或处理失败（对象没有审核结论）：**先核对已存在对象，再按规格重新导出或重新上传一次，记录并读回；再次失败即停止并报告。
 - **政策拒审：**读取原因，修正原因所指的实质内容（主张、画面、文案或落地页）后提交修改版，或附证据通过平台官方复核渠道申诉；同一原因第二次被拒即停止，交人工做政策复核。

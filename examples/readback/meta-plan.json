@@ -15,7 +15,8 @@
       "level": "campaign",
       "object_key": "cmp-quote-01",
       "name": "LG | Home quote",
-      "objective": "OUTCOME_LEADS"
+      "objective": "OUTCOME_LEADS",
+      "special_ad_categories": []
     },
     {
       "level": "adset",

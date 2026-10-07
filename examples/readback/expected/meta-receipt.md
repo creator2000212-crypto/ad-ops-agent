@@ -6,17 +6,17 @@ Meta · account `fictional-meta-account-a` · currency USD · plan `meta-plan.js
 
 ## Timeline
 
-**Created PAUSED 7/7 → Readback 39/40 fields → HOLD**
+**Created PAUSED 7/7 → Readback 40/41 fields → HOLD**
 
 | Step | Time | Result |
 |---|---|---|
 | Created PAUSED | 2026-09-23T02:00:00Z | 7 of 7 planned objects returned; 7 read back `PAUSED` |
-| Readback | 2026-09-23T02:03:00Z | 39 of 40 fields match the plan |
-| Decision | — | HOLD: 1 problem; nothing is activated |
+| Readback | 2026-09-23T02:03:00Z | 40 of 41 fields match the plan |
+| Decision | — | HOLD: 1 mismatch · nothing activated |
 
 ## Problems
 
-- `ad-h3` · URL parameters: required parameter missing: `utm_content`
+- `ad-h3` · URL parameters: missing required parameter `utm_content`
 
 ## Fields
 
@@ -24,6 +24,7 @@ Meta · account `fictional-meta-account-a` · currency USD · plan `meta-plan.js
 |---|---|---|---|---|:---:|
 | account | `fictional-meta-account-a` | Account currency | `USD` | `USD` | ✓ |
 | campaign | `cmp-quote-01` | Objective | `OUTCOME_LEADS` | `OUTCOME_LEADS` | ✓ |
+| campaign | `cmp-quote-01` | Special ad categories | `(none)` | `(none)` | ✓ |
 | campaign | `cmp-quote-01` | Status | `PAUSED` | `PAUSED` | ✓ |
 | ad set | `as-h1` | Optimization goal | `OFFSITE_CONVERSIONS` | `OFFSITE_CONVERSIONS` | ✓ |
 | ad set | `as-h1` | Optimization event | `LEAD` | `LEAD` | ✓ |

@@ -4,22 +4,22 @@
 
 How the method I used on live Meta and TikTok lead-gen accounts changed between Sep 13 and Sep 26, 2026, one entry per change: what triggered it, what changed, and what it did. Thresholds are described in relative terms; the economics in this repository's fixtures are synthetic. The current reference version is [`examples/operating/methodology-reference.json`](../examples/operating/methodology-reference.json).
 
-## Sep 13 · First written cost floor
+## Sep 13 · First written ROAS floor
 
 - **Trigger:** The first cost rule in my method notes.
-- **Change:** Target ROAS floor set at 80%. T, the highest acceptable cost per lead, is derived from the value of a lead and that floor.
+- **Change:** A target ROAS floor was written down. T, the highest acceptable cost per lead, is derived from the value of a lead and that floor.
 - **Effect:** T follows from the value of a lead and the floor, so changing either changes every verdict the same way. In this repo: `target_roas` and `target_cost()` in [`operating_rules.py`](../operating_rules.py).
 
-## Sep 18 · Floor raised to 85%, every conclusion recomputed
+## Sep 18 · Floor raised, every conclusion recomputed
 
-- **Trigger:** I wanted more return per unit of spend than an 80% floor required.
-- **Change:** Target ROAS floor 80% → 85%, which lowers T.
+- **Trigger:** My decision on Sep 18; no separate incident.
+- **Change:** Target ROAS floor raised by 5 points, which lowers T.
 - **Effect:** Every earlier conclusion was recomputed at the new T, so no report mixed verdicts made under two floors.
 
 ## Sep 18 · One attribution setting
 
 - **Trigger:** Cost per lead had to be comparable across ad sets, accounts and reports.
-- **Change:** Attribution standardised from 1-day click to 7-day click + 1-day view.
+- **Change:** Attribution standardized from 1-day click to 7-day click + 1-day view.
 - **Effect:** Cost per lead became comparable across ad sets and accounts. In this repo: `preflight.py` fails a campaign whose ad sets use different attribution settings (`test_mixed_attribution_in_one_campaign_fails` in [`tests/test_preflight.py`](../tests/test_preflight.py)).
 
 ## Sep 20 · Daily sheet scoped to settlement

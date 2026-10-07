@@ -80,7 +80,7 @@ def engine_or_human(action, methodology, policy):
         return 'Engine: detects; advisory, a person acts'
     change = f'`{field}`'
     if code == 'LADDER_PROMOTE':
-        change += f" ×{methodology['promotion']['budget_multiple']}"
+        change += ' to the next ladder step'
     elif field == 'status':
         change += ' → PAUSED'
     text = f'Engine: proposes {change} through the write gate'

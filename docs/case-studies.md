@@ -9,8 +9,8 @@ The labels `WB-01` to `WB-10` index my private records: plans, scripts, run outp
 | Case | Outcome | Guardrail in this repo |
 |---|---|---|
 | [WB-01](#wb-01) | 20 proposed ads held for review before creation | Duplicate-file check in pre-flight |
-| [WB-02](#wb-02) | Three-line TikTok build handed off object by object | Field-by-field readback receipt |
-| [WB-03](#wb-03) | Daily report labelled incomplete when a source was missing | Missing is not zero |
+| [WB-02](#wb-02) | TikTok build for three business lines, handed off object by object | Field-by-field readback receipt |
+| [WB-03](#wb-03) | Daily report labeled incomplete when a source was missing | Missing is not zero |
 | [WB-04](#wb-04) | Automated rules with a 100× unit error traced, reversed, made notify-only | Currency-aware money conversion |
 | [WB-05](#wb-05) | Every round starts by checking the last round's actions | Append-only ledger; `open` keeps failures visible |
 | [WB-06](#wb-06) | A receipt that hard-coded `ACTIVE` caught in review | Receipts only from timed readback |
@@ -122,9 +122,9 @@ A/B/C are labels for this page, not platform names or IDs.
 
 **Situation.** Sep 20, the only run of a 2-hour Meta watch. The connector's authorization had dropped. The script parsed an error message as data, exited 0, and wrote a report that read like 0 accounts, 0 spend and no urgent issues.
 
-**What I did.** The agent treated 0 accounts as implausible, ruled out the local proxy and the script, confirmed the failure across accounts, tools and a second connector, and reported a data-source outage with no conclusions; it did not reuse an earlier pull. It also pointed out that exit code 0 with a healthy-looking report is the worst failure mode for an unattended job. That job was deleted the same day. The 12-hour check I set up on Sep 22 treats `accounts=0` as a failed pull and draws no conclusions.
+**What I did.** The agent treated 0 accounts as implausible, ruled out the local network and the script, confirmed the failure across accounts, tools and a second connector, and reported a data-source outage with no conclusions; it did not reuse an earlier pull. It also pointed out that exit code 0 with a healthy-looking report is the worst failure mode for an unattended job. That job was deleted the same day. The 12-hour check I set up on Sep 22 treats `accounts=0` as a failed pull and draws no conclusions.
 
-**Guardrail now in this repo.** [`operating_loop.py`](../operating_loop.py) refuses a snapshot with no accounts (`validate_snapshot()`) and raises on a missing ledger instead of reporting `open: 0` (`test_missing_ledger_raises`). A zero denominator is "missing", not 0.
+**Guardrail now in this repo.** [`operating_loop.py`](../operating_loop.py) refuses a snapshot with no accounts (`validate_snapshot()`, `test_snapshot_without_accounts_is_rejected`) and raises on a missing ledger instead of reporting `open: 0` (`test_missing_ledger_raises`). A zero denominator is "missing", not 0.
 
 **Evidence:** automation run record and the run's report, Sep 20; the 12-hour check's instructions, Sep 22.
 

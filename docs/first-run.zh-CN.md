@@ -91,7 +91,7 @@ Agent 保留原文和来源，标出冲突、缺项与当前工具不支持的�
 
 ### 接入偏好与模拟能力
 
-`setup_preferences.route` 保存 `undecided`、`existing`、`self_managed`（官方 API / SDK）、`self_hosted_mcp` 或 `managed_mcp`（托管 MCP 连接器）；旧值 `pipeboard`、`other_mcp` 分别按 `managed_mcp`、`self_hosted_mcp` 读取。路线为 `undecided` 时，`guidance.connection_options` 不分先后地列出全部路线及不带参数的文档链接；`setup_preferences.options_dismissed`（旧名 `recommendation_dismissed`）用于隐藏该列表。已选路线或隐藏列表后不再重复展示。选择路线不构成接入成功证据。
+`setup_preferences.route` 保存 `undecided`、`existing`、`self_managed`（官方 API / SDK）、`self_hosted_mcp` 或 `managed_mcp`（托管 MCP 连接器）；旧值 `other_mcp` 按 `self_hosted_mcp` 读取。路线为 `undecided` 时，`guidance.connection_options` 不分先后地列出全部路线及不带参数的文档链接；`setup_preferences.options_dismissed`（旧名 `recommendation_dismissed`）用于隐藏该列表。已选路线或隐藏列表后不再重复展示。选择路线不构成接入成功证据。
 
 `onboarding.py` 的 `connection_gate` 对四类 readiness 检查模拟读取与 `create_simulated_draft` 能力；未通过时 `guidance` 保持接入阶段。该契约没有变更，不要求真实只读任务也具备写入权限；`ready_simulation` 不是真实账户验收。
 

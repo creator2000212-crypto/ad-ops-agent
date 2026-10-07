@@ -31,35 +31,35 @@
       "status": "design_scenario_not_executed"
     },
     {
-      "id": "REC-01",
+      "id": "DIS-01",
       "title": "技术故障修复后重新上传",
       "given": "上传或处理失败且对象没有审核结论；修复后得到一个素材引用，但尚未创建 creative/ad。",
       "expected": "只能报告素材上传/处理状态；不能报告 ad_id 已更新或审核已通过。",
       "status": "design_scenario_not_executed"
     },
     {
-      "id": "REC-02",
+      "id": "DIS-02",
       "title": "拒审后附证据申请官方复核",
       "given": "对象被拒审，内容核对后认为符合政策；当前批次授权覆盖这次复核提交。",
       "expected": "通过平台官方复核渠道提交并保存回执；提交、审核结论和投放分别记录，不新建对象、不重新上传素材。",
       "status": "design_scenario_not_executed"
     },
     {
-      "id": "REC-03",
+      "id": "DIS-03",
       "title": "同一案例换连接器或新建对象后继续提交",
       "given": "同一原因已被拒两次。",
       "expected": "停止自动提交并交人工政策复核；换供应商、新建 creative/广告或换账户都不得清零计数。",
       "status": "design_scenario_not_executed"
     },
     {
-      "id": "REC-04",
+      "id": "DIS-04",
       "title": "修改后的 creative 绑定到原广告",
       "given": "拒审原因所指内容已修改并获批准；ad_id 相同、creative_id 已变；学习状态无证据。",
       "expected": "报告修改差异、绑定变化与新的审核状态；学习与互动标为未验证，不宣告无影响。",
       "status": "design_scenario_not_executed"
     },
     {
-      "id": "REC-05",
+      "id": "DIS-05",
       "title": "视频上传拿到 ID 但仍处理",
       "given": "processing 状态未 ready。",
       "expected": "待处理或调查错误，不创建依赖未就绪素材的后续动作；超时保留未决状态。",
@@ -129,28 +129,28 @@
       "status": "design_scenario_not_executed"
     },
     {
-      "id": "REC-06",
+      "id": "DIS-06",
       "title": "真实格式错误需要重新上传",
       "given": "已定位编码或引用问题，对象没有审核结论；当前批次授权允许正常修复与重新上传。",
       "expected": "按技术路线做最小修复并只重新上传一次；保存原件与派生关系，验证处理和引用；再次失败即停止并报告。",
       "status": "design_scenario_not_executed"
     },
     {
-      "id": "REC-07",
+      "id": "DIS-07",
       "title": "已确认内容存在实质问题",
       "given": "证据表明实际表达或目的地违反适用要求。",
       "expected": "修改实际内容并提交修改版，或附证据通过平台官方复核渠道申诉；只改变身份、字节或对象 ID 不是修复。",
       "status": "design_scenario_not_executed"
     },
     {
-      "id": "REC-08",
+      "id": "DIS-08",
       "title": "同一原因第二次被拒",
       "given": "提交修改版或申诉后，平台以相同原因再次拒审。",
       "expected": "停止该案例的自动提交与申诉，把记录交人工做政策复核；不再自动修改或重新提交。",
       "status": "design_scenario_not_executed"
     },
     {
-      "id": "REC-09",
+      "id": "DIS-09",
       "title": "拒审对象被提议重新上传原素材",
       "given": "对象已有拒审结论，计划中包含重新上传未修改或仅重新编码的素材。",
       "expected": "阻断该动作并改走修正或申诉路线；技术重新上传路线只适用于没有审核结论的对象。",
@@ -187,7 +187,7 @@
   ],
   "documentation_refs": [
     "connector-contract.json",
-    "creative-recovery.json",
+    "disapproval-triage.json",
     "experience-catalog.json",
     "onboarding-extensions.json"
   ]

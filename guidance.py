@@ -18,7 +18,7 @@ PLATFORMS = ('meta', 'tiktok', 'google')
 CONNECTION_ROUTES = ('self_managed', 'self_hosted_mcp', 'managed_mcp')
 ROUTES = {'undecided', 'existing'} | set(CONNECTION_ROUTES)
 # Values accepted from older profiles and mapped to the generic route.
-LEGACY_ROUTE_ALIASES = {'pipeboard': 'managed_mcp', 'other_mcp': 'self_hosted_mcp'}
+LEGACY_ROUTE_ALIASES = {'other_mcp': 'self_hosted_mcp'}
 LANGUAGES = ('en', 'zh-CN')
 APPROACHES = {'guided', 'bring_own', 'undecided'}
 EXPERIENCE = {'new', 'experienced', 'unknown'}
@@ -265,9 +265,6 @@ def evaluate(profile, connected: bool):
         'stage': 'connection_setup',
         'questions': [],
         'connection_options': None,
-        # Deprecated alias of ``connection_options`` for callers written before
-        # the vendor-neutral list; it carries the same neutral content.
-        'recommendation': None,
         'connection_route': route,
         'setup_steps': [],
         'familiarity_question': None,
@@ -279,7 +276,6 @@ def evaluate(profile, connected: bool):
         result['setup_steps'] = _setup_steps(route)
         if route == 'undecided' and not dismissed:
             result['connection_options'] = connection_options()
-            result['recommendation'] = connection_options()
         return result
 
     result['collaboration_summary'] = {

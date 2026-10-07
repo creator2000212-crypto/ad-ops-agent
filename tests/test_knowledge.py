@@ -250,7 +250,7 @@ class DisapprovalPolicyTests(unittest.TestCase):
                 self.assertIn('未修改或仅重新编码', ' '.join(entry['avoid']))
 
     def test_disapproval_contract_limits_reupload_to_technical_failures(self):
-        contract = json.loads((ROOT / 'contracts' / 'creative-recovery.json').read_text(encoding='utf-8'))
+        contract = json.loads((ROOT / 'contracts' / 'disapproval-triage.json').read_text(encoding='utf-8'))
         self.assertEqual(contract['policy_statement'], DISAPPROVAL_RULE_ZH)
         routes = {route['route_id']: route for route in contract['routes']}
         self.assertEqual(set(routes), {'technical_processing_failure', 'policy_fix',

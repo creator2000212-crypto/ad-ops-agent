@@ -110,26 +110,30 @@ class GuidanceTests(unittest.TestCase):
         urls = [link['url'] for item in options['routes'] for link in item['links']]
         self.assertNotIn('https://example.com/redirect', urls)
 
-    def test_legacy_vendor_and_catch_all_routes_map_to_generic_routes(self):
-        for legacy, canonical in (('pipeboard', 'managed_mcp'), ('other_mcp', 'self_hosted_mcp')):
+    def test_legacy_catch_all_route_maps_to_a_generic_route(self):
+        for legacy, canonical in (('other_mcp', 'self_hosted_mcp'),):
             with self.subTest(route=legacy):
                 result = guidance.evaluate({'setup_preferences': {'route': legacy}}, False)
                 self.assertEqual(result['connection_route'], canonical)
                 self.assertIsNone(result['connection_options'])
                 self.assertNotIn('Pipeboard', ' '.join(result['setup_steps']))
 
+    def test_vendor_name_is_not_a_route(self):
+        with self.assertRaises(guidance.GuidanceError):
+            guidance.evaluate({'setup_preferences': {'route': 'pipeboard'}}, False)
+
     def test_chosen_route_existing_connection_and_dismissal_hide_the_options(self):
         for route in ('existing', 'self_managed', 'self_hosted_mcp', 'managed_mcp'):
             result = guidance.evaluate({'setup_preferences': {'route': route}}, False)
             self.assertIsNone(result['connection_options'])
-            self.assertIsNone(result['recommendation'])
+            self.assertNotIn('recommendation', result)
             self.assertEqual(result['connection_route'], route)
             self.assertTrue(result['setup_steps'])
             self.assertNotIn('Pipeboard', ' '.join(result['setup_steps']))
         undecided = guidance.evaluate({'setup_preferences': {'route': 'undecided'}}, False)
         self.assertIsNotNone(undecided['connection_options'])
-        # The deprecated alias carries the same neutral list.
-        self.assertEqual(undecided['recommendation'], undecided['connection_options'])
+        # The list is only ever exposed as neutral connection options.
+        self.assertNotIn('recommendation', undecided)
         for key in ('options_dismissed', 'recommendation_dismissed'):
             profile = {'setup_preferences': {'route': 'undecided', key: True}}
             self.assertIsNone(guidance.evaluate(profile, False)['connection_options'])
@@ -228,7 +232,7 @@ class GuidanceTests(unittest.TestCase):
     def test_invalid_guidance_shapes_enums_and_boolean_values_are_rejected(self):
         invalid = [
             [], {'setup_preferences': []}, {'setup_preferences': {'route': 'auto_buy'}},
-            {'setup_preferences': {'route': True}}, {'setup_preferences': {'route': ['pipeboard']}},
+            {'setup_preferences': {'route': True}}, {'setup_preferences': {'route': ['managed_mcp']}},
             {'setup_preferences': {'recommendation_dismissed': 'false'}},
             {'setup_preferences': {'recommendation_dismissed': 0}}, {'setup_preferences': {'options_dismissed': 1}},
             {'collaboration': []},

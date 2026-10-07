@@ -14,8 +14,8 @@ Both read JSON files and make no platform call. The fixtures use fictional IDs, 
 | Stage | On live accounts (Sep 2026) | In this repository |
 |---|---|---|
 | 1. Pre-flight | — | `preflight.py`: naming, URL, declaration, attribution and duplicate-file checks on the checklist |
-| 2. Create paused | Every campaign, ad set and ad created `PAUSED` | A plan that asks for any other status is refused |
-| 3. Field-by-field readback | Every object read back and compared with the plan | `readback.py`: one row per field, HOLD on any mismatch |
+| 2. Create paused | Campaigns, ad sets and ads created `PAUSED` as the standing rule | A plan that asks for any other status is refused |
+| 3. Field-by-field readback | Objects read back and compared with the plan | `readback.py`: one row per field, HOLD on any mismatch |
 | 4. Staged activation | Activated in stages (after 09-22, only on my explicit approval), then status read back again | Not replayed. An ACTIVATE receipt means "eligible", not "approved" |
 | 5. Review polling | Platform review status polled after activation | Not replayed. `effective_status` is recorded in the receipt, never gated |
 
@@ -26,8 +26,8 @@ Pre-flight is new in this repository; it moves contradictions that the later sta
 | Date (2026) | What happened | What the check does now |
 |---|---|---|
 | 09-10 | A batch of 25 creatives timed out; the objects that already existed were reconciled before the retry | An object in the readback that the plan does not contain (a duplicate from a retry) holds the build |
-| 09-17 | A bulk activation left 8 ads inactive; reading the fields back after activation caught it | Activation is not replayed here, but the same rule applies before it: status is read per object, never assumed from the request |
-| 09-18 | I standardised attribution to 7-day click + 1-day view so costs were comparable | Pre-flight fails a campaign whose ad sets use different attribution settings |
+| 09-17 | A bulk activation left 8 ads inactive; reading the fields back after activation caught it | Activation is not replayed here. Status is read per object before it, never assumed from the request, and the operating loop's after-state comparison keeps a write that did not land open as "not in effect" |
+| 09-18 | I standardized attribution to 7-day click + 1-day view so costs were comparable | Pre-flight fails a campaign whose ad sets use different attribution settings |
 | 09-22 | Agent-created automated rules had thresholds written in dollars where the API expects cents, so they were 100x too small and paused ad sets | Money converts by the platform's currency offset for the currency the account reports; there is no x100 default |
 | 09-22 | The agent activated a batch after a reply that only answered a pixel question | The receipt says activation still needs the owner's approval of the batch |
 | 09-25 | A receipt generator hard-coded `ACTIVE` while the saved readbacks said `PAUSED` / `IN_PROCESS` | Every "Read back" value comes from the readback file; a missing field is "not returned" |
@@ -40,6 +40,7 @@ Pre-flight is new in this repository; it moves contradictions that the later sta
 |---|---|---|
 | Account currency | ad account `currency` | advertiser `currency` |
 | Objective | `objective` | `objective_type` |
+| Special ad categories | campaign `special_ad_categories` (compared when the plan states it; an empty list means none declared) | not mapped: a TikTok plan that states it is refused |
 | Optimization goal / event | `optimization_goal`, `promoted_object.custom_event_type` | `optimization_goal`, `optimization_event` |
 | Daily budget | `daily_budget` (minor units) | `budget` when `budget_mode` is `BUDGET_MODE_DAY` (major units) |
 | Bid strategy / amount | `bid_strategy`, `bid_amount` (minor units) | `bid_type`, `conversion_bid_price` |
@@ -55,6 +56,7 @@ Rules the comparison follows:
 - **Missing is not equal.** A field the plan states but the readback lacks is a mismatch shown as *not returned*.
 - **Units come from the platform, not a default.** Meta returns money in minor units. The offset table in `readback.py` is copied from Meta's [currency reference](https://developers.facebook.com/docs/marketing-api/currencies) (checked 2026-10-07): USD has two decimals, JPY none, and TWD and HUF none on Meta even though ISO 4217 gives them two. A currency missing from the table is refused. The account currency is read back too, so a plan written in USD against a JPY account fails instead of being off by 100x.
 - **Parameters are checked by name and value.** Every required URL parameter must be present with its planned value; extra parameters are allowed.
+- **A planned value is never skipped.** A field the plan states at a level where it is not compared (for example a campaign budget, or a geo on an ad), or on a platform with no response path for it, makes the plan invalid instead of passing unchecked.
 - **Status is gated; review state is recorded.** Configured status must be paused. Meta's `effective_status` (for example `IN_PROCESS`) is listed under "Not gated" because it reflects review and delivery processing, not configuration.
 
 ## What `preflight.py` checks
@@ -102,15 +104,15 @@ After an intended change, regenerate a golden file with `--receipt` (readback) o
 
 Excerpt from [`examples/readback/expected/meta-receipt.md`](../examples/readback/expected/meta-receipt.md). The Meta fixture has exactly one mismatch, an ad whose URL parameters lack `utm_content`, so the build holds. The [TikTok receipt](../examples/readback/expected/tiktok-receipt.md) matches every field and says ACTIVATE.
 
-**Created PAUSED 7/7 → Readback 39/40 fields → HOLD**
+**Created PAUSED 7/7 → Readback 40/41 fields → HOLD**
 
 | Step | Time | Result |
 |---|---|---|
 | Created PAUSED | 2026-09-23T02:00:00Z | 7 of 7 planned objects returned; 7 read back `PAUSED` |
-| Readback | 2026-09-23T02:03:00Z | 39 of 40 fields match the plan |
-| Decision | — | HOLD: 1 problem; nothing is activated |
+| Readback | 2026-09-23T02:03:00Z | 40 of 41 fields match the plan |
+| Decision | — | HOLD: 1 mismatch · nothing activated |
 
-- `ad-h3` · URL parameters: required parameter missing: `utm_content`
+- `ad-h3` · URL parameters: missing required parameter `utm_content`
 
 | Level | Object | Field | Planned | Read back | Match |
 |---|---|---|---|---|:---:|
