@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "2026-09-24.1",
+  "version": "2026-10-07.1",
   "sources": [
     {
       "id": "PRJ-ONBOARD",
@@ -30,13 +30,13 @@
       "note": "经验抽象用于组织待核证据；此原始契约仍为 design_only，本知识库仅手工提炼方法与问题，不启用其中的动作。"
     },
     {
-      "id": "PRJ-RECOVERY",
-      "title": "项目 Meta 素材恢复边界",
-      "url": "https://github.com/creator2000212-crypto/ad-ops-agent/blob/main/docs/meta-creative-recovery.md",
+      "id": "PRJ-DISAPPROVAL",
+      "title": "项目拒审分诊：修正或申诉",
+      "url": "https://github.com/creator2000212-crypto/ad-ops-agent/blob/main/docs/disapproval-triage.md",
       "kind": "project",
-      "checked_on": "2026-09-24",
+      "checked_on": "2026-10-07",
       "review_after_days": 365,
-      "note": "恢复案例的工程边界；不支持绕过实质政策问题，也不保证重传改变审核结果。"
+      "note": "项目流程：拒审只能通过修正内容或平台官方复核流程解决；同一原因第二次被拒交人工政策复核。不是平台政策原文。"
     },
     {
       "id": "META-VIDEO",
@@ -936,7 +936,7 @@
         }
       ],
       "checks": [
-        "金额、品类、语言、奖励或限制在整个路径一致。",
+        "金额、品类、语言、优惠条件或限制在整个路径一致。",
         "已阅读内容与仅匹配标签的部分明确分开。"
       ],
       "actions": [
@@ -1165,7 +1165,7 @@
         "比较真实返回引用，不能从文件变化推断广告对象变化。"
       ],
       "avoid": [
-        "换本地哈希不能证明广告 ID 已刷新。"
+        "本地文件内容变化不能证明平台媒体或广告对象已变化。"
       ],
       "source_ids": [
         "META-IMAGE",
@@ -1219,7 +1219,7 @@
         "互动无法从当前预览验证时明确保留未知。"
       ],
       "avoid": [
-        "重传同视频不等于复用同帖。",
+        "再次上传同一视频不等于复用原帖。",
         "新广告不能据此宣称继承旧学习或报表。"
       ],
       "source_ids": [
@@ -1451,8 +1451,8 @@
     },
     {
       "id": "KB-META-08",
-      "title": "Meta 拒审先建立证据再选择恢复路线",
-      "kind": "diagnostic_hypothesis",
+      "title": "Meta 拒审：读取原因后修正内容或申请官方复核",
+      "kind": "operational_principle",
       "stages": [
         "diagnosis",
         "creative"
@@ -1471,10 +1471,11 @@
         "FB",
         "拒审",
         "被拒",
-        "恢复",
-        "哈希"
+        "申诉",
+        "复核",
+        "Request Review"
       ],
-      "summary": "广告拒审可能涉及内容、目的地、身份、处理或引用问题；SDK 的审核反馈和 issues_info 能提供部分证据，不能从重复拒审次数推断原因。",
+      "summary": "拒审只能通过修正内容或平台官方复核流程解决：读取原生审核原因，修正所指的主张、画面、文案或落地页后提交修改版，或附证据申请复核；同一原因第二次被拒交人工政策复核。",
       "required_facts": [
         "review_reason_verified",
         "creative_content_verified",
@@ -1489,24 +1490,25 @@
       "questions": [
         {
           "key": "review_reason_verified",
-          "question": "原生审核理由是什么，支持误拒或技术故障的证据有哪些？"
+          "question": "平台返回的拒审原因是什么，指向主张、画面、文案还是落地页？"
         }
       ],
       "checks": [
-        "内容、链接与实际用户体验是否存在需要修正的问题。",
-        "历史尝试跨媒体、创意、广告 ID 连续计数。"
+        "拒审原因已按原生字段读取，并对应到具体内容元素。",
+        "同一原因的提交与复核次数跨媒体、创意、广告 ID 连续计数。"
       ],
       "actions": [
-        "实质问题先改内容或目的地；存在误拒证据时整理复核材料。",
-        "确认编码或引用故障后，提出有次数与成本边界的技术修复方案。"
+        "修正原因所指的实质内容，经负责人批准后提交修改版。",
+        "内容合规且判定可能有误时，附证据通过平台官方复核渠道申诉。",
+        "同一原因第二次被拒时停止，交人工做政策复核。"
       ],
       "avoid": [
-        "不把改哈希或新 ad_id 当作过审方法或保证。",
-        "不通过不断换对象绕过实质政策问题。"
+        "不重新上传未修改或仅重新编码的素材。",
+        "不复制被拒广告，不更换账户、主页或身份来通过审核。"
       ],
       "source_ids": [
         "META-AD",
-        "PRJ-RECOVERY"
+        "PRJ-DISAPPROVAL"
       ],
       "priority": 1
     },

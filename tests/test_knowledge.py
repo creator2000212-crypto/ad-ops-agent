@@ -2,6 +2,7 @@ import copy
 from datetime import date, datetime, timezone
 import json
 from pathlib import Path
+import re
 import sys
 import tempfile
 import unittest
@@ -14,6 +15,9 @@ import onboarding
 
 ROOT = Path(__file__).resolve().parents[1]
 AS_OF = date(2026, 9, 24)
+REPOSITORY_BLOB = 'https://github.com/creator2000212-crypto/ad-ops-agent/blob/main/'
+DISAPPROVAL_RULE_EN = "Disapprovals are resolved only by fixing the content or through the platform's review process."
+DISAPPROVAL_RULE_ZH = '拒审只能通过修正内容或平台官方复核流程解决。'
 
 
 def fact(value, status='confirmed', source='fictional_test_evidence'):
@@ -216,6 +220,66 @@ class KnowledgeRetrievalTests(unittest.TestCase):
         for entry in corpus['entries']:
             self.assertTrue(entry['source_ids'])
             self.assertTrue(set(entry['source_ids']) <= sources)
+
+
+class DisapprovalPolicyTests(unittest.TestCase):
+    """Bundled knowledge and design contracts handle disapprovals only by fix or appeal."""
+
+    def setUp(self):
+        self.corpus = knowledge.load_catalog()
+
+    def test_project_sources_point_to_files_in_this_repository(self):
+        project = [source for source in self.corpus['sources'] if source['kind'] == 'project']
+        self.assertTrue(project)
+        for source in project:
+            with self.subTest(source=source['id']):
+                self.assertTrue(source['url'].startswith(REPOSITORY_BLOB))
+                self.assertTrue((ROOT / source['url'][len(REPOSITORY_BLOB):]).is_file())
+
+    def test_rejection_knowledge_routes_to_fix_or_official_review(self):
+        trigger = {'key': 'creative_rejected', 'equals': True}
+        rejected = [entry for entry in self.corpus['entries'] if trigger in entry['triggers']]
+        self.assertTrue(rejected)
+        for entry in rejected:
+            with self.subTest(entry=entry['id']):
+                actions = ' '.join(entry['actions'])
+                self.assertIn('修正', actions)
+                self.assertIn('官方复核', actions)
+                self.assertIn('第二次被拒', actions)
+                self.assertIn('人工', actions)
+                self.assertIn('未修改或仅重新编码', ' '.join(entry['avoid']))
+
+    def test_disapproval_contract_limits_reupload_to_technical_failures(self):
+        contract = json.loads((ROOT / 'contracts' / 'creative-recovery.json').read_text(encoding='utf-8'))
+        self.assertEqual(contract['policy_statement'], DISAPPROVAL_RULE_ZH)
+        routes = {route['route_id']: route for route in contract['routes']}
+        self.assertEqual(set(routes), {'technical_processing_failure', 'policy_fix',
+                                       'official_review_request', 'human_policy_review'})
+        self.assertIs(routes['technical_processing_failure']['requires_no_review_decision'], True)
+        actions = {action['id']: action for action in contract['action_options']}
+        self.assertEqual(actions['reupload_asset']['allowed_routes'], ['technical_processing_failure'])
+        self.assertEqual(contract['fixed_policy']['technical_retry_limit_per_asset'], 1)
+        self.assertEqual(contract['fixed_policy']['same_reason_rejections_before_human_review'], 2)
+
+    def test_triage_pages_open_with_the_fix_or_appeal_rule(self):
+        for name, rule in (('disapproval-triage.md', DISAPPROVAL_RULE_EN),
+                           ('disapproval-triage.zh-CN.md', DISAPPROVAL_RULE_ZH)):
+            with self.subTest(page=name):
+                text = (ROOT / 'docs' / name).read_text(encoding='utf-8')
+                first_paragraph = text.split('\n\n')[2]
+                self.assertIn(rule, first_paragraph)
+
+    def test_public_knowledge_and_contracts_contain_no_review_circumvention(self):
+        # Built from fragments so this test file never matches its own pattern.
+        terms = ['改' + '哈希', '换.{0,4}' + '哈希', r'\bre-?' + 'hash', '疑似' + '误拒', '奖' + '品', '混' + '量']
+        pattern = re.compile('|'.join(terms), re.IGNORECASE)
+        paths = [ROOT / 'knowledge' / 'catalog.json', ROOT / 'contracts' / 'README.md']
+        paths += sorted((ROOT / 'contracts').glob('*.json'))
+        paths += [ROOT / 'docs' / name for name in ('disapproval-triage.md', 'disapproval-triage.zh-CN.md',
+                                                    'operations.md', 'knowledge-base.zh-CN.md')]
+        for path in paths:
+            with self.subTest(path=path.relative_to(ROOT).as_posix()):
+                self.assertIsNone(pattern.search(path.read_text(encoding='utf-8')))
 
 
 class KnowledgeRuntimeIntegrationTests(unittest.TestCase):

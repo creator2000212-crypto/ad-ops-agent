@@ -19,7 +19,7 @@ A host using existing tools does not first need Python platform adapters. Making
 | Task | Work found in the records | What it does not establish |
 |---|---|---|
 | Creative and batch preparation | Deduplication, asset/destination matching, user revisions and batch records | Automatic understanding of every asset or proven performance |
-| Meta creation, migration and configuration diagnosis | Creation/read records, state checks, user confirmation and unresolved items | Every batch took effect, or an accepted request started spending |
+| Meta creation, restructuring and configuration diagnosis | Creation/read records, state checks, user confirmation and unresolved items | Every batch took effect, or an accepted request started spending |
 | TikTok creative and delivery work | Multi-product plans, user-supplied creative constraints and object-state records | Every object was approved or spent, or equal support across three platforms |
 | Reporting and product mapping | Source tables, account scope, product mapping, missing-data notes and reports | Conversions from different sources can be summed, or missing means zero |
 | Recurring reviews and corrections | Prior-item checks, fresh retrieval, method references and report handoffs | Every recommendation was executed or scheduled runs always succeeded |

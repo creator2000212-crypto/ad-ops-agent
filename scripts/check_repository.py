@@ -37,7 +37,7 @@ REQUIRED = [
     'docs/assets/showcase/social-preview.svg', 'docs/assets/showcase/social-preview.png',
     'docs/assets/showcase/content.json', 'scripts/showcase_content.py', 'tests/test_showcase_content.py',
     'docs/product.md', 'docs/architecture.md', 'docs/onboarding.md',
-    'docs/operations.md', 'docs/meta-creative-recovery.md', 'docs/roadmap.md',
+    'docs/operations.md', 'docs/disapproval-triage.md', 'docs/disapproval-triage.zh-CN.md', 'docs/roadmap.md',
     'contracts/README.md', 'contracts/connector-contract.json', 'contracts/creative-recovery.json',
     'contracts/acceptance-scenarios.json', 'contracts/experience-catalog.json',
     'contracts/onboarding-extensions.json',

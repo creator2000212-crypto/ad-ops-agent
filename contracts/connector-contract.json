@@ -176,7 +176,7 @@
     },
     {
       "case": "write_confirmed",
-      "action": "以原生对象 ID 继续读回或后续动作；不迁移广告对象，不重置尝试次数。"
+      "action": "以原生对象 ID 继续读回或后续动作；不重建广告对象，不重置尝试次数。"
     },
     {
       "case": "capability_gap",

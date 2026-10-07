@@ -270,7 +270,7 @@
         "material_selection",
         "preflight",
         "reporting",
-        "migration"
+        "restructure"
       ],
       "artifact_type": "design_only",
       "runtime_loaded": false,
@@ -323,7 +323,7 @@
       "question": "已验证的平台能力与本轮方法存在这些差异；哪些替代方案符合你的测试目的？",
       "workflows": [
         "preflight",
-        "migration",
+        "restructure",
         "publish"
       ],
       "artifact_type": "design_only",

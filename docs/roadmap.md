@@ -18,7 +18,7 @@
 
 ### A1 · 从六类实际任务开始，而不是重做一遍所有初始化
 
-**目标：**用户说出要做的事，Agent 能沿正确入口完成准备与交接。六类入口是素材与测试准备、批次搭建/调整、日报/归属核对、巡检/操作复盘、配置/追踪排障、迁移/结构清理。
+**目标：**用户说出要做的事，Agent 能沿正确入口完成准备与交接。六类入口是素材与测试准备、批次搭建/调整、日报/归属核对、巡检/操作复盘、配置/追踪排障、结构调整与清理。
 
 当前[宿主工作流](workflow.zh-CN.md)与[任务记录模板](../templates/task-record.zh-CN.md)提供公共步骤。后续在新手与熟手的实际使用中检查：先核对本次连接能力，再复用业务背景与方法；仅补影响当前任务的信息。新手得到可选择的具体方案，熟手的方法和不修改范围被保留，超出 Python 两类模板的条款不会被静默删除。
 
@@ -87,7 +87,7 @@
 
 **目标：**让程序处理媒体故障、状态变化、并发修改和数据回补。
 
-接入选定[操作卡](operations.md)的原生实现，建立文件、变体、媒体、creative、ad、post 关联与生效时间。加入 as-of 快照、归因、事件成熟度和实际素材暴露量；恢复动作保留审核依据与停止条件。
+接入选定[操作卡](operations.md)的原生实现，建立文件、变体、媒体、creative、ad、post 关联与生效时间。加入 as-of 快照、归因、事件成熟度和实际素材暴露量；恢复动作保留审核依据与停止条件；拒审按[拒审分诊](disapproval-triage.zh-CN.md)只走修正或官方复核，同一原因第二次被拒交人工政策复核。
 
 **验收：**换素材后可分段追溯；互动保留有真实帖子证据；未知学习状态不被补成确定结论；过审不宣称恢复原表现；失败与不可比样本保留。方法和经验不自动获得调用平台工具的权限。
 
@@ -112,7 +112,7 @@
 
 ## 设计契约不是已运行测试
 
-[acceptance-scenarios.json](../contracts/acceptance-scenarios.json) 是接入与恢复验收设计；[connector-contract.json](../contracts/connector-contract.json)、[creative-recovery.json](../contracts/creative-recovery.json) 是接口/工作流设计；[experience-catalog.json](../contracts/experience-catalog.json) 和 [onboarding-extensions.json](../contracts/onboarding-extensions.json) 是候选知识与字段扩展。文件存在不代表运行时已加载，也不代表验收已经完成。
+[acceptance-scenarios.json](../contracts/acceptance-scenarios.json) 是接入与恢复验收设计；[connector-contract.json](../contracts/connector-contract.json) 是接口设计，[creative-recovery.json](../contracts/creative-recovery.json) 是拒审分诊工作流设计；[experience-catalog.json](../contracts/experience-catalog.json) 和 [onboarding-extensions.json](../contracts/onboarding-extensions.json) 是候选知识与字段扩展。文件存在不代表运行时已加载，也不代表验收已经完成。
 
 优先交付能减少重复填写、配置错误和重复执行的小闭环。经营策略、成本阈值与创意方向保持可选；自动预算优化和覆盖所有行业不是两条路线开始工作的前提。
 

@@ -15,8 +15,8 @@ This route can use the host's MCP, API, SDK or user-authorized platform UI. The 
 | “Prepare the next test from these videos” | Product, destination, account, event, test question and asset fit | Selection reasons, exclusions, batch configuration and budget |
 | “Build or update this confirmed batch” | Plan version, objects/actions, budget, dependencies, current state and authorization | Per-operation records, configuration readback, partial failures and open items |
 | “Review these accounts for changes” | Time window, account coverage, current method and previous open items | Evidence, recommendations, missing data and follow-ups |
-| “Move this campaign to another account” | Source structure, target access, reusable identities/events/media and overlapping spend | Object mapping, differences, authorized operations and checks |
-| “This ad is not spending / was rejected / is misconfigured” | Effective and parent state, review/error details and recent changes | Diagnosis, evidence, recovery options and results |
+| “Restructure this campaign” | Current and target structure, access, reusable identities/events/media and overlapping spend | Object mapping, differences, authorized operations and checks |
+| “This ad is not spending / was rejected / is misconfigured” | Effective and parent state, review/error details and recent changes | Diagnosis, evidence and next steps; a rejection follows [disapproval triage](disapproval-triage.md) (fix or appeal) |
 | “Give me a daily report by product or offer” | Date/timezone, channels/accounts, cost/conversion/revenue sources and mapping rules | A readable report, coverage notes and traceable detail |
 
 Choose the task before collecting its inputs. A report request does not require another creative-testing interview.

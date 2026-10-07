@@ -156,7 +156,7 @@ M1 的 `memory_store.py` 在一个绑定 workspace 的本地 SQLite 数据库中
 | [knowledge/catalog.json](../knowledge/catalog.json) | 可检索的投放知识、来源、范围与条件 | 是，由 knowledge.py 加载；仅提供建议 |
 | 档案配置的本地私有数据库 | 产品方法、操作观察、版本与撤回历史 | 按需启用，由 personalization.py 读取；仅匹配已采用方法可补充未知方法论，观察只供审阅 |
 | [connector-contract.json](../contracts/connector-contract.json) | 可替换连接器与能力映射 | 否，生产接入设计 |
-| [creative-recovery.json](../contracts/creative-recovery.json) | 条件化素材恢复动作及证据 | 否，流程设计 |
+| [creative-recovery.json](../contracts/creative-recovery.json) | 拒审分诊（修正或申诉） | 否，流程设计 |
 | [acceptance-scenarios.json](../contracts/acceptance-scenarios.json) | 未来接入和恢复验收场景 | 否，不等于已运行测试 |
 | [experience-catalog.json](../contracts/experience-catalog.json) | 分层经验候选 | 否，默认未启用 |
 | [onboarding-extensions.json](../contracts/onboarding-extensions.json) | 进一步的业务初始化字段建议 | 否，不能假设当前 CLI 接受全部扩展字段 |

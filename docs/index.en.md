@@ -51,7 +51,8 @@ Open a reference only when needed:
 | --- | --- |
 | Prepare, confirm, execute, read back and hand off | [Host workflow](workflow.md) |
 | Record a plan, confirmation and next actions | [Task record template](../templates/task-record.md) |
-| Check assets, posts, links, budgets and states | [Operations cards (Chinese)](operations.md) · [Meta creative recovery (Chinese)](meta-creative-recovery.md) |
+| Check assets, posts, links, budgets and states | [Operations cards (Chinese)](operations.md) |
+| Handle a disapproval or a failed media upload | [Disapproval triage: fix or appeal](disapproval-triage.md) |
 | Inspect offline monitoring fields, formulas and commands | [Technical reference](operating-loop.md) |
 
 ### Evidence, implementation and contribution
@@ -71,7 +72,7 @@ Developer references: [Python method planning](method-planning.md) · [Onboardin
 | File | Purpose |
 | --- | --- |
 | [connector-contract.json](../contracts/connector-contract.json) | Vendor-neutral connector and capability mapping |
-| [creative-recovery.json](../contracts/creative-recovery.json) | Conditional recovery actions, records and checks |
+| [creative-recovery.json](../contracts/creative-recovery.json) | Disapproval triage routes, prohibited actions, records and stop conditions |
 | [acceptance-scenarios.json](../contracts/acceptance-scenarios.json) | Integration scenarios, not completed test results |
 | [experience-catalog.json](../contracts/experience-catalog.json) | Scoped candidate experience, not automatic optimization rules |
 | [onboarding-extensions.json](../contracts/onboarding-extensions.json) | Proposed field extensions, not a list of fields the CLI already accepts |
@@ -81,4 +82,4 @@ Developer references: [Python method planning](method-planning.md) · [Onboardin
 
 ### Working rule
 
-A read-only task checks only the access it needs. Creating, changing or migrating objects requires a concrete plan, an action scope and user confirmation. Verify prior actions before judging outcomes. Actual capability depends on the current host, tools, accounts and ad product.
+A read-only task checks only the access it needs. Creating, changing or restructuring objects requires a concrete plan, an action scope and user confirmation. Verify prior actions before judging outcomes. Actual capability depends on the current host, tools, accounts and ad product.

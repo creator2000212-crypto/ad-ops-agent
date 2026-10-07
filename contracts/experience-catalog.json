@@ -192,7 +192,7 @@
         "账户与父对象归属",
         "派生素材和对象 lineage"
       ],
-      "automation_boundary": "本地字节变化不证明任何广告 ID 已变；换绑定不等于新广告，换广告不保证历史迁移。",
+      "automation_boundary": "本地字节变化不证明任何广告 ID 已变；换绑定不等于新广告，换广告不保证历史延续。",
       "artifact_type": "design_only",
       "runtime_loaded": false,
       "enabled": false
@@ -226,7 +226,7 @@
         "实际参数与中间跳转",
         "平台可参与组合和目的地"
       ],
-      "automation_boundary": "不能仅检查最终域名或文件名，也不能为补齐文案自行发明价格、资格、奖励或期限。",
+      "automation_boundary": "不能仅检查最终域名或文件名，也不能为补齐文案自行发明价格、资格、优惠或期限。",
       "artifact_type": "design_only",
       "runtime_loaded": false,
       "enabled": false
@@ -251,16 +251,16 @@
     {
       "id": "EXP-014",
       "stage": "asset_preparation",
-      "title": "重传与正常修复有条件可用",
+      "title": "只有技术故障才重新上传",
       "target_layer": "core",
       "classification": "design_requirement",
-      "principle": "定位编码、处理或引用错误后可选最小规格修复或重传；疑似误拒可进入有证据与边界的恢复路线。",
+      "principle": "定位编码、处理或引用错误且对象没有审核结论时，可做最小规格修复或重新上传一次。",
       "verification_needed": [
-        "错误和内容证据",
-        "允许方法与对象范围",
-        "处理、审核、投放分别读回"
+        "错误证据与当前审核状态",
+        "上一次上传是否已生成可用素材",
+        "处理与引用分别读回"
       ],
-      "automation_boundary": "不一概排除重传；实质问题必须修正，有限恢复不保证过审或学习、互动保留。",
+      "automation_boundary": "对象已被拒审时不走此路线；同一素材再次技术失败即停止并报告。",
       "artifact_type": "design_only",
       "runtime_loaded": false,
       "enabled": false
@@ -538,23 +538,6 @@
       "enabled": false
     },
     {
-      "id": "EXP-031",
-      "stage": "diagnosis",
-      "title": "恢复案例按跨对象边界计数",
-      "target_layer": "business_template",
-      "classification": "business_choice",
-      "principle": "疑似误拒先记录支持与反对证据，再选当前支持的复核或有限资产、creative、绑定、广告恢复动作。",
-      "verification_needed": [
-        "案例 lineage",
-        "允许方法、尝试数、时间和花费",
-        "处理、审核、交付与效果各自结果"
-      ],
-      "automation_boundary": "换连接器或新建对象不重置计数；达到边界停止，重复拒登次数本身不证明内容级原因。",
-      "artifact_type": "design_only",
-      "runtime_loaded": false,
-      "enabled": false
-    },
-    {
       "id": "EXP-032",
       "stage": "diagnosis",
       "title": "自动规则和后续动作也需验收",
@@ -567,6 +550,23 @@
         "实际执行者及活动覆盖"
       ],
       "automation_boundary": "规则数量相等不代表全部正确或已启用；历史阈值不直接继承，经验积累不自动创建调度或改变投放。",
+      "artifact_type": "design_only",
+      "runtime_loaded": false,
+      "enabled": false
+    },
+    {
+      "id": "EXP-033",
+      "stage": "diagnosis",
+      "title": "拒审只走修正或官方复核",
+      "target_layer": "core",
+      "classification": "design_requirement",
+      "principle": "读取拒审原因后，修正所指的实质内容并提交修改版，或附证据通过平台官方复核渠道申诉；同一原因第二次被拒交人工政策复核。",
+      "verification_needed": [
+        "原生拒审原因与所指元素",
+        "修改差异或复核证据及批准",
+        "提交回执与审核状态读回"
+      ],
+      "automation_boundary": "计数跨对象、连接器与账户累计；不重新上传未修改或仅重新编码的素材，不更换账户、主页或身份来通过审核。",
       "artifact_type": "design_only",
       "runtime_loaded": false,
       "enabled": false

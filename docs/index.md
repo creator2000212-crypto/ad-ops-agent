@@ -51,7 +51,8 @@
 | --- | --- |
 | 准备、确认、执行、读回和交接 | [宿主工作流](workflow.zh-CN.md) · [English](workflow.md) |
 | 在私有目录记录方案、确认与下轮待办 | [任务模板](../templates/task-record.zh-CN.md) · [English](../templates/task-record.md) |
-| 检查素材、帖子、链接、预算及状态 | [16 张实操卡](operations.md) · [Meta 素材恢复](meta-creative-recovery.md) |
+| 检查素材、帖子、链接、预算及状态 | [16 张实操卡](operations.md) |
+| 处理拒审或素材上传失败 | [拒审分诊：修正或申诉](disapproval-triage.zh-CN.md) · [English](disapproval-triage.md) |
 | 查看离线巡检的字段、公式和命令 | [技术参考](operating-loop.zh-CN.md) · [English](operating-loop.md) |
 
 ### 证据、实现与贡献
@@ -71,7 +72,7 @@
 | 文件 | 定位 |
 | --- | --- |
 | [connector-contract.json](../contracts/connector-contract.json) | 供应商中立的连接器与能力映射 |
-| [creative-recovery.json](../contracts/creative-recovery.json) | 条件化恢复动作、记录与验收 |
+| [creative-recovery.json](../contracts/creative-recovery.json) | 拒审分诊路线、禁止动作、记录与停止条件 |
 | [acceptance-scenarios.json](../contracts/acceptance-scenarios.json) | 集成验收场景，不是已执行测试报告 |
 | [experience-catalog.json](../contracts/experience-catalog.json) | 有适用范围的经验候选，不是自动优化规则 |
 | [onboarding-extensions.json](../contracts/onboarding-extensions.json) | 字段扩展建议，不代表 CLI 接受全部字段 |
@@ -81,4 +82,4 @@
 
 ### 使用原则
 
-只读任务只检查所需读取能力；新建、调整或迁移需要具体方案、操作范围与用户确认。相关上一轮待办先回验，未执行不能写成效果无效。首次接入可参考托管或自建路线；已有接口直接核验。实际能力以当前宿主、工具、账户和广告产品的验收为准。
+只读任务只检查所需读取能力；新建、调整或重组结构需要具体方案、操作范围与用户确认。相关上一轮待办先回验，未执行不能写成效果无效。首次接入可参考托管或自建路线；已有接口直接核验。实际能力以当前宿主、工具、账户和广告产品的验收为准。
