@@ -1,9 +1,10 @@
 {
   "methodology_id": "reference-1n1-ladder",
-  "version": "2026-09-24.1",
-  "status_note": "虚构参考口径，用于演示判定引擎。它不是任何账户的建议，也不来自任何真实投放结果。",
-  "target_roas": "0.85",
-  "quality_factor": "1",
+  "version": "2026-10-07.1",
+  "status_note": "规则结构与阈值沿用我 2026 年 9 月实盘 Meta/TikTok 线索投放所用的打法；账户、广告组、素材与价格均为虚构。",
+  "target_roas": "1.25",
+  "quality_factor": "0.90",
+  "economics_note": "T = 每条线索价值（offer.unit_price）× 线索通过率（quality_factor）÷ 目标 ROAS。quality_factor 是结算方认可的线索占比；目标 ROAS 1.25 表示每花 1 元要收回 1.25 元结算收入。因此 T 必须低于每条线索的价值：本参考口径下 10.00 → T = 7.20，8.00 → T = 5.76。",
   "ladder": ["T", "2T", "3T"],
   "budget_examples_note": "HYPOTHETICAL。T 只是可接受 CPA 的锚，实际预算档位由团队自行决定。",
   "balance_alert_below": "50",
@@ -60,7 +61,7 @@
   "reporting_rules": [
     "一律按 campaign / adset 出数，不拿账户总 CPA 直接判素材。",
     "期望转化 < 判死门槛时标「样本不足」，不用它下结论。",
-    "成本口径统一叫 CPA；区分广告侧与整体（含混量）。",
+    "成本口径统一叫 CPA；区分平台口径与结算口径。",
     "不确定的字段如实标 unknown，不用推断填空。"
   ],
   "actions": [
@@ -72,6 +73,15 @@
       "window": "2-3 个完整投放日",
       "acceptance": "回读 daily_budget = 目标档位金额，且变更流水可查（某一天必须用 since=D, until=D+1 拉取）。两者不一致视为未执行。",
       "stop_condition": "回读发现 bid_strategy / bid_amount 被默认覆盖，或该档未覆盖完整投放日 -> 本轮不晋级，先修结构。"
+    },
+    {
+      "code": "LADDER_HOLD",
+      "level": "P2",
+      "rule_driven": true,
+      "action": "本轮不晋级、预算不变；先处理同组的素材熔断 / 素材超上界 / 命名与出价不符，或账户级 P0 问题（每个广告组每轮只做一项变更）",
+      "window": "次轮",
+      "acceptance": "阻断项已处理并回读确认；下一轮按晋级条件重新判定，不沿用本轮结论。",
+      "stop_condition": "阻断项未处理前不得加预算；不得在同一轮里既改素材又加预算。"
     },
     {
       "code": "TEST_STOP_NOCONV",
@@ -95,9 +105,9 @@
       "code": "TEST_EARLY_STOP",
       "level": "P1",
       "rule_driven": true,
-      "action": "停新增花费并复核钩子，不改组状态",
+      "action": "暂停该组（停新增花费）并复核钩子；不下「素材无效」结论",
       "window": "次轮",
-      "acceptance": "确认 CPC 或 CTR 已回落，或已定位到钩子问题。",
+      "acceptance": "status=PAUSED 回读确认，且已定位 CPC 偏高或 CTR 偏低的原因（通常是钩子）。",
       "stop_condition": "展示未达判死门槛时不得下「素材无效」结论；CPC 高通常上游是 CTR 低，要修的是钩子而不是出价。"
     },
     {
@@ -122,10 +132,10 @@
       "code": "AD_STATUS",
       "level": "P0",
       "rule_driven": true,
-      "action": "按素材恢复流程处置（改哈希重传 + 质检）",
+      "action": "读取拒审原因；修正素材、文案或落地页中的实质问题后提交审核，或通过平台官方复核渠道（Request Review）申诉；不得重新上传未修改或仅重新编码的素材。",
       "window": "次轮",
-      "acceptance": "新素材编码 ready、effective_status 不再是 DISAPPROVED，且对象标识未变可证是换绑而非新建。",
-      "stop_condition": "改哈希只试 1 次；再拒改单变量换文案；三次不过质疑画面/落地页。不得把「改哈希」当通过审核的方法。"
+      "acceptance": "拒审原因已记录；修改或申诉已提交；复读后 effective_status 与审核结果已更新。",
+      "stop_condition": "同一原因第二次被拒 → 停止，交人工做政策复核。"
     },
     {
       "code": "CREATIVE_BREAKER",
@@ -215,7 +225,7 @@
       "action": "只识别、不提动作；由新结构取代，硬异常除外",
       "window": "不适用",
       "acceptance": "新结构计划已覆盖该 offer，旧结构无需任何动作。",
-      "stop_condition": "不得以「优化」为名去动旧结构（不迁移、不修补）。"
+      "stop_condition": "不得以「优化」为名去动旧结构（不重建、不修补）。"
     },
     {
       "code": "CAMP_GHOST_SPEND",

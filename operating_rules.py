@@ -31,9 +31,14 @@ RATIO = Decimal('0.0001')
 LEVELS = ('P0', 'P1', 'P2')
 
 # Fields a proposal may ask the gate to change, per object type. Kept explicit
-# so an unknown field is rejected instead of being written blindly.
+# so an unknown field is rejected instead of being written blindly: ``gate()``
+# raises ``RuleError`` for any target field outside this table, which blocks the
+# whole round rather than inventing a sixth gate state. Account-level findings
+# are advisory only, so ``account`` allows no field at all.
 WRITABLE_FIELDS = {
     'adset': ('daily_budget', 'status', 'bid_strategy', 'bid_amount'),
+    'creative': ('status',),
+    'account': (),
 }
 
 
@@ -94,14 +99,24 @@ def num2(value):
 
 
 def same_number(left, right):
-    """Loose equality used by the write gate: ``10``, ``10.0`` and ``'10.00'`` match."""
+    """Equality used by the write gate: ``10``, ``10.0`` and ``'10.00'`` match.
+
+    Numbers are compared as ``Decimal`` (exact, no float tolerance); other values
+    such as ``'PAUSED'`` must match as text. A boolean is never a number here:
+    ``True`` does not equal ``1`` and ``False`` does not equal ``0``.
+    """
+    if isinstance(left, bool) or isinstance(right, bool):
+        return False
     if left is None or right is None:
         return left is right
     if str(left) == str(right):
         return True
+    if not isinstance(left, (str, int, float, Decimal)) or not isinstance(right, (str, int, float, Decimal)):
+        return False
     try:
-        return abs(float(left) - float(right)) < 1e-9
-    except (TypeError, ValueError):
+        a, b = Decimal(str(left)), Decimal(str(right))
+        return a.is_finite() and b.is_finite() and a == b
+    except (InvalidOperation, ValueError):
         return False
 
 
@@ -112,18 +127,34 @@ def same_number(left, right):
 REQUIRED_METHODOLOGY_KEYS = (
     'methodology_id', 'version', 'target_roas', 'ladder', 'sample_gate',
     'promotion', 'stop_loss', 'utilisation', 'creative_rules', 'actions',
+    'balance_alert_below', 'max_creatives_per_adset',
 )
 REQUIRED_ACTION_KEYS = ('code', 'level', 'action', 'window', 'acceptance', 'stop_condition')
+
+
+def required(methodology, key):
+    """Read a threshold that must come from the methodology. No code default."""
+    if not isinstance(methodology, dict) or methodology.get(key) is None:
+        raise RuleError(f'方法论缺少必需阈值 {key}；阈值只来自方法论文档，代码不提供默认值。')
+    return methodology[key]
 
 
 def validate_methodology(document):
     if not isinstance(document, dict):
         raise RuleError('方法论文档必须是 JSON 对象。')
-    missing = [key for key in REQUIRED_METHODOLOGY_KEYS if key not in document]
+    missing = [key for key in REQUIRED_METHODOLOGY_KEYS if document.get(key) is None]
     if missing:
         raise RuleError('方法论文档缺少必需字段：' + ', '.join(missing))
     if dec(document['target_roas'], 'target_roas') <= 0:
         raise RuleError('target_roas 必须为正数。')
+    if 'quality_factor' in document:
+        quality = dec(document['quality_factor'], 'quality_factor')
+        if quality is None or quality <= 0 or quality > 1:
+            raise RuleError('quality_factor（线索通过率）必须在 (0, 1] 之间。')
+    if dec(document['balance_alert_below'], 'balance_alert_below') < 0:
+        raise RuleError('balance_alert_below 不能为负数。')
+    if integer(document['max_creatives_per_adset'], 'max_creatives_per_adset') < 1:
+        raise RuleError('max_creatives_per_adset 必须是正整数。')
     if not isinstance(document['ladder'], list) or not document['ladder']:
         raise RuleError('ladder 必须是非空数组。')
     actions = document.get('actions')
@@ -158,15 +189,21 @@ def actions_by_code(methodology):
 def target_cost(unit_price, methodology):
     """T — the acceptable cost per result.
 
-    ``T = unit price x quality factor / target ROAS``. With no deduction the
-    quality factor is 1, so a 4.00 unit price against an 85% target yields
-    4.705882..., the value the ladder then multiplies by 2 and 3.
+    ``T = unit price x quality factor / target ROAS``. The unit price is the
+    value of one lead, the quality factor is the share of leads the buyer
+    approves, and the target ROAS is the return required on spend. A 10.00 lead
+    with a 0.90 approval rate against a 1.25 target gives ``T = 7.20``, safely
+    below the value of the lead; the ladder then multiplies T by 2 and 3.
+    An omitted quality factor means no deduction (1).
     """
     price = dec(unit_price, 'unit_price')
     if price is None or price <= 0:
         raise RuleError('unit_price 必须为正数。')
     quality = dec(methodology.get('quality_factor', '1'), 'quality_factor')
-    return price * quality / dec(methodology['target_roas'], 'target_roas')
+    roas = dec(methodology.get('target_roas'), 'target_roas')
+    if quality is None or roas is None or roas <= 0:
+        raise RuleError('target_roas 必须为正数，quality_factor 不能为 null。')
+    return price * quality / roas
 
 
 def ladder_multiplier(stage, methodology):
@@ -312,7 +349,7 @@ def creative_findings(adset, values, methodology):
     if not creatives or not total_spend:
         return findings
 
-    cap = int(methodology.get('max_creatives_per_adset', 8))
+    cap = integer(required(methodology, 'max_creatives_per_adset'), 'max_creatives_per_adset')
     if len(creatives) > cap:
         findings.append({
             'kind': 'creative_count',
@@ -370,13 +407,23 @@ def creative_findings(adset, values, methodology):
     return findings
 
 
+def name_mismatch(adset):
+    """The ad set name promises MAX (no cap) but the bid strategy says otherwise."""
+    name = adset.get('name') or ''
+    strategy = adset.get('bid_strategy')
+    return 'MAX' in name.upper() and bool(strategy) and strategy != 'LOWEST_COST_WITHOUT_CAP'
+
+
 def structure_findings(account, methodology):
-    """Declared-versus-actual structure problems that need no metric to detect."""
+    """Declared-versus-actual structure problems that need no metric to detect.
+
+    Ad-set checks run for every ad set; the account-level capability gap is
+    reported once per account, so it can never hide a later ad set's warning.
+    """
     findings = []
-    for adset in account.get('adsets', []):
-        name = adset.get('name', '')
+    for adset in account.get('adsets') or []:
         strategy = adset.get('bid_strategy')
-        if 'MAX' in name.upper() and strategy and strategy != 'LOWEST_COST_WITHOUT_CAP':
+        if name_mismatch(adset):
             findings.append({
                 'kind': 'name_mismatch',
                 'object_key': adset.get('adset_key'),
@@ -391,13 +438,12 @@ def structure_findings(account, methodology):
                 'detail': ('configured_status=ACTIVE 但 effective_status=DISAPPROVED'
                            ' ⇒ 判「能不能投」必须看 effective_status。'),
             })
-        if account.get('spend_cap') is None:
-            findings.append({
-                'kind': 'capability_gap',
-                'object_key': account.get('account_key'),
-                'detail': 'spend_cap 读回为 null ⇒ 余量预警无法计算，如实标注，不得用 balance 反推。',
-            })
-            break
+    if account.get('spend_cap') is None:
+        findings.append({
+            'kind': 'capability_gap',
+            'object_key': account.get('account_key'),
+            'detail': 'spend_cap 读回为 null ⇒ 余量预警无法计算，如实标注，不得用 balance 反推。',
+        })
     return findings
 
 
@@ -405,22 +451,29 @@ def structure_findings(account, methodology):
 # decisions
 # --------------------------------------------------------------------------
 
-def proposal(account, adset, code, methodology, *, object_key=None, parent_key=None,
-             baseline=None, target=None, question=None, evidence=None):
+def proposal(account, adset, code, methodology, *, object_type='adset', object_key=None,
+             parent_key=None, baseline=None, target=None, question=None, evidence=None):
     """Build one proposal in the shape the write gate expects.
 
-    ``object_key`` is what the proposal acts on; ``parent_key`` is the ad set it
-    belongs to. They differ for creative-level findings, and the report needs the
-    parent so a creative finding is not silently detached from its ad set.
+    ``object_type`` is ``account``, ``adset`` or ``creative`` and decides which
+    fields the gate will accept (``WRITABLE_FIELDS``). ``object_key`` is what the
+    proposal acts on; ``parent_key`` is the ad set it belongs to. They differ for
+    creative-level findings, and the report needs the parent so a creative
+    finding is not silently detached from its ad set.
     """
-    action = actions_by_code(methodology)[code]
+    if object_type not in WRITABLE_FIELDS:
+        raise RuleError(f'未知的 object_type {object_type!r}，已声明：{sorted(WRITABLE_FIELDS)}')
+    actions = actions_by_code(methodology)
+    if code not in actions:
+        raise RuleError(f'方法论动作目录里没有 {code}。')
+    action = actions[code]
     adset_key = adset.get('adset_key') if adset else None
     proposal = {
         'code': code,
         'level': action['level'],
         'account_key': account.get('account_key'),
         'offer_key': (account.get('offer') or {}).get('offer_key'),
-        'object_type': 'adset',
+        'object_type': object_type,
         'object_key': object_key if object_key is not None else adset_key,
         'parent_key': parent_key if parent_key is not None else adset_key,
         'object_name': adset.get('name', '') if adset else '',
@@ -448,9 +501,10 @@ def decide_account(account, methodology):
     proposals, diagnostics = [], []
     adsets = account.get('adsets') or []
 
+    account_key = account.get('account_key')
     if not adsets:
         proposals.append(proposal(account, None, 'ACC_STOPPED', methodology,
-                                  object_key=account.get('account_key'),
+                                  object_type='account', object_key=account_key,
                                   evidence=['账户下没有任何广告组记录。']))
         return proposals, diagnostics
 
@@ -462,19 +516,23 @@ def decide_account(account, methodology):
     effective_live = [a for a in configured_live if a.get('effective_status') == 'ACTIVE']
     if not configured_live:
         proposals.append(proposal(account, None, 'ACC_STOPPED', methodology,
-                                  object_key=account.get('account_key'),
+                                  object_type='account', object_key=account_key,
                                   evidence=['没有任何 configured_status 为 ACTIVE 的广告组。']))
     elif account.get('today_spend') is not None and dec(account.get('today_spend'), 'today_spend') == 0:
         proposals.append(proposal(account, None, 'ACC_NO_DELIVERY', methodology,
-                                  object_key=account.get('account_key'),
+                                  object_type='account', object_key=account_key,
                                   evidence=[f'configured_status 为 ACTIVE 的组有 {len(configured_live)} 个'
                                             f'（其中 effective 可投 {len(effective_live)} 个），但今日消耗为 0。']))
     balance = dec(account.get('balance'), 'balance')
-    low = dec(methodology.get('balance_alert_below', '50'), 'balance_alert_below')
-    if balance is not None and low is not None and balance <= low:
+    low = dec(required(methodology, 'balance_alert_below'), 'balance_alert_below')
+    if balance is not None and balance <= low:
         proposals.append(proposal(account, None, 'ACC_BALANCE_LOW', methodology,
-                                  object_key=account.get('account_key'),
+                                  object_type='account', object_key=account_key,
                                   evidence=[f'余额 {num2(balance)} <= 警示线 {num2(low)}。']))
+    # Any P0 account finding outranks scaling: no ad set in this account is
+    # promoted until the account itself can deliver.
+    account_blockers = [item['code'] for item in proposals
+                        if item['object_type'] == 'account' and item['level'] == 'P0']
 
     promotion = methodology['promotion']
     min_results = integer(promotion['min_results'], 'min_results')
@@ -483,18 +541,17 @@ def decide_account(account, methodology):
 
     for adset in adsets:
         values = adset_metrics(adset, unit_price, methodology)
-        diagnostics.append({'account_key': account.get('account_key'), **{
+        diagnostics.append({'account_key': account_key, **{
             key: value for key, value in values.items() if not key.startswith('_')}})
 
         creatives = creative_findings(adset, values, methodology)
         for finding in creatives:
-            if finding['kind'] == 'circuit_breaker':
-                proposals.append(proposal(account, adset, 'CREATIVE_BREAKER', methodology,
+            if finding['kind'] in ('circuit_breaker', 'fatigue'):
+                code = 'CREATIVE_BREAKER' if finding['kind'] == 'circuit_breaker' else 'CREATIVE_FATIGUE'
+                proposals.append(proposal(account, adset, code, methodology,
+                                          object_type='creative',
                                           object_key=finding.get('creative_key'),
                                           parent_key=adset.get('adset_key'),
-                                          evidence=[finding['detail']]))
-            elif finding['kind'] == 'fatigue':
-                proposals.append(proposal(account, adset, 'CREATIVE_FATIGUE', methodology,
                                           evidence=[finding['detail']]))
             else:
                 proposals.append(proposal(account, adset, 'CREATIVE_OVERFLOW', methodology,
@@ -522,10 +579,38 @@ def decide_account(account, methodology):
             adset, values, methodology, min_results, require_full_day, day_complete)
         if code is None:
             continue
+        if code == 'LADDER_PROMOTE':
+            blockers = promotion_blockers(adset, creatives, account_blockers)
+            if blockers:
+                # Rule precedence: one change per ad set per round, and a
+                # creative or account problem is fixed before money is added.
+                code, question = 'LADDER_HOLD', None
+                evidence = evidence + [
+                    '晋级被阻断：' + '、'.join(blockers)
+                    + ' ⇒ 先处理素材/结构/账户问题，本轮预算不变；每个广告组每轮只做一项变更。']
         target, baseline = _write_intent(code, adset, values, methodology)
         proposals.append(proposal(account, adset, code, methodology, question=question,
                                   evidence=evidence, target=target, baseline=baseline))
     return proposals, diagnostics
+
+
+def promotion_blockers(adset, creative_items, account_blockers):
+    """Why a promotion that met its numbers must wait, in a stable order.
+
+    A promotion is replaced by advisory ``LADDER_HOLD`` when the same ad set has
+    a creative circuit breaker, too many creatives, or a name that contradicts
+    its bid strategy, or when the account has any P0 account-level finding.
+    """
+    kinds = {item['kind'] for item in creative_items}
+    blockers = []
+    if 'circuit_breaker' in kinds:
+        blockers.append('CREATIVE_BREAKER')
+    if 'creative_count' in kinds:
+        blockers.append('CREATIVE_OVERFLOW')
+    if name_mismatch(adset):
+        blockers.append('name_mismatch')
+    blockers.extend(account_blockers)
+    return blockers
 
 
 def _classify_adset(adset, values, methodology, min_results, require_full_day, day_complete):
@@ -537,15 +622,15 @@ def _classify_adset(adset, values, methodology, min_results, require_full_day, d
     dead_impressions = integer(sample['impressions_for_dead'], 'impressions_for_dead')
     early_cpc = dec(sample.get('early_stop_cpc_above'), 'early_stop_cpc_above')
     early_ctr = dec(sample.get('early_stop_ctr_below'), 'early_stop_ctr_below')
+    stop_line = values['_T'] * dec(methodology['stop_loss']['measured_in_t'], 'stop_loss.measured_in_t')
 
     if results == 0:
         enough_sample = impressions >= dead_impressions
         if values['_overcost_margin'] is not None and \
-                values['_overcost_margin'] >= values['_T'] * dec(methodology['stop_loss']['measured_in_t'], 'm') \
-                and enough_sample:
+                values['_overcost_margin'] >= stop_line and enough_sample:
             return ('TEST_STOP_NOCONV', '链路与回传是否正常？',
                     [f'零转化且展示 {impressions} >= 判死门槛 {dead_impressions}，'
-                     f"累计花费 {num2(spend)} >= 止损线 {num2(values['_T'] * Decimal(str(methodology['stop_loss']['measured_in_t'])))}。"])
+                     f"累计花费 {num2(spend)} >= 止损线 {num2(money(stop_line))}。"])
         early = []
         if early_cpc is not None and values['_cpc'] is not None and values['_cpc'] > early_cpc:
             early.append(f"CPC {num2(values['_cpc'])} > {num2(early_cpc)}")
@@ -557,11 +642,10 @@ def _classify_adset(adset, values, methodology, min_results, require_full_day, d
                      f'{impressions} < 判死门槛 {dead_impressions} ⇒ 停新增花费、不下「素材无效」结论。'])
         return ('TEST_UNDERTESTED', '是出价进不了场，还是预算撞顶？',
                 [f"零转化但展示 {impressions} < 判死门槛 {dead_impressions} ⇒ 样本不足，只记录。"])
-    if values['_overcost_margin'] is not None and \
-            values['_overcost_margin'] >= values['_T'] * dec(methodology['stop_loss']['measured_in_t'], 'm'):
+    if values['_overcost_margin'] is not None and values['_overcost_margin'] >= stop_line:
         return ('TEST_STOP_OVERCOST', '回传是否已成熟？',
                 [f"累计花费 − T x 转化数 = {num2(values['_overcost_margin'])} >= 止损线 "
-                 f"{num2(values['_T'] * Decimal(str(methodology['stop_loss']['measured_in_t'])))}。"])
+                 f"{num2(money(stop_line))}。"])
 
     if results < min_results:
         return ('TEST_UNDERTESTED', '现有预算下还要多久才能攒够样本？',
@@ -587,7 +671,7 @@ def _classify_adset(adset, values, methodology, min_results, require_full_day, d
     if not cpa_ok:
         return ('TEST_UNDERTESTED', '这一档的 CPA 是否已到不可接受？',
                 [f"CPA {num2(values['_cpa'])} > T {num2(values['_T'])}，但未达止损线 "
-                 f"{num2(values['_T'] * Decimal(str(methodology['stop_loss']['measured_in_t'])))}"
+                 f"{num2(money(stop_line))}"
                  ' ⇒ 保持预算、不继续加钱。'])
     return (None, None, [])
 
@@ -596,7 +680,7 @@ def _write_intent(code, adset, values, methodology):
     """Translate a rule into the field change the gate must verify."""
     budget = values['_daily_budget']
     if code == 'LADDER_PROMOTE' and budget is not None:
-        multiple = Decimal(str(methodology['promotion']['budget_multiple']))
+        multiple = dec(methodology['promotion']['budget_multiple'], 'promotion.budget_multiple')
         new_budget = money(budget * multiple)
         return ({'daily_budget': num2(new_budget)},
                 {'daily_budget': num2(budget)})
@@ -649,11 +733,17 @@ def gate(proposals, writeback):
     An already satisfied field needs no baseline because it will not be changed.
     Any unknown field holds the whole proposal; other proposals remain independent.
     Only ``ready`` rows may proceed, and only for their differing fields.
+
+    Before any comparison, every target field must be allowed for the
+    proposal's ``object_type`` by ``WRITABLE_FIELDS``. A field outside that
+    table is a malformed plan, not a state question, so it raises ``RuleError``
+    and blocks the round instead of becoming a sixth gate state.
     """
     objects = (writeback or {}).get('objects') or {}
     results = []
     for item in proposals:
         target = item.get('target')
+        _check_writable(item, target)
         if not target:
             results.append(_verdict(item, ADVISORY,
                                     ['该发现不涉及写入字段（仅建议），不过闸门。']))
@@ -701,6 +791,25 @@ def gate(proposals, writeback):
         else:
             results.append(_verdict(item, READY, detail, writable_fields=writes))
     return results
+
+
+def _check_writable(item, target):
+    """Reject a target that names a field its object type may not change."""
+    if target is None:
+        return
+    if not isinstance(target, dict):
+        raise RuleError(f"{item.get('code')} · {item.get('object_key')}：target 必须是对象。")
+    if not target:
+        return
+    object_type = item.get('object_type')
+    allowed = WRITABLE_FIELDS.get(object_type)
+    if allowed is None:
+        raise RuleError(f"{item.get('code')} · {item.get('object_key')}：object_type {object_type!r} "
+                        f'没有声明可写字段（已声明：{sorted(WRITABLE_FIELDS)}）⇒ 整轮闸门停止。')
+    outside = sorted(field for field in target if field not in allowed)
+    if outside:
+        raise RuleError(f"{item.get('code')} · {item.get('object_key')}：字段 {', '.join(outside)} "
+                        f'不在 {object_type} 的可写字段 {list(allowed)} 内 ⇒ 整轮闸门停止，不写任何一行。')
 
 
 def _verdict(item, state, detail, writable_fields=(), satisfied_fields=(), conflict_fields=()):

@@ -163,7 +163,7 @@ def account_signals(snapshot, methodology):
         signals.append({
             'account_key': account['account_key'],
             'offer_key': (account.get('offer') or {}).get('offer_key'),
-            'reward_code': (account.get('offer') or {}).get('unit_price'),
+            'unit_price': (account.get('offer') or {}).get('unit_price'),
             'account_timezone': account.get('account_timezone'),
             'report_timezone': account.get('report_timezone'),
             'adsets_total': len(adsets),
@@ -205,8 +205,7 @@ def run_gate(findings, writeback):
 # --------------------------------------------------------------------------
 
 def append_events(ledger, events):
-    if not events:
-        return
+    """Append events; the ledger file exists afterwards even when nothing was added."""
     path = Path(ledger)
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, 'a', encoding='utf-8') as handle:
@@ -214,10 +213,16 @@ def append_events(ledger, events):
             handle.write(json.dumps(event, ensure_ascii=False) + '\n')
 
 
-def read_events(ledger):
+def require_ledger(ledger):
+    """A missing ledger is missing evidence, never an empty history."""
     path = Path(ledger)
-    if not path.exists():
-        return []
+    if not path.is_file():
+        raise LoopError(f'台账不存在：{ledger} —— 缺失不等于「没有待办」；先确认路径或先运行 apply。')
+    return path
+
+
+def read_events(ledger):
+    path = require_ledger(ledger)
     events = []
     with open(path, encoding='utf-8') as handle:
         for line in handle:
@@ -308,6 +313,7 @@ def apply_gate(ledger, gate_document, at):
 
 def reconcile_and_record(ledger, gate_document, after, at):
     observation_of(after)
+    require_ledger(ledger)
     report = rules.reconcile(gate_document['verdicts'], after.get('objects') or {})
     events = []
     for item in report:
@@ -337,7 +343,8 @@ def reconcile_and_record(ledger, gate_document, after, at):
 # step 6: the report a human reads
 # --------------------------------------------------------------------------
 
-def render_report(findings, gate_document, application, reconciliation, settlement, signal_rows):
+def render_report(findings, gate_document, application, reconciliation, settlement, signal_rows,
+                  methodology):
     summary = gate_document['summary']
     flagged = [item for item in gate_document['verdicts'] if item['gate'] in rules.NEEDS_HUMAN]
     unmatched = [item for item in reconciliation['rows'] if item.get('checked') and not item['effective']]
@@ -407,7 +414,7 @@ def render_report(findings, gate_document, application, reconciliation, settleme
             notes.append(f"账户时区 {signal['account_timezone']} != 报表时区 {signal['report_timezone']}，跨户加总前先对齐")
         if signal['adsets_configured_live'] > signal['adsets_effective_live']:
             notes.append(f"{signal['adsets_configured_live'] - signal['adsets_effective_live']} 个组配置为在投但实际不可投")
-        add(f"| `{signal['account_key']}` | {signal['offer_key']} | {signal['reward_code']} | "
+        add(f"| `{signal['account_key']}` | {signal['offer_key']} | {signal['unit_price']} | "
             f"{signal['adsets_configured_live']} | {signal['adsets_effective_live']} | "
             f"{signal['adsets_total']} | {signal['today_spend']} | "
             f"{display(signal['balance'])} | {display(signal['spend_cap'])} | {'；'.join(notes) or '—'} |")
@@ -485,9 +492,9 @@ def render_report(findings, gate_document, application, reconciliation, settleme
     if settlement:
         add('## 结算口径对账')
         add('')
-        basis = settlement.get('cost_basis') or {}
-        add(f"日期 {settlement.get('date')}　|　目标 ROAS {basis.get('target_roas')}　|　"
-            f"混量成本 {basis.get('mixed_traffic_cost_per_result')}/转化")
+        add(f"日期 {settlement.get('date')}　|　目标 ROAS {methodology['target_roas']}　|　"
+            f"线索通过率 {methodology.get('quality_factor', '1')}　|　"
+            f"口径 {methodology['methodology_id']} v{methodology['version']}")
         add('')
         add('| 平台 | 账户 | 单价 | 花费 | 转化 | 收入 | 盘面 CPA | 目标 CPA(T) | ROAS |')
         add('|---|---|---|---|---|---|---|---|---|')
@@ -496,8 +503,7 @@ def render_report(findings, gate_document, application, reconciliation, settleme
             spend = rules.dec(row.get('spend'), 'spend')
             results = rules.integer(row.get('results'), 'results')
             value = rules.dec(row.get('value'), 'value')
-            target = (rules.target_cost(unit, {'target_roas': basis.get('target_roas') or '0.85'})
-                      if unit else None)
+            target = rules.target_cost(unit, methodology) if unit else None
             cpa = rules.ratio(spend, rules.Decimal(results)) if results else None
             roas = rules.ratio(value, spend) if spend else None
             add(f"| {row.get('platform')} | `{row.get('account_key')}` | {row.get('unit_price')} | "
@@ -542,7 +548,7 @@ def build_parser():
     p.add_argument('--methodology', required=True)
     p.add_argument('--out', required=True)
 
-    p = commands.add_parser('gate', help='Four-way write gate against a fresh writeback snapshot')
+    p = commands.add_parser('gate', help='Five-state write gate against a fresh writeback snapshot')
     p.add_argument('--findings', required=True)
     p.add_argument('--writeback', required=True)
     p.add_argument('--out', required=True)
@@ -649,7 +655,8 @@ def _command_round(args):
     reconciliation = reconcile_and_record(ledger, gate_document, after, at)
     save(out / 'reconciliation.json', reconciliation)
 
-    report = render_report(findings, gate_document, application, reconciliation, settlement, signals)
+    report = render_report(findings, gate_document, application, reconciliation, settlement, signals,
+                           methodology)
     (out / 'report.md').write_text(report, encoding='utf-8')
 
     still_open = open_rows(ledger)

@@ -14,20 +14,25 @@ ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES = ROOT / 'examples' / 'operating'
 
 
+# Synthetic economics of the reference methodology: a 10.00 lead, 90% approval,
+# target ROAS 1.25 -> T = 7.20, stop-loss line 3T = 21.60, breaker CPA 1.7T = 12.24.
+PRICE = '10.00'
+
+
 def methodology():
     return rules.load_methodology(EXAMPLES / 'methodology-reference.json')
 
 
 def adset(**overrides):
     base = {
-        'adset_key': 'fictional-adset', 'name': '1n1 | X | MAX | $10',
+        'adset_key': 'fictional-adset', 'name': '1n1 | X | MAX | $20',
         'campaign_key': 'fictional-campaign',
         'configured_status': 'ACTIVE', 'effective_status': 'ACTIVE',
         'bid_strategy': 'LOWEST_COST_WITHOUT_CAP', 'bid_amount': None,
         'optimization_goal': 'OFFSITE_CONVERSIONS',
-        'daily_budget': '10.00', 'ladder_stage': 'T',
-        'spend': '10.00', 'impressions': 1000, 'clicks': 60, 'results': 3,
-        'value': '12.00', 'frequency': '1.10', 'linked': True, 'tracking_ok': True,
+        'daily_budget': '20.00', 'ladder_stage': 'T',
+        'spend': '19.80', 'impressions': 4600, 'clicks': 300, 'results': 3,
+        'value': '30.00', 'frequency': '1.10', 'linked': True, 'tracking_ok': True,
         'creatives': [],
     }
     base.update(overrides)
@@ -39,7 +44,7 @@ def account(adsets, **overrides):
         'account_key': 'fictional-meta-account', 'platform': 'meta',
         'account_timezone': 'Etc/GMT', 'report_timezone': 'Etc/GMT',
         'spend_cap': '1000.00', 'balance': '500.00', 'today_spend': '50.00',
-        'offer': {'offer_key': 'fictional-offer', 'unit_price': '4.000'},
+        'offer': {'offer_key': 'fictional-offer', 'unit_price': PRICE},
         'observation': {'complete_delivery_day': True},
         'adsets': adsets,
     }
@@ -53,14 +58,30 @@ def codes_for(adsets, **overrides):
 
 
 class TargetCostTests(unittest.TestCase):
-    def test_target_is_price_over_roas(self):
-        value = rules.target_cost('4.000', methodology())
-        self.assertEqual(rules.num2(value), '4.71')
+    def test_target_is_price_times_approval_over_roas(self):
+        value = rules.target_cost(PRICE, methodology())
+        self.assertEqual(rules.num2(value), '7.20')
+        self.assertEqual(rules.num2(rules.target_cost('8.00', methodology())), '5.76')
 
     def test_quality_factor_applies_before_roas(self):
         document = methodology()
-        document['quality_factor'] = '0.9'
-        self.assertEqual(rules.num2(rules.target_cost('4.000', document)), '4.24')
+        document['quality_factor'] = '1'
+        self.assertEqual(rules.num2(rules.target_cost(PRICE, document)), '8.00')
+
+    def test_reference_target_cost_is_below_value_per_lead(self):
+        snapshot = operating_loop.load(EXAMPLES / 'snapshot-primary.json')
+        for item in snapshot['accounts']:
+            price = rules.dec(item['offer']['unit_price'], 'unit_price')
+            with self.subTest(account=item['account_key']):
+                self.assertLess(rules.target_cost(price, methodology()), price)
+
+    def test_quality_factor_outside_zero_to_one_is_rejected(self):
+        for value in ('0', '1.10', None):
+            with self.subTest(value=value):
+                document = methodology()
+                document['quality_factor'] = value
+                with self.assertRaises(rules.RuleError):
+                    rules.validate_methodology(document)
 
     def test_missing_price_is_rejected(self):
         document = methodology()
@@ -76,16 +97,16 @@ class TargetCostTests(unittest.TestCase):
 
 class MetricTests(unittest.TestCase):
     def test_derived_metrics(self):
-        values = rules.adset_metrics(adset(spend='12.40', impressions=3200, clicks=210, results=3),
-                                     '4.000', methodology())
-        self.assertEqual(values['spend'], '12.40')
+        values = rules.adset_metrics(adset(spend='19.80', impressions=4600, clicks=300, results=3),
+                                     PRICE, methodology())
+        self.assertEqual(values['spend'], '19.80')
         self.assertEqual(values['results'], 3)
-        self.assertEqual(values['cpa'], '4.13')
-        self.assertEqual(values['T_display'], '4.71')
-        self.assertEqual(values['stop_loss_line'], '14.12')
+        self.assertEqual(values['cpa'], '6.60')
+        self.assertEqual(values['T_display'], '7.20')
+        self.assertEqual(values['stop_loss_line'], '21.60')
 
     def test_zero_denominator_is_missing_not_zero(self):
-        values = rules.adset_metrics(adset(clicks=0, results=0), '4.000', methodology())
+        values = rules.adset_metrics(adset(clicks=0, results=0), PRICE, methodology())
         # A genuine zero (nobody clicked out of 1000 impressions) stays zero...
         self.assertEqual(values['ctr'], '0.0000')
         # ...but a metric with a zero denominator is missing, not zero.
@@ -94,12 +115,12 @@ class MetricTests(unittest.TestCase):
         self.assertIsNone(values['cvr'])
 
     def test_overcost_margin_can_be_negative(self):
-        values = rules.adset_metrics(adset(spend='4.00', results=2), '4.000', methodology())
-        self.assertEqual(values['overcost_margin'], '-5.41')
+        values = rules.adset_metrics(adset(spend='4.00', results=2), PRICE, methodology())
+        self.assertEqual(values['overcost_margin'], '-10.40')
 
     def test_decimal_parsing_rejects_text(self):
         with self.assertRaises(rules.RuleError):
-            rules.adset_metrics(adset(spend='not-a-number'), '4.000', methodology())
+            rules.adset_metrics(adset(spend='not-a-number'), PRICE, methodology())
 
 
 class AttributionTests(unittest.TestCase):
@@ -128,14 +149,14 @@ class CreativeRuleTests(unittest.TestCase):
     def test_circuit_breaker_needs_at_least_two_creatives(self):
         single = adset(spend='30.00', results=3, creatives=[
             {'creative_key': 'only', 'spend': '30.00', 'results': 3}])
-        values = rules.adset_metrics(single, '4.000', methodology())
+        values = rules.adset_metrics(single, PRICE, methodology())
         self.assertEqual([f['kind'] for f in rules.creative_findings(single, values, methodology())], [])
 
     def test_circuit_breaker_fires_on_concentration_and_cost(self):
-        group = adset(spend='22.00', results=5, creatives=[
-            {'creative_key': 'heavy', 'spend': '10.56', 'results': 1},
-            {'creative_key': 'light', 'spend': '11.44', 'results': 4}])
-        values = rules.adset_metrics(group, '4.000', methodology())
+        group = adset(spend='21.00', results=5, creatives=[
+            {'creative_key': 'heavy', 'spend': '13.00', 'results': 1},
+            {'creative_key': 'light', 'spend': '8.00', 'results': 4}])
+        values = rules.adset_metrics(group, PRICE, methodology())
         kinds = [f['kind'] for f in rules.creative_findings(group, values, methodology())]
         self.assertIn('circuit_breaker', kinds)
 
@@ -144,18 +165,18 @@ class CreativeRuleTests(unittest.TestCase):
             {'creative_key': 'tired', 'spend': '5.00', 'results': 2, 'frequency': '2.70',
              'ctr': '0.0500', 'prior_ctr': '0.0700', 'cvr': '0.0600', 'prior_cvr': '0.0900'},
             {'creative_key': 'other', 'spend': '5.00', 'results': 1}])
-        values = rules.adset_metrics(group, '4.000', methodology())
+        values = rules.adset_metrics(group, PRICE, methodology())
         self.assertIn('fatigue', [f['kind'] for f in rules.creative_findings(group, values, methodology())])
 
         # Drop the frequency below the threshold: CTR and CVR drops alone are noise.
         group['creatives'][0]['frequency'] = '1.20'
-        values = rules.adset_metrics(group, '4.000', methodology())
+        values = rules.adset_metrics(group, PRICE, methodology())
         self.assertNotIn('fatigue', [f['kind'] for f in rules.creative_findings(group, values, methodology())])
 
     def test_overflow_uses_declared_cap(self):
         group = adset(spend='10.00', results=3, creatives=[
             {'creative_key': f'k{i}', 'spend': '1.00', 'results': 0} for i in range(9)])
-        values = rules.adset_metrics(group, '4.000', methodology())
+        values = rules.adset_metrics(group, PRICE, methodology())
         self.assertIn('creative_count', [f['kind'] for f in rules.creative_findings(group, values, methodology())])
 
 
@@ -163,7 +184,7 @@ class StructureTests(unittest.TestCase):
     def test_name_mismatch_is_flagged(self):
         found = rules.structure_findings(
             account([adset(name='1n1 | X | MAX | $10', bid_strategy='LOWEST_COST_WITH_COST_CAP',
-                           bid_amount='4.70')]), methodology())
+                           bid_amount='5.00')]), methodology())
         self.assertIn('name_mismatch', [f['kind'] for f in found])
 
     def test_effective_status_is_read_separately(self):
@@ -175,21 +196,36 @@ class StructureTests(unittest.TestCase):
         found = rules.structure_findings(account([adset()], spend_cap=None), methodology())
         self.assertIn('capability_gap', [f['kind'] for f in found])
 
+    def test_null_spend_cap_does_not_hide_later_adset_findings(self):
+        later = [adset(adset_key='second', bid_strategy='LOWEST_COST_WITH_COST_CAP', bid_amount='5.00'),
+                 adset(adset_key='third', effective_status='DISAPPROVED')]
+        found = rules.structure_findings(account([adset(adset_key='first')] + later, spend_cap=None),
+                                         methodology())
+        kinds = [(f['kind'], f['object_key']) for f in found]
+        self.assertIn(('name_mismatch', 'second'), kinds)
+        self.assertIn(('effective_status', 'third'), kinds)
+        # The account-level gap is reported exactly once, not once per ad set.
+        self.assertEqual([k for k, _ in kinds].count('capability_gap'), 1)
+
+    def test_null_spend_cap_is_reported_even_without_adsets(self):
+        found = rules.structure_findings(account([], spend_cap=None), methodology())
+        self.assertEqual([f['kind'] for f in found], ['capability_gap'])
+
 
 class DecisionTests(unittest.TestCase):
     def test_healthy_stage_promotes_and_doubles_budget(self):
         proposals, _ = rules.decide_account(account([adset()]), methodology())
         promote = [p for p in proposals if p['code'] == 'LADDER_PROMOTE']
         self.assertEqual(len(promote), 1)
-        self.assertEqual(promote[0]['baseline'], {'daily_budget': '10.00'})
-        self.assertEqual(promote[0]['target'], {'daily_budget': '20.00'})
+        self.assertEqual(promote[0]['baseline'], {'daily_budget': '20.00'})
+        self.assertEqual(promote[0]['target'], {'daily_budget': '40.00'})
 
     def test_zero_conversion_below_sample_gate_is_not_judged(self):
         self.assertEqual(codes_for([adset(spend='3.10', impressions=180, clicks=12, results=0)]),
                          ['TEST_UNDERTESTED'])
 
     def test_zero_conversion_with_sample_and_loss_line_stops(self):
-        self.assertEqual(codes_for([adset(spend='15.30', impressions=420, clicks=26, results=0)]),
+        self.assertEqual(codes_for([adset(spend='22.40', impressions=640, clicks=41, results=0)]),
                          ['TEST_STOP_NOCONV'])
 
     def test_zero_conversion_early_stop_on_expensive_click(self):
@@ -197,7 +233,7 @@ class DecisionTests(unittest.TestCase):
                          ['TEST_EARLY_STOP'])
 
     def test_overcost_margin_triggers_stop(self):
-        self.assertEqual(codes_for([adset(spend='30.00', impressions=9100, clicks=540, results=3)]),
+        self.assertEqual(codes_for([adset(spend='40.00', impressions=9300, clicks=590, results=2)]),
                          ['TEST_STOP_OVERCOST'])
 
     def test_incomplete_delivery_day_blocks_promotion(self):
@@ -233,6 +269,149 @@ class DecisionTests(unittest.TestCase):
             account([adset(spend=None)]), methodology())
         self.assertEqual([p['code'] for p in proposals], [])
         self.assertTrue(any(item.get('blocked') for item in diagnostics))
+
+
+class ObjectTypeTests(unittest.TestCase):
+    def test_account_proposals_are_typed_account(self):
+        cases = (([], {}), ([adset()], {'today_spend': '0.00'}), ([adset()], {'balance': '41.20'}))
+        for adsets, overrides in cases:
+            proposals, _ = rules.decide_account(account(adsets, **overrides), methodology())
+            accounts = [p for p in proposals if p['code'].startswith('ACC_')]
+            self.assertTrue(accounts, overrides)
+            for item in accounts:
+                with self.subTest(code=item['code']):
+                    self.assertEqual(item['object_type'], 'account')
+                    self.assertEqual(item['object_key'], 'fictional-meta-account')
+                    self.assertNotIn('target', item)
+
+    def test_fatigue_proposal_targets_creative(self):
+        group = adset(creatives=[
+            {'creative_key': 'tired', 'spend': '9.80', 'results': 2, 'frequency': '2.70',
+             'ctr': '0.0500', 'prior_ctr': '0.0700', 'cvr': '0.0600', 'prior_cvr': '0.0900'},
+            {'creative_key': 'other', 'spend': '10.00', 'results': 1}])
+        proposals, _ = rules.decide_account(account([group]), methodology())
+        fatigue = next(p for p in proposals if p['code'] == 'CREATIVE_FATIGUE')
+        self.assertEqual(fatigue['object_type'], 'creative')
+        self.assertEqual(fatigue['object_key'], 'tired')
+        self.assertEqual(fatigue['parent_key'], 'fictional-adset')
+
+    def test_breaker_proposal_targets_creative(self):
+        group = adset(spend='21.00', results=5, creatives=[
+            {'creative_key': 'heavy', 'spend': '13.00', 'results': 1},
+            {'creative_key': 'light', 'spend': '8.00', 'results': 4}])
+        proposals, _ = rules.decide_account(account([group]), methodology())
+        breaker = next(p for p in proposals if p['code'] == 'CREATIVE_BREAKER')
+        self.assertEqual((breaker['object_type'], breaker['object_key'], breaker['parent_key']),
+                         ('creative', 'heavy', 'fictional-adset'))
+
+    def test_overflow_stays_on_the_adset(self):
+        group = adset(creatives=[{'creative_key': f'k{i}', 'spend': '2.20', 'results': 0}
+                                 for i in range(9)])
+        proposals, _ = rules.decide_account(account([group]), methodology())
+        overflow = next(p for p in proposals if p['code'] == 'CREATIVE_OVERFLOW')
+        self.assertEqual((overflow['object_type'], overflow['object_key']), ('adset', 'fictional-adset'))
+
+    def test_unknown_object_type_is_rejected(self):
+        with self.assertRaises(rules.RuleError):
+            rules.proposal(account([]), None, 'ACC_STOPPED', methodology(), object_type='campaign')
+
+
+class PrecedenceTests(unittest.TestCase):
+    """A promotion that met its numbers still waits behind creative, structure
+    and account problems: one change per ad set per round."""
+
+    def decide(self, group, **overrides):
+        proposals, _ = rules.decide_account(account([group], **overrides), methodology())
+        return proposals
+
+    def hold_of(self, proposals):
+        self.assertNotIn('LADDER_PROMOTE', [p['code'] for p in proposals])
+        hold = next(p for p in proposals if p['code'] == 'LADDER_HOLD')
+        self.assertNotIn('target', hold)
+        verdict = rules.gate([hold], {'objects': {}})[0]
+        self.assertEqual(verdict['gate'], rules.ADVISORY)
+        return ' '.join(hold['evidence'])
+
+    def test_breaker_blocks_promotion(self):
+        evidence = self.hold_of(self.decide(adset(spend='21.00', results=4, creatives=[
+            {'creative_key': 'heavy', 'spend': '13.00', 'results': 1},
+            {'creative_key': 'light', 'spend': '8.00', 'results': 3}])))
+        self.assertIn('CREATIVE_BREAKER', evidence)
+
+    def test_overflow_blocks_promotion(self):
+        evidence = self.hold_of(self.decide(adset(creatives=[
+            {'creative_key': f'k{i}', 'spend': '2.20', 'results': 1 if i < 3 else 0}
+            for i in range(9)])))
+        self.assertIn('CREATIVE_OVERFLOW', evidence)
+
+    def test_name_mismatch_blocks_promotion(self):
+        evidence = self.hold_of(self.decide(adset(bid_strategy='LOWEST_COST_WITH_COST_CAP',
+                                                  bid_amount='5.00')))
+        self.assertIn('name_mismatch', evidence)
+
+    def test_account_p0_blocks_promotion(self):
+        for overrides, code in (({'balance': '41.20'}, 'ACC_BALANCE_LOW'),
+                                ({'today_spend': '0.00'}, 'ACC_NO_DELIVERY')):
+            with self.subTest(code=code):
+                evidence = self.hold_of(self.decide(adset(), **overrides))
+                self.assertIn(code, evidence)
+
+    def test_fatigue_alone_does_not_block_promotion(self):
+        proposals = self.decide(adset(creatives=[
+            {'creative_key': 'tired', 'spend': '9.80', 'results': 2, 'frequency': '2.70',
+             'ctr': '0.0500', 'prior_ctr': '0.0700', 'cvr': '0.0600', 'prior_cvr': '0.0900'},
+            {'creative_key': 'other', 'spend': '10.00', 'results': 1}]))
+        self.assertEqual(sorted(p['code'] for p in proposals), ['CREATIVE_FATIGUE', 'LADDER_PROMOTE'])
+
+    def test_clean_adset_still_promotes(self):
+        self.assertEqual([p['code'] for p in self.decide(adset())], ['LADDER_PROMOTE'])
+
+
+class MethodologyTests(unittest.TestCase):
+    def test_policy_missing_required_threshold_is_rejected(self):
+        for key in ('balance_alert_below', 'max_creatives_per_adset'):
+            for value in ('delete', None):
+                with self.subTest(key=key, value=value):
+                    document = methodology()
+                    if value == 'delete':
+                        del document[key]
+                    else:
+                        document[key] = None
+                    with self.assertRaises(rules.RuleError):
+                        rules.validate_methodology(document)
+
+    def test_rules_never_fall_back_to_a_code_default(self):
+        document = methodology()
+        del document['balance_alert_below']
+        with self.assertRaises(rules.RuleError):
+            rules.decide_account(account([adset()]), document)
+        document = methodology()
+        del document['max_creatives_per_adset']
+        group = adset(creatives=[{'creative_key': 'k', 'spend': '19.80', 'results': 3}])
+        with self.assertRaises(rules.RuleError):
+            rules.creative_findings(group, rules.adset_metrics(group, PRICE, document), document)
+
+    def test_reference_methodology_declares_hold(self):
+        actions = rules.actions_by_code(methodology())
+        self.assertIn('LADDER_HOLD', actions)
+        self.assertIn('Request Review', actions['AD_STATUS']['action'])
+
+
+class SameNumberTests(unittest.TestCase):
+    def test_same_number_compares_decimals(self):
+        self.assertTrue(rules.same_number('10', '10.00'))
+        self.assertTrue(rules.same_number(10.0, '10'))
+        self.assertTrue(rules.same_number('PAUSED', 'PAUSED'))
+        self.assertFalse(rules.same_number('0.1', '0.10000000001'))
+        self.assertFalse(rules.same_number('PAUSED', 'ACTIVE'))
+        self.assertFalse(rules.same_number('NaN', '0'))
+        self.assertTrue(rules.same_number(None, None))
+        self.assertFalse(rules.same_number(None, '0'))
+
+    def test_same_number_rejects_bool(self):
+        for left, right in ((True, 1), (1, True), (False, 0), (False, '0'), (True, '1.00'), (True, True)):
+            with self.subTest(left=left, right=right):
+                self.assertFalse(rules.same_number(left, right))
 
 
 class GateTests(unittest.TestCase):
@@ -272,7 +451,7 @@ class GateTests(unittest.TestCase):
         self.assertEqual(verdict['gate'], rules.UNKNOWN)
 
     def test_absent_field_is_unknown_not_ready(self):
-        verdict = self.verdict(baseline={'bid_amount': None}, target={'bid_amount': '4.70'},
+        verdict = self.verdict(baseline={'bid_amount': None}, target={'bid_amount': '5.00'},
                                writeback={'objects': {'obj': {'daily_budget': '10.00'}}})
         self.assertEqual(verdict['gate'], rules.UNKNOWN)
 
@@ -286,7 +465,7 @@ class GateTests(unittest.TestCase):
 
     def test_omitted_baseline_document_is_unknown(self):
         verdict = rules.gate(
-            [{'object_key': 'obj', 'target': {'daily_budget': '20.00'}}],
+            [{'object_type': 'adset', 'object_key': 'obj', 'target': {'daily_budget': '20.00'}}],
             {'objects': {'obj': {'daily_budget': '30.00'}}})[0]
         self.assertEqual(verdict['gate'], rules.UNKNOWN)
         self.assertEqual(rules.writable_rows([verdict]), [])
@@ -361,7 +540,7 @@ class GateTests(unittest.TestCase):
     def test_generated_pause_preserves_missing_and_null_status_baselines(self):
         for code, overrides in (
                 ('LINK_OR_TRACKING_BAD', {'linked': False}),
-                ('TEST_STOP_NOCONV', {'results': 0, 'spend': '20.00', 'impressions': 1800})):
+                ('TEST_STOP_NOCONV', {'results': 0, 'spend': '25.00', 'impressions': 1800})):
             for missing in (True, False):
                 with self.subTest(code=code, missing=missing):
                     source = adset(configured_status=None, **overrides)
@@ -378,6 +557,41 @@ class GateTests(unittest.TestCase):
     def test_finding_without_write_intent_is_advisory(self):
         verdict = self.verdict(code='TEST_UNDERTESTED')
         self.assertEqual(verdict['gate'], rules.ADVISORY)
+
+    def test_target_outside_writable_fields_blocks_the_round(self):
+        fine = {'code': 'A', 'level': 'P1', 'object_type': 'adset', 'object_key': 'one',
+                'baseline': {'daily_budget': '10.00'}, 'target': {'daily_budget': '20.00'}}
+        cases = (
+            {'object_type': 'adset', 'target': {'name': 'renamed'}, 'baseline': {'name': 'x'}},
+            {'object_type': 'creative', 'target': {'daily_budget': '20.00'},
+             'baseline': {'daily_budget': '10.00'}},
+            {'object_type': 'account', 'target': {'spend_cap': '0'}, 'baseline': {'spend_cap': '1'}},
+            {'object_type': None, 'target': {'status': 'PAUSED'}, 'baseline': {'status': 'ACTIVE'}},
+        )
+        for case in cases:
+            with self.subTest(case=case):
+                bad = {'code': 'B', 'level': 'P1', 'object_key': 'two', **case}
+                with self.assertRaises(rules.RuleError):
+                    # The valid row first: nothing is returned for it either.
+                    rules.gate([fine, bad], {'objects': {'one': {'daily_budget': '10.00'},
+                                                         'two': {'status': 'ACTIVE'}}})
+        findings = {'round_id': 'bad-field', 'proposals': [fine, {
+            'code': 'B', 'level': 'P1', 'object_type': 'adset', 'object_key': 'two',
+            'baseline': {'name': 'x'}, 'target': {'name': 'y'}}]}
+        with self.assertRaises(rules.RuleError):
+            operating_loop.run_gate(findings, {'kind': 'writeback_snapshot', 'objects': {}})
+
+    def test_creative_status_is_writable(self):
+        verdict = rules.gate([{'code': 'CREATIVE_BREAKER', 'level': 'P1', 'object_type': 'creative',
+                               'object_key': 'c1', 'baseline': {'status': 'ACTIVE'},
+                               'target': {'status': 'PAUSED'}}],
+                             {'objects': {'c1': {'status': 'ACTIVE'}}})[0]
+        self.assertEqual(verdict['gate'], rules.READY)
+
+    def test_bool_in_current_state_is_not_a_number(self):
+        verdict = self.verdict(baseline={'daily_budget': '1'}, target={'daily_budget': '20.00'},
+                               writeback={'objects': {'obj': {'daily_budget': True}}})
+        self.assertEqual(verdict['gate'], rules.CONFLICT)
 
     def test_only_ready_rows_enter_the_write_plan(self):
         proposals = [
@@ -444,7 +658,7 @@ class EndToEndTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def run_round(self):
+    def run_round(self, out=None, ledger=None):
         import io
         import contextlib
         stdout = io.StringIO()
@@ -456,8 +670,8 @@ class EndToEndTests(unittest.TestCase):
                 '--after', str(EXAMPLES / 'after-snapshot.json'),
                 '--methodology', str(EXAMPLES / 'methodology-reference.json'),
                 '--settlement', str(EXAMPLES / 'settlement-daily.json'),
-                '--ledger', str(self.ledger),
-                '--out', str(self.out),
+                '--ledger', str(ledger or self.ledger),
+                '--out', str(out or self.out),
                 '--at', '2026-09-24T03:58:00+00:00',
             ])
         self.assertEqual(code, 0)
@@ -478,8 +692,9 @@ class EndToEndTests(unittest.TestCase):
 
     def test_baseline_gaps_stay_out_of_write_plan_and_remain_in_the_ledger(self):
         findings = {'round_id': 'baseline-gaps', 'proposals': [
-            {'code': 'MISSING', 'object_key': 'missing', 'target': {'daily_budget': '20.00'}},
-            {'code': 'NULL', 'object_key': 'null', 'baseline': {'daily_budget': None},
+            {'code': 'MISSING', 'object_type': 'adset', 'object_key': 'missing',
+             'target': {'daily_budget': '20.00'}},
+            {'code': 'NULL', 'object_type': 'adset', 'object_key': 'null', 'baseline': {'daily_budget': None},
              'target': {'daily_budget': '20.00'}},
         ]}
         gate = operating_loop.run_gate(findings, {
@@ -501,6 +716,8 @@ class EndToEndTests(unittest.TestCase):
     def test_round_catches_the_ineffective_write(self):
         summary = self.run_round()
         self.assertEqual(summary['reconciliation']['ineffective'], 1)
+        report = (self.out / 'report.md').read_text(encoding='utf-8')
+        self.assertIn('| `fictional-adset-a10` | LADDER_PROMOTE | **不匹配** |', report)
 
     def test_ledger_is_append_only_and_folds(self):
         self.run_round()
@@ -520,16 +737,86 @@ class EndToEndTests(unittest.TestCase):
         self.run_round()
         report = (self.out / 'report.md').read_text(encoding='utf-8')
         self.assertIn('冲突隔离', report)
-        self.assertIn('当前值 30.00 与基线 10.00、目标 20.00 均不一致', report)
+        self.assertIn('当前值 30.00 与基线 20.00、目标 40.00 均不一致', report)
         self.assertIn('暂缓修改并核对变更来源', report)
         self.assertNotIn('人工改过', report)
         self.assertIn('未生效', report)
         self.assertIn('不连接任何广告平台', report)
 
     def test_repeat_run_is_deterministic(self):
-        first = self.run_round()['snapshot_hash']
-        second = self.run_round()['snapshot_hash']
-        self.assertEqual(first, second)
+        root = Path(self.tmp.name)
+        first = self.run_round(out=root / 'first', ledger=root / 'first.jsonl')
+        second = self.run_round(out=root / 'second', ledger=root / 'second.jsonl')
+        self.assertEqual(first['snapshot_hash'], second['snapshot_hash'])
+        for name in ('report.md', 'gate.json', 'findings.json'):
+            with self.subTest(artifact=name):
+                self.assertEqual((root / 'first' / name).read_bytes(),
+                                 (root / 'second' / name).read_bytes())
+
+    def test_every_teaching_scenario_occurs_in_the_fixture(self):
+        summary = self.run_round()
+        findings = json.loads((self.out / 'findings.json').read_text(encoding='utf-8'))
+        gate = json.loads((self.out / 'gate.json').read_text(encoding='utf-8'))
+        reconciliation = json.loads((self.out / 'reconciliation.json').read_text(encoding='utf-8'))
+        codes = {(p['object_key'], p['code']) for p in findings['proposals']}
+        for expected in (
+                ('fictional-adset-a1', 'LADDER_PROMOTE'),
+                ('fictional-adset-a2', 'TEST_UNDERTESTED'),        # under-tested
+                ('fictional-adset-a3', 'TEST_STOP_NOCONV'),
+                ('fictional-adset-a4', 'TEST_STOP_OVERCOST'),
+                ('fictional-adset-a5', 'TEST_UNDERTESTED'),        # limited delivery
+                ('fictional-adset-a6', 'LADDER_HOLD'),
+                ('fictional-adset-a7', 'AD_STATUS'),
+                ('fictional-adset-b1', 'LADDER_HOLD'),
+                ('fictional-adset-b2', 'TEST_EARLY_STOP')):
+            self.assertIn(expected, codes)
+        states = {(v['object_key'], v['gate']) for v in gate['verdicts']}
+        for expected in (('fictional-adset-a1', 'ready'), ('fictional-adset-a3', 'satisfied'),
+                         ('fictional-adset-a9', 'conflict'), ('fictional-adset-b2', 'unknown')):
+            self.assertIn(expected, states)
+        self.assertEqual([r['object_key'] for r in reconciliation['rows']
+                          if r['checked'] and not r['effective']], ['fictional-adset-a10'])
+        kinds = {(f['kind'], f['object_key']) for f in findings['structure_findings']}
+        self.assertEqual(kinds, {('name_mismatch', 'fictional-adset-a5'),
+                                 ('effective_status', 'fictional-adset-a7'),
+                                 ('capability_gap', 'fictional-meta-account-b')})
+        self.assertEqual(summary['native_platform_calls'], 0)
+
+    def test_settlement_target_comes_from_the_methodology(self):
+        self.run_round()
+        report = (self.out / 'report.md').read_text(encoding='utf-8')
+        self.assertIn('| meta | `fictional-meta-account-a` | 10.00 | 176.30 | 19 | 190.00 | 9.28 | 7.20 |', report)
+        self.assertIn('| meta | `fictional-meta-account-b` | 8.00 | 24.70 | 3 | 24.00 | 8.23 | 5.76 |', report)
+        self.assertNotIn('混量', report)
+        self.assertIn('目标 ROAS 1.25　|　线索通过率 0.90', report)
+
+    def test_missing_ledger_raises(self):
+        import io
+        import contextlib
+        missing = Path(self.tmp.name) / 'nowhere' / 'ledger.jsonl'
+        for call in (operating_loop.read_events, operating_loop.fold, operating_loop.open_rows):
+            with self.subTest(call=call.__name__):
+                with self.assertRaises(operating_loop.LoopError):
+                    call(missing)
+        gate = {'round_id': 'r', 'verdicts': []}
+        with self.assertRaises(operating_loop.LoopError):
+            operating_loop.reconcile_and_record(missing, gate, {'kind': 'writeback_snapshot', 'objects': {}},
+                                                '2026-09-25T00:00:00+00:00')
+        self.assertFalse(missing.exists())
+        stderr, stdout = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(stdout):
+            code = operating_loop.main(['open', '--ledger', str(missing)])
+        self.assertEqual(code, 2)
+        self.assertIn('blocked', stderr.getvalue())
+        self.assertNotIn('"open": 0', stdout.getvalue())
+
+    def test_apply_without_events_still_creates_the_ledger(self):
+        gate = operating_loop.run_gate({'round_id': 'advisory-only', 'proposals': [
+            {'code': 'TEST_UNDERTESTED', 'object_type': 'adset', 'object_key': 'one'}]},
+            {'kind': 'writeback_snapshot', 'objects': {}})
+        operating_loop.apply_gate(self.ledger, gate, '2026-09-25T00:00:00+00:00')
+        self.assertTrue(self.ledger.is_file())
+        self.assertEqual(operating_loop.open_rows(self.ledger), [])
 
     def test_corrupt_ledger_line_does_not_erase_history(self):
         self.run_round()

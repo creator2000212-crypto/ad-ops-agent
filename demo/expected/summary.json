@@ -2,13 +2,13 @@
   "notice": "OFFLINE ANALYSIS ONLY — 不连接任何广告平台、不写任何账户、不上传素材。输出的动作清单是给人审阅的建议，不是已执行的指令。",
   "mode": "offline_analysis_only",
   "round_id": "demo-20260924-1150",
-  "snapshot_hash": "e00210a0777f3b23f656d29b0aef217432bbf60492a48382a071a0ffa9bd49e0",
+  "snapshot_hash": "d4d8fa2a0e8f96ae623ad723ae45ccb445796d13f20bf9a84c64ecf43487c27d",
   "methodology": {
     "methodology_id": "reference-1n1-ladder",
-    "version": "2026-09-24.1"
+    "version": "2026-10-07.1"
   },
   "accounts": 3,
-  "proposals": 16,
+  "proposals": 18,
   "findings_by_code": {
     "ACC_BALANCE_LOW": 1,
     "ACC_NO_DELIVERY": 1,
@@ -17,8 +17,10 @@
     "CREATIVE_BREAKER": 1,
     "CREATIVE_FATIGUE": 1,
     "CREATIVE_OVERFLOW": 1,
-    "LADDER_PROMOTE": 4,
+    "LADDER_HOLD": 2,
+    "LADDER_PROMOTE": 3,
     "LINK_OR_TRACKING_BAD": 1,
+    "TEST_EARLY_STOP": 1,
     "TEST_STOP_NOCONV": 1,
     "TEST_STOP_OVERCOST": 1,
     "TEST_UNDERTESTED": 2
@@ -28,8 +30,8 @@
     "satisfied": 1,
     "conflict": 1,
     "unknown": 1,
-    "advisory": 9,
-    "total": 16,
+    "advisory": 11,
+    "total": 18,
     "needs_human": 2
   },
   "planned_writes": 4,
@@ -37,7 +39,7 @@
     {
       "object_key": "fictional-adset-a1",
       "patch": {
-        "daily_budget": "20.00"
+        "daily_budget": "40.00"
       }
     },
     {
@@ -47,26 +49,29 @@
       }
     },
     {
-      "object_key": "fictional-adset-a6",
-      "patch": {
-        "daily_budget": "40.00"
-      }
-    },
-    {
       "object_key": "fictional-adset-a8",
       "patch": {
         "status": "PAUSED"
+      }
+    },
+    {
+      "object_key": "fictional-adset-a10",
+      "patch": {
+        "daily_budget": "40.00"
       }
     }
   ],
   "needs_human": [
     "fictional-adset-a9(conflict)",
-    "fictional-adset-b1(unknown)"
+    "fictional-adset-b2(unknown)"
   ],
   "promotion_candidates": [
     "fictional-adset-a1",
+    "fictional-adset-a10",
+    "fictional-adset-a9"
+  ],
+  "promotion_holds": [
     "fictional-adset-a6",
-    "fictional-adset-a9",
     "fictional-adset-b1"
   ],
   "reconciliation": {
@@ -75,7 +80,7 @@
     "ineffective": 1
   },
   "not_effective": [
-    "fictional-adset-a6"
+    "fictional-adset-a10"
   ],
   "open_rows": 1,
   "native_platform_calls": 0

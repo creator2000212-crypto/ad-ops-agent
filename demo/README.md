@@ -1,83 +1,83 @@
-# What the agent does in one ad review
+# One round of the 12-hour check, replayed
 
-[简体中文](README.zh-CN.md) · [Project home](../README.md)
+This demo replays one round of the read-only 12-hour check I ran as a scheduled WorkBuddy job on live Meta and TikTok lead-gen accounts (Sep 22–26, 2026), using fictional data.
 
-For use in actual business tasks, see the [anonymized working cases](../docs/case-studies.md). This page explains the runnable fictional example.
+[简体中文](README.zh-CN.md) · [Project home](../README.md) · [Technical reference](../docs/operating-loop.md)
 
-**You give it a task. The agent turns ad data into recommendations with reasons, then lists the decisions and follow-ups that remain.**
+WorkBuddy is Tencent's desktop AI agent; this project is not affiliated with it. Here the round runs offline: the script reads JSON fixtures, makes 0 platform calls, and writes a report plus a local ledger. Accounts, ad sets, creatives and prices are fictional; the rule structure and thresholds are the ones I used.
 
-This walkthrough uses the repository's runnable fictional example: **3 Meta accounts and 10 ad sets, reviewing delivery on September 23, 2026.** Ad set names are shortened to a1, a2 and so on. Amounts use the sample account's currency units.
+```bash
+python3 demo/run_demo.py           # run the round and print the report
+python3 demo/run_demo.py --steps   # the same round, one step at a time
+python3 demo/run_demo.py --check   # compare with the committed sample in demo/expected/
+```
 
-The current demo reads files, generates recommendations and compares values. It does not connect to real accounts. References to your review explain the intended collaboration; they do not record an actual approval or account change.
+## The task
 
-## 1. You give it a specific task
+> Review yesterday's delivery across these 3 accounts. Which ad sets can take more budget, which should pause, which need more time? Give me the reasons and the change list first.
 
-> Review yesterday's delivery across these 3 accounts. Which ad sets could take more budget, which should pause, and which need more observation? Show me the reasons and proposed changes first.
+The fixture holds **3 Meta accounts and 12 ad sets for September 23, 2026**. Ad set names are shortened to a1, a2 and so on.
 
-The example already has a reference method. For account A, the target cost per conversion is **4.71**. The zero-conversion stop-loss rule illustrated by a3 requires both **300 impressions** and **14.12 in spend** before producing that particular pause-and-review recommendation. These numbers belong to this example; users choose a method appropriate to their own business.
+## 1. The economics behind every threshold
 
-## 2. The agent explains what the data means
+Each account declares the value of one lead; the methodology declares the lead approval rate and the target ROAS. For account A:
 
-Start with 4 representative ad sets:
+**T = 10.00 value per lead × 0.90 approval / 1.25 target ROAS = 7.20**
 
-| Ad set | Observed data | Interpretation | Recommendation for you |
+T is the highest cost per lead the round accepts, and it sits below the value of a lead. The stop-loss line is 3T = **21.60**, and a zero-lead ad set needs at least **300 impressions** before it can be judged. Account B's leads are worth 8.00, so its T is 5.76.
+
+## 2. What the data says
+
+| Ad set | Observed | Reading | Proposal |
 |---|---|---|---|
-| **a1** | Spend 12.40; 3 conversions; cost per conversion 4.13 | Cost is below the 4.71 target, and this example's conversion-count and full-day requirements are met | Consider increasing daily budget **10 → 20** |
-| **a2** | Spend 3.10; 180 impressions; no conversions | It has not reached this method's sample and stop-loss conditions | Keep observing; do not label the creative a failure |
-| **a3** | Spend 15.30; 420 impressions; no conversions | Both impression and spend conditions for a pause-and-review recommendation are met | Propose a pause and review the destination and conversion reporting |
-| **a5** | Spend 6.40; 4 conversions; cost per conversion 1.60; only 32% budget utilisation | Cost is low, but delivery is not using much of the budget | Investigate limited delivery before deciding whether to increase budget |
+| **a1** | Spend 19.80; 3 leads; CPA 6.60 | Below T over a full delivery day | Budget **20 → 40** |
+| **a2** | Spend 4.60; 210 impressions; 0 leads | Below the 300-impression sample gate | Keep observing; no verdict on the creative |
+| **a3** | Spend 22.40; 640 impressions; 0 leads | Past both the sample gate and 3T | Pause and check the destination and conversion tracking |
+| **a4** | Spend 40.00; 2 leads; CPA 20.00 | Spend − T × leads = 25.60, past 3T | Pause |
+| **a5** | Spend 8.40; 3 leads; CPA 2.80; 42% of budget spent | Cheap but limited delivery; the name says MAX while the ad set runs a 5.00 cost cap below T | Fix delivery before adding budget |
+| **a6** | Spend 21.00; 4 leads; CPA 5.25 | Meets the promotion numbers, but creative a6-c1 took 62% of spend at CPA 13.00 (above 1.7T) and a6-c2 is fatigued | **Hold**: fix the creatives first; budget unchanged |
+| **b1** | Spend 15.60; 3 leads; CPA 5.20 vs T 5.76 | Meets the numbers, but 9 creatives (cap 8), and account B spent nothing today with a balance below the alert line | **Hold** |
+| **b2** | Spend 9.10; 190 impressions; CPC 1.30; CTR 3.7% | Too few impressions to judge, but past the early-stop CPC and CTR lines | Pause and review the hook |
 
-This explains why two ad sets with no conversions receive different recommendations, and why the lowest conversion cost does not automatically lead to more budget.
+Two zero-lead ad sets get different answers (a2, a3), the cheapest leads do not automatically get more money (a5), and a promotion waits when something else in the ad set or account is broken (a6, b1). One change per ad set per round keeps cause and effect readable.
 
-## 3. Check current state before preparing changes
+## 3. Check current state before changing anything
 
-Yesterday's data describes performance. Current state helps determine whether a proposed change is still needed. Comparing the recommendations with a separate current-state file reveals:
+Yesterday's data says how things performed; the state read just before writing says whether a change is still needed. Comparing the proposals with that read:
 
-- **a3 is already paused.** Keep the diagnosis without scheduling the same pause again.
-- **a9's budget differs.** The baseline was 10, the proposal is 20, but the current value is 30. Find out why it changed before overwriting it with 20. The difference does not identify who changed it.
-- **b1 has no current-state record.** Obtain that information before deciding whether it can be changed.
+- **a3 is already paused.** Satisfied: nothing to write.
+- **a9's budget changed.** The plan was 20 → 40, but the current value is 30. Conflict: isolate the row and find out why before touching it. The values alone do not say who changed it.
+- **b2 was not returned by the read.** Unknown: read it again before pausing.
 
-The remaining 4 items form a review list:
+Four rows remain for review:
 
-| Ad set | Proposed change | Evidence to consider during review |
+| Ad set | Proposed change | Evidence |
 |---|---|---|
-| a1 | Daily budget **10 → 20** | Cost per conversion is 4.13 and this example's increase conditions are met |
-| a4 | **Pause** | Spend 30; 3 conversions; cost per conversion 10; this example's excess-cost stop condition is met |
-| a6 | Daily budget **20 → 40** | Ad set data meets the increase conditions, but there are also warnings about concentrated creative spend, high creative cost and fatigue; review them together |
-| a8 | **Pause and investigate** | Input data flags a destination or tracking issue that needs verification and repair |
+| a1 | Budget **20 → 40** | CPA 6.60 ≤ T 7.20, 3 leads, full delivery day |
+| a4 | **Pause** | Over-cost margin 25.60 ≥ 21.60 |
+| a8 | **Pause and investigate** | The destination check failed |
+| a10 | Budget **20 → 40** | CPA 5.15 ≤ T 7.20, 4 leads, full delivery day |
 
-**You decide whether to adopt the batch.** For example, a6 has both a budget-increase recommendation and creative warnings. You might request a creative review before deciding on its budget. The list must reflect that decision; passing a state check is not your approval.
+`ready` means the row passed the state check. It is not approval. The live 12-hour job only read and reported; in live operation I approved launches and budget changes myself. This demo has no approval or submission step.
 
-The intended workflow is to confirm the final batch, let the agent execute within authorization, then read the platform result. This demo only records the review list; it has no real submission or user-approval step.
+## 4. Read back, then hand over
 
-## 4. Compare results and leave specific follow-ups
+To show verification, the fixture supplies the state "after" the change. It is a prepared file, not a platform readback.
 
-To demonstrate verification, the project supplies a preset file representing later state. It is neither produced by execution nor retrieved from a platform.
+**a1, a4 and a8 match their targets. a10's target budget is 40, but it still reads 20.** The write did not take, so a10 stays open in the ledger and must not be treated as running at 40 when the next promotion is considered.
 
-Against the original 4-item list above, **a1, a4 and a8 match their target values or states. For a6, the target budget is 40 but the file still says 20.** It cannot be marked as successfully changed or treated as being on a budget of 40 when considering another increase.
-
-The handoff could read:
+The handoff:
 
 > **Follow up:**
 >
-> - a9: Current budget 30 differs from the baseline. Establish the change's context.
-> - b1: Obtain current state, then check again.
-> - a6: Target budget 40, supplied result 20. Investigate the mismatch and retain the creative warnings.
+> - a10: target budget 40, read back 20. Find out why the change did not land.
+> - a9: current budget 30 differs from the plan's baseline 20. Establish the change's context first.
+> - b2: re-read its state, then decide on the pause.
 >
-> Keep observing a2. Investigate why a5 is not using its budget. The complete report also retains disapproval, account-balance and other creative findings for your judgement.
+> Fix the a6 creatives and b1's creative count; account B needs funds and a delivery check. Keep observing a2; find out why a5 cannot spend its budget.
 
-You receive **ad assessments, proposed changes and follow-ups**. This round provides no evidence that a real ad was changed or that the recommendations improve performance.
+## Read the full result
 
-## Run it or read the results
+The committed [complete report (Chinese)](expected/report.md) lists every ad set with its evidence, and [`expected/summary.json`](expected/summary.json) holds the counts that `--check` compares. After `python3 demo/run_demo.py`, the generated files are under `demo/out/` (ignored by Git): start with `report.md`, then `gate.json` and `reconciliation.json` when tracing a decision.
 
-Open the [complete report (Chinese)](expected/report.md) for all ad sets and evidence, or run this in the project directory:
-
-```bash
-python3 demo/run_demo.py
-```
-
-The terminal prints the report. Then open `demo/out/report.md` for the generated report; start with proposed changes and remaining follow-ups, and inspect `demo/out/gate.json` or `demo/out/reconciliation.json` only when tracing the snapshot checks. These paths are relative to the repository root and are ignored by Git. The committed `demo/expected/report.md` is the reference sample, not the output of your own run.
-
-To start your own task after reading, follow [first use](../docs/first-check.md). Running this demo does not connect an account.
-
-For concrete examples of initial setup, creative testing and retaining experience, read the [building guide](../docs/build-from-zero.md). Refer to the [technical guide](../docs/operating-loop.md) when you need fields, formulas or step-by-step commands.
+To start your own task, follow [first use](../docs/first-check.md). For fields, formulas and commands, see the [technical reference](../docs/operating-loop.md).

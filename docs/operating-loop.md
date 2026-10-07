@@ -1,84 +1,85 @@
-# Operating loop — a recurring test loop, implemented offline
+# Operating loop — the 12-hour check, implemented offline
 
-This page is the technical reference for rules, data dependencies and the CLI.
-Start with the [worked ad-review example](../demo/README.md) for the operator/agent division
-of work and sample results; [building from zero](build-from-zero.md) explains the
-architecture and build order.
+This page is the technical reference for the rules, data dependencies and CLI.
+Start with the [worked example](../demo/README.md) for sample results;
+[building from zero](build-from-zero.md) explains the architecture and build order.
 
-This module reads a window declared as settled and a set of method parameters,
-produces proposals with evidence, compares fields in supplied files, and writes
-a report and an append-only ledger. It is entirely offline: it does not collect
-platform data, submit ad changes, check user authorization or schedule background
-runs. Every result depends on the JSON supplied by the caller.
+The rules are ported from the read-only 12-hour check I ran as a scheduled
+WorkBuddy (Tencent's desktop AI agent; not affiliated) job on live Meta and TikTok
+lead-gen accounts (Sep 22–26, 2026). Builds ran interactively: create paused →
+field-by-field readback → activate. This repo is the offline, tested version.
 
-## Why the loop is longer than "read the numbers"
+**Scope:** the module is offline by design. It reads JSON files, makes 0 platform
+calls, and writes proposals, a report and an append-only ledger. `ready` means a
+difference passed the state check, not that anyone approved it; a matching after
+snapshot is a file comparison, not proof of a live change.
 
-The example demonstrates checks for three types of problem:
+## What each guard prevents
 
 | Failure | What it looks like | The guard |
 |---|---|---|
-| Judging a sample too small to judge | A zero-conversion ad set is killed on $3 of spend | A sample gate that requires both an impression floor and the loss line |
-| Treating a target as the actual state | The plan targets a budget of 40, but the supplied after snapshot says 20 | Compare the after snapshot with the target; no write occurs in this example |
-| Missing a change in current state | The current field matches neither baseline nor target | Isolate the conflicting row; the difference alone does not identify who changed it |
-
-These checks preserve proposals, state differences and unresolved work
-separately for review.
+| Judging a sample too small to judge | A zero-lead ad set is killed after a few dollars | Sample gate: an impression floor **and** the stop-loss line must both be met |
+| Scaling while something else is broken | Budget doubles on an ad set whose creative just tripped the breaker | Rule precedence: `LADDER_HOLD` replaces the promotion; one change per ad set per round |
+| Writing a field the plan should never touch | A proposal targets a field outside its object type | `WRITABLE_FIELDS`: the gate raises `RuleError` and the round stops |
+| Overwriting someone's change | The current budget matches neither baseline nor target | `conflict`: the row is isolated; the values alone do not identify who changed it |
+| Treating a target as the actual state | The plan sets a budget of 40, the after snapshot still says 20 | Readback comparison: the row stays open as `verified_not_effective` |
+| Reading "no ledger" as "nothing open" | A typo in the ledger path reports `open: 0` | A missing ledger raises `LoopError` (exit code 2) |
 
 ## Module map
 
 | File | Responsibility |
 |---|---|
-| `operating_rules.py` | Pure decision layer. Parses numbers, derives metrics, splits a CPA gap into CPM/CTR/CVR contributions, evaluates creative-level rules, classifies every ad set, and runs the write gate. No file IO except loading a methodology document. |
-| `operating_loop.py` | Orchestration and IO. Snapshot validation, account signals, the ledger, the report, and the CLI. |
-| `examples/operating/methodology-reference.json` | The thresholds, as data: target ROAS, ladder, sample gate, promotion rule, stop loss, utilisation bands, creative rules, and the action catalogue with each action's acceptance and stop condition. |
-| `examples/operating/snapshot-primary.json` | One settled observation window (fictional). |
-| `examples/operating/writeback-snapshot.json` | A separately supplied example of pre-write state, including one row different from its baseline. The program does not fetch it from an account. |
-| `examples/operating/after-snapshot.json` | A separately supplied after-state example in which one planned object does not match its target; it is not produced by `apply`. |
-| `examples/operating/settlement-daily.json` | Settlement rows for cross-checking the board against the settlement basis. |
-| `tests/test_operating_loop.py` | Executable contracts for every rule and every gate outcome. |
-| `scripts/demo_operating_loop.py` | End-to-end demonstration with assertions. |
+| `operating_rules.py` | Pure decision layer. Parses numbers as `Decimal`, derives metrics, splits a CPA gap into CPM/CTR/CVR terms, evaluates creative rules, classifies every ad set, applies rule precedence and runs the write gate. No file IO except loading a methodology document. |
+| `operating_loop.py` | Orchestration and IO: snapshot validation, account signals, the ledger, the report and the CLI. |
+| `examples/operating/methodology-reference.json` | Thresholds and economics as data: target ROAS, lead approval rate, ladder, sample gate, promotion rule, stop loss, utilisation bands, creative rules, balance alert, creative cap, and the action catalogue with each action's acceptance and stop condition. |
+| `examples/operating/snapshot-primary.json` | One settled observation window: 3 fictional Meta accounts, 12 ad sets. |
+| `examples/operating/writeback-snapshot.json` | The supplied pre-write state: a9's budget was hand-edited to 30, and b2 is missing. |
+| `examples/operating/after-snapshot.json` | The supplied after state: a10 still reads its old budget. It is not produced by `apply`. |
+| `examples/operating/settlement-daily.json` | Settlement rows for checking the platform view against the settlement view. |
+| `tests/test_operating_loop.py` | Executable contracts for every rule, every gate state and every fix. |
+| `scripts/demo_operating_loop.py` | End-to-end run with assertions (two rounds on one ledger). |
 
-## The demo's five steps and their data dependencies
+## The five steps and their data
 
 ```
-1  diagnose: observation snapshot + method         -> findings.json
-2  gate: findings + supplied pre-write state       -> gate.json / difference plan
+1  diagnose: observation snapshot + methodology   -> findings.json
+2  gate: findings + pre-write state               -> gate.json / difference plan
 3  apply: gate                                    -> application.json / ledger events
-4  verify: gate + supplied after state + ledger    -> reconciliation.json / ledger events
-5  open: read the ledger                          -> unresolved rows; round also produces report.md
+4  verify: gate + after state + ledger            -> reconciliation.json / ledger events
+5  open: read the ledger                          -> unresolved rows; round also writes report.md
 ```
 
-`apply` only records proposed field changes. `verify` compares the supplied after
-snapshot without fetching platform data. `round` runs the computations and
-recording stages in sequence, then produces the report and open-row count; it
-does not recheck the previous round at startup or automatically retry rows from
-`open`. The optional settlement file supplies settlement figures and basis notes
-for the report; it does not automatically explain data discrepancies.
+`apply` records proposed field changes; `verify` compares them with the supplied
+after snapshot. `round` runs all steps in sequence and writes the report; it does
+not re-check the previous round at startup or retry rows from `open`. The optional
+settlement file adds a platform-versus-settlement table to the report.
 
-The fixture contains three Meta accounts and ten ad sets, producing sixteen
-account/ad-set/creative findings. Four enter the difference plan; three match
-the after snapshot and one does not. `ready` is not authorization, and a matching
-snapshot is not proof of a successful live change.
+The fixture produces 18 account, ad-set and creative findings. Four enter the
+difference plan (a1, a4, a8, a10); three match the after snapshot and a10 does not.
 
 ### Target cost and the ladder
 
-`T = unit price x quality factor / target ROAS`. With no deduction the quality
-factor is 1, so a 4.00 unit price against an 85% target gives `T = 4.71`. The
-ladder is declared as a list; `T`, `2T`, `3T` become multipliers 1, 2 and 3, and
-the stop-loss line is declared in multiples of `T` rather than as an absolute
-amount. A changed unit price therefore recalculates target cost and its related
-stop-loss thresholds.
+`T = value per lead x lead approval rate / target ROAS`. In the methodology these
+are `offer.unit_price` (per account), `quality_factor` and `target_roas`. The
+reference uses a 10.00 lead, a 0.90 approval rate and a 1.25 target, so
+`T = 10.00 x 0.90 / 1.25 = 7.20`; account B's 8.00 lead gives `T = 5.76`. T must
+stay below the value of a lead, otherwise every lead at target cost loses money.
+All prices are fictional; the structure and thresholds are the ones I used.
+
+The ladder is declared as a list; `T`, `2T`, `3T` become multipliers 1, 2 and 3,
+and the stop-loss line is declared in multiples of `T` (3T = 21.60 for account A).
+A changed price or approval rate therefore recalculates T and every threshold
+derived from it.
 
 ### Metrics
 
 `spend`, `impressions`, `clicks`, `results`, `value` and `frequency` are read from
-the snapshot. `CPM`, `CTR`, `CPC`, `CVR`, `CPA`, `ROAS`, `utilisation`, expected
-results and the over-cost margin are derived. Every derived value that cannot be
-computed is `None` and is reported as missing evidence.
+the snapshot. `CPM`, `CTR`, `CPC`, `CVR`, `CPA`, `ROAS`, utilisation, expected
+results and the over-cost margin are derived. A value that cannot be computed is
+`None` and is reported as missing evidence.
 
 A zero denominator is not a zero metric: nobody clicking out of 1,000 impressions
-is a real `CTR` of 0, while `CPC` has no denominator and is therefore `None`. The
-engine never substitutes one for the other.
+is a real `CTR` of 0, while `CPC` has no denominator and is therefore `None`.
 
 ### Cost-gap decomposition
 
@@ -88,95 +89,100 @@ engine never substitutes one for the other.
 log(CPA / CPA_reference) = dlog(CPM) - dlog(CTR) - dlog(CVR)
 ```
 
-For positive metrics with comparable definitions, the three signed terms
-describe the mathematical relationship between the CPA gap and changes in CPM,
-CTR and CVR. Each term's share of the absolute total is also reported. **This is
-not causal attribution or proof that changing a metric will improve results.**
-A non-zero residual means the inputs do not exactly satisfy the identity; check
-precision, observation windows and metric definitions. The program does not
-establish the cause of the discrepancy.
+The three signed terms describe how much of a CPA gap moved with CPM, CTR and CVR,
+with each term's share of the absolute total. It is an accounting identity, not a
+causal claim. A non-zero residual means the inputs do not exactly satisfy the
+identity (rounding, different windows or definitions).
 
-### Sample gate
+### Classification order
 
-The zero-conversion branch produces `TEST_STOP_NOCONV` only when **both** the
-impression floor and the loss line are met. Otherwise, it checks the declared
-CPC/CTR early-stop thresholds and proposes a pause if they trigger, without
-concluding that a creative is invalid; otherwise it returns `TEST_UNDERTESTED`.
-None of these proposals stops account spending by itself.
+Account signals come first: no configured ad set (`ACC_STOPPED`), zero spend today
+with configured ad sets (`ACC_NO_DELIVERY`) and a balance at or below
+`balance_alert_below` (`ACC_BALANCE_LOW`). Then, per ad set:
 
-The sample gate is not the first step for every rule. Account signals are
-independent. Per ad set, creative findings come first, followed by disapproval,
-link/tracking problems and missing required metrics. For ad sets with results,
-the classifier checks excess-cost stop loss, the minimum result count,
-utilisation and then promotion conditions. See `decide_account` and
-`_classify_adset`; insufficient samples do not stop all other rules from running.
+1. Creative findings (breaker, fatigue, overflow).
+2. Disapproval (`AD_STATUS`) and link/tracking failure (`LINK_OR_TRACKING_BAD`) end the ad set's evaluation.
+3. Missing spend, impressions or results block the ad set; nothing is guessed.
+4. Zero leads: `TEST_STOP_NOCONV` only when the impression floor **and** the stop-loss line are met; otherwise the declared CPC/CTR early-stop thresholds (`TEST_EARLY_STOP`, pause and review the hook); otherwise `TEST_UNDERTESTED`.
+5. With leads: over-cost stop loss, then the minimum lead count, then utilisation (limited delivery), then promotion.
+
+See `decide_account` and `_classify_adset`.
+
+### Rule precedence: hold before promote
+
+A promotion that met its numbers is replaced by advisory `LADDER_HOLD` when the
+same ad set has `CREATIVE_BREAKER`, `CREATIVE_OVERFLOW` or a `name_mismatch`
+structure finding, or when its account has any P0 `ACC_*` finding. The evidence
+names every blocker. Fix the creative, structure or account problem first; the
+budget stays unchanged this round, and the next round re-evaluates from scratch.
+One change per ad set per round keeps cause and effect readable. Fatigue alone
+does not block a promotion. In the fixture, a6 is held by its creative breaker and
+b1 by its creative count and account B's two P0 findings.
 
 ### Creative rules
 
-* **Circuit-breaker finding** — requires a spend share above the declared limit
-  *and* a cost above the declared multiple, with at least two creatives. A
-  single-creative group does not trigger this rule but still has ad-set checks.
-* **Fatigue finding** — requires frequency, `CTR` decline and `CVR` decline to
-  meet their conditions together. Not triggering it does not prove that a
-  creative has no problem.
-* **Overflow finding** — records a proposal when creative count exceeds the
-  declared cap.
+* **Circuit breaker** (`CREATIVE_BREAKER`, object type `creative`) — spend share
+  above the declared limit *and* CPA above the declared multiple of T, with at
+  least two creatives in the ad set.
+* **Fatigue** (`CREATIVE_FATIGUE`, object type `creative`) — frequency, CTR decline
+  and CVR decline must all meet their thresholds together.
+* **Overflow** (`CREATIVE_OVERFLOW`, object type `adset`) — more creatives than
+  `max_creatives_per_adset`.
 
-Creative and ad-set proposals are generated separately. Creative findings do not
-automatically block promotion; fixture a6 has both creative findings and a
-promotion candidate.
+Creative findings carry the creative as `object_key` and the ad set as
+`parent_key`, so the report keeps them on their ad set's row.
 
-### Write gate
+### Write gate: five states
 
-There are five outcomes per proposal. **Only `ready` rows enter the difference
-plan; this is neither user authorization nor an execution receipt.**
+**Only `ready` rows enter the difference plan.**
 
-| Outcome | Meaning | Action |
+| State | Meaning | Action |
 |---|---|---|
-| `ready` | The implemented field comparison passes and differences remain | Add those fields to the review plan; this module does not submit them |
-| `satisfied` | Supplied current state already matches the target | Do not propose a duplicate change; the program does not determine learning-phase effects |
-| `conflict` | The current field matches neither baseline nor target | Isolate the row and investigate the difference without inferring its author |
-| `unknown` | The supplied state lacks the object or a target field, or a differing field lacks a concrete baseline | Obtain the missing current state or original-plan baseline evidence; absence does not mean equality |
-| `advisory` | The finding declares no field change | Nothing to gate; counted separately so it does not inflate the rows needing attention |
+| `ready` | Each differing field still holds its baseline value | Add only those fields to the plan for review |
+| `satisfied` | The current state already equals the target | Write nothing; a repeated write only adds risk and noise |
+| `conflict` | A current field matches neither baseline nor target | Isolate the row and find the source of the change |
+| `unknown` | The object or a target field is missing from the read, or a differing field has no concrete baseline | Re-read state or recover the plan's baseline; absence never means equality |
+| `advisory` | The finding declares no field change | Nothing to gate; counted separately |
 
-A present field already matching its target needs no baseline because it will
-not be changed. Every remaining field needs a concrete baseline. A missing field
-and an explicit `null` have different explanations but both produce `unknown`.
-The generic input does not define native null semantics: even two null values
-do not establish a safe baseline for a change. Numeric `0` is a concrete value
-and participates in the comparison normally.
+Before any comparison, every target field must be allowed for the proposal's
+`object_type` by `WRITABLE_FIELDS`: `adset` may change `daily_budget`, `status`,
+`bid_strategy` and `bid_amount`; `creative` may change `status`; `account` may
+change nothing. A field outside the table raises `RuleError` and stops the round;
+it is a malformed plan, not a sixth state.
 
-One unresolved baseline holds the entire proposal out of the write plan, with
-any other detected conflicts retained. Other proposals are checked independently.
-Recover evidence from the original plan; do not fill its old baseline with a
-fresh current value. Regenerate and review the plan when necessary. `ready`
-still does not replace user authorization or platform-capability checks.
+A field already at its target needs no baseline because it will not be changed.
+Every other field needs a concrete baseline; a missing field and an explicit
+`null` both produce `unknown`. Numeric `0` is a concrete value. Values are compared
+as `Decimal` (`10`, `10.0` and `'10.00'` match); a boolean never equals a number.
+One unknown field holds the whole proposal; other proposals are checked
+independently. Recover a missing baseline from the original plan rather than
+filling it with a fresh current value.
 
 ### After-snapshot comparison
 
-`verify` compares targets from `ready` rows with the `--after` file. An object
+`verify` compares the targets of `ready` rows with the `--after` file. An object
 present in that file counts as `checked`; all target fields matching means
-`effective`, while differences mean a mismatch. An absent object is not counted
-as checked. Here `effective` is a snapshot comparison, not proof of a submitted
-request, live delivery or business impact. Fixture a6 targets a budget of 40,
-while its after-state value is 20.
+`effective`, anything else a mismatch. An absent object is not counted as checked.
+In the fixture, a10 targets a budget of 40 and the after snapshot still reads 20.
 
 ### Ledger
 
-Append-only JSONL preserves proposals, skips and reconciliation events; current
-state is obtained by folding the stream. `open` lists only `pending_write` and
-`verified_not_effective`. It does not recheck, retry or schedule another round.
-`conflict` and `unknown` are recorded as `skipped` and are not included in `open`;
-`advisory` produces no action event. The fixture's one open row is a6. The two
-separate rows needing human review are the a9 conflict and missing b1 snapshot.
+Append-only JSONL keeps proposals, skips and reconciliation events; the current
+state of each row is folded from the stream. `open` lists `pending_write` and
+`verified_not_effective` rows. `conflict` and `unknown` are recorded as `skipped`
+and are not in `open`, so hand over both lists: in the fixture, the one open row
+is a10, and the two rows needing a human are the a9 conflict and the missing b2
+state.
 
-`read_events` returns a `corrupt` record for a damaged JSON line, but `open` is
-not a complete event list or corruption report.
+`apply` creates the ledger even when it records no event. `read_events`, `open`
+and `verify` raise `LoopError` on a missing ledger path instead of reporting an
+empty history. A damaged JSON line becomes a `corrupt` record rather than
+disappearing.
 
 ## Running it
 
 ```bash
-# End-to-end demonstration with assertions
+# End-to-end run with assertions
 python3 scripts/demo_operating_loop.py
 
 # One round, producing findings / gate / reconciliation / report
@@ -199,40 +205,31 @@ python3 operating_loop.py open     --ledger <ledger.jsonl>
 python3 -m unittest tests.test_operating_loop -v
 ```
 
-Only `round`, `apply` and `verify` accept optional `--at`, which sets timestamps
-in events and application/reconciliation artifacts; omission uses the current
-time. `diagnose`, `gate` and `open` do not accept it. It does not change the
-observation date inside the input snapshot. `round` also accepts optional
-`--settlement` and `--ledger`; without `--ledger`, it uses `ledger.jsonl` in the
-output directory.
+`round`, `apply` and `verify` accept `--at` to pin event timestamps (default: now);
+it does not change the observation date in the snapshot. `round` also accepts
+`--settlement` and `--ledger`; without `--ledger` it uses `ledger.jsonl` in the
+output directory. Blocked input exits with code 2 and a JSON error on stderr.
 
 ## Bringing your own thresholds
 
-Copy `examples/operating/methodology-reference.json`, change the numbers, and pass
-it with `--methodology`. The action catalogue supplies acceptance and stop
-descriptions; those descriptions are not separate authorization checks.
-Configuration changes cover implemented parameters, not Python branch order or
-new platform actions. Defaults still exist, such as a `quality_factor` of 1
-when omitted; not every behavior is defined by the supplied configuration.
+Copy `examples/operating/methodology-reference.json`, change the numbers and pass
+it with `--methodology`. Thresholds come only from that document:
+`balance_alert_below` and `max_creatives_per_adset` are required, and a missing
+one is rejected rather than replaced by a code default. The one optional value is
+`quality_factor`, which means "no deduction" (1) when omitted and must lie in
+(0, 1] when present. Configuration changes parameters, not the branch order or
+the set of writable fields.
 
-## What this module deliberately does not do
+## Boundaries
 
-* No platform connection, no credentials, no account writes. The output is a
-  proposal list for a human, not an executed instruction.
-* No media understanding. Assets are referenced by declared identity only.
-* No automatic account operations. Rules classify inputs and generate proposals,
-  but this module has no user-approval, publishing or background scheduler implementation.
-* No claim that one account's result generalises. A rule firing is not proof of a
-  cause, and a repaired row is not proof that the repair worked.
+* No platform connection, credentials or account writes; the output is a list for
+  a human to review.
+* No media understanding; creatives are referenced by declared identity.
+* A rule firing is evidence for a decision, not proof of a cause.
 
-## Relationship to the rest of the repository
-
-`knowledge/catalog.json` remains the contextual advisory layer, and the files
-under `contracts/` remain design references that are not loaded at runtime. This
-module is executable and self-contained: it does not read the contracts and it
-does not write to any platform. Live integration needs a separately designed
-process for metric definitions, object mapping, permissions, authorization,
-submission and readback, followed by validation of the applicable rules.
-Replacing file inputs with a connector does not complete a live deployment.
+Live use needs its own reads, object mapping, permissions, approval, submission
+and readback; in my live runs those went through WorkBuddy's connectors under my
+approval. `knowledge/catalog.json` stays the advisory layer, and `contracts/` stays
+a design reference that is not loaded at runtime.
 
 Return to the [documentation index](index.md).

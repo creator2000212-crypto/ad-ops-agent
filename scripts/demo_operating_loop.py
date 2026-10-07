@@ -7,10 +7,13 @@ What this demonstrates, in order:
    without calling a platform.
 2. A zero-conversion ad set below the sample gate is *not* judged, while one that
    crosses both the sample gate and the loss line is.
-3. The write gate separates four outcomes: writable, already satisfied, a
-   current value matching neither baseline nor target, and unreadable state.
-4. A write that did not take effect is caught by the write-back reconciliation.
-5. The ledger is append-only: a second round adds rows and keeps the unresolved
+3. Rule precedence: an ad set that meets the promotion numbers is held when a
+   creative or account problem comes first (one change per ad set per round).
+4. The five-state write gate separates ready, already satisfied, conflict (a
+   current value matching neither baseline nor target), unknown (state not
+   read) and advisory (nothing to write).
+5. A write that did not take effect is caught by the write-back reconciliation.
+6. The ledger is append-only: a second round adds rows and keeps the unresolved
    ones visible instead of resetting the round.
 
 No network calls. All fixtures are under ``examples/operating/``.
@@ -75,7 +78,13 @@ def run(output):
     require('LADDER_PROMOTE' in (by_object.get('fictional-adset-a1') or []),
             'A healthy ad set should be proposed for promotion')
 
-    # (3) all four gate outcomes plus the advisory bucket must be present.
+    # (3) a promotion waits behind a creative breaker and behind account P0 findings.
+    for held in ('fictional-adset-a6', 'fictional-adset-b1'):
+        codes = by_object.get(held) or []
+        require('LADDER_HOLD' in codes and 'LADDER_PROMOTE' not in codes,
+                f'{held} should be held, not promoted')
+
+    # (4) all five gate states must be present.
     gate = json.loads((output / 'round-1' / 'gate.json').read_text(encoding='utf-8'))
     summary = gate['summary']
     for state in ('ready', 'satisfied', 'conflict', 'unknown', 'advisory'):
@@ -92,14 +101,18 @@ def run(output):
     require(first['planned_writes'] == summary['ready'], 'Write plan does not match the ready rows')
     require(first['planned_writes'] < first['proposals'], 'The gate wrote everything, so it gated nothing')
 
-    # (4) a write that silently did not take effect must be visible, not assumed.
+    # (5) a write that silently did not take effect must be visible, not assumed.
     require(first['reconciliation']['ineffective'] == 1,
             'The ineffective write was not detected')
+    reconciliation = json.loads((output / 'round-1' / 'reconciliation.json').read_text(encoding='utf-8'))
+    missed = [row['object_key'] for row in reconciliation['rows'] if row['checked'] and not row['effective']]
+    require(missed == ['fictional-adset-a10'], 'The write that did not take should be a10')
     report = (output / 'round-1' / 'report.md').read_text(encoding='utf-8')
-    require('未生效' in report, 'Report did not flag the ineffective write')
+    require('| `fictional-adset-a10` | LADDER_PROMOTE | **不匹配** |' in report,
+            'Report did not flag the ineffective write')
     require('不连接任何广告平台' in report, 'Report did not carry the offline notice')
 
-    # (5) the ledger grows and unresolved rows stay open across rounds.
+    # (6) the ledger grows and unresolved rows stay open across rounds.
     events_after_first = len(ledger.read_text(encoding='utf-8').strip().splitlines())
     open_first = cli('operating_loop.py', 'open', '--ledger', ledger)['open']
     require(open_first >= 1, 'The ineffective write should remain an open row')

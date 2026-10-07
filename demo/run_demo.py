@@ -34,10 +34,20 @@ FIXTURE_ARGS = (
 )
 
 
+def fresh_ledger(path):
+    """Each demo run starts its own ledger, so earlier runs cannot leak open rows
+    into the committed sample. Only the demo's own ledger file is removed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_file():
+        path.unlink()
+    return path
+
+
 def run_round(out):
     out.mkdir(parents=True, exist_ok=True)
+    ledger = fresh_ledger(out / 'ledger.jsonl')
     command = [sys.executable, str(ROOT / 'operating_loop.py'), 'round',
-               '--out', str(out), '--at', DEMO_TIMESTAMP,
+               '--out', str(out), '--ledger', str(ledger), '--at', DEMO_TIMESTAMP,
                *[part for pair in FIXTURE_ARGS for part in pair]]
     result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True)
     if result.returncode != 0:
@@ -59,6 +69,8 @@ def sample(out):
                    if item['gate'] in ('conflict', 'unknown'))
     promote = [item['object_key'] for item in findings['proposals']
                if item['code'] == 'LADDER_PROMOTE']
+    hold = [item['object_key'] for item in findings['proposals']
+            if item['code'] == 'LADDER_HOLD']
     ineffective = [item['object_key'] for item in reconciliation['rows']
                    if item.get('checked') and not item['effective']]
 
@@ -77,6 +89,7 @@ def sample(out):
                                for row in gate['write_plan']],
         'needs_human': human,
         'promotion_candidates': sorted(promote),
+        'promotion_holds': sorted(hold),
         'reconciliation': summary['reconciliation'],
         'not_effective': sorted(ineffective),
         'open_rows': summary['open_rows'],
@@ -198,7 +211,7 @@ def run_steps(out):
     regenerated from the same fixtures in full/, using its own ledger.
     """
     steps = out / 'steps'
-    ledger = steps / LEDGER_IN_STEPS
+    ledger = fresh_ledger(steps / LEDGER_IN_STEPS)
     banner = '─' * 78
 
     def head(number, title, inputs, action, outputs):

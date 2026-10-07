@@ -1,27 +1,29 @@
 {
   "schema_version": 1,
   "kind": "writeback_snapshot",
-  "notice": "FICTIONAL FIXTURE — 写入前重新复拉的状态。用来演示写前闸门，不是任何账户的真实回读。",
+  "notice": "FICTIONAL FIXTURE — the state re-read just before writing, used to demonstrate the write gate. All values are fictional; this is not a readback from any account.",
   "as_of": "2026-09-24T11:58:00+08:00",
   "collected_by": "offline_fixture",
-  "collection_note": "闸门要求的是「写入前最后一次复拉」，不是取数那一次。两次之间可能有人在操作。",
+  "collection_note": "The gate needs the last read before writing, not the read the diagnosis used. Someone may have changed an object in between.",
   "objects": {
-    "fictional-adset-a1": {"daily_budget": "10.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
-    "fictional-adset-a2": {"daily_budget": "5.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
-    "fictional-adset-a3": {"daily_budget": "10.00", "status": "PAUSED", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
-    "fictional-adset-a4": {"daily_budget": "30.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
-    "fictional-adset-a5": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
+    "fictional-adset-a1": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
+    "fictional-adset-a2": {"daily_budget": "10.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
+    "fictional-adset-a3": {"daily_budget": "20.00", "status": "PAUSED", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
+    "fictional-adset-a4": {"daily_budget": "40.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
+    "fictional-adset-a5": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITH_COST_CAP", "bid_amount": "5.00"},
     "fictional-adset-a6": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
-    "fictional-adset-a7": {"daily_budget": "10.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
-    "fictional-adset-a8": {"daily_budget": "10.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
-    "fictional-adset-a9": {"daily_budget": "30.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITH_COST_CAP"},
+    "fictional-adset-a7": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
+    "fictional-adset-a8": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
+    "fictional-adset-a9": {"daily_budget": "30.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
+    "fictional-adset-a10": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
+    "fictional-adset-b1": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
     "fictional-meta-account-b": {"balance": "41.20", "today_spend": "0.00"},
     "fictional-meta-account-c": {"balance": "300.00", "today_spend": "0.00"}
   },
   "scenario_notes": {
-    "fictional-adset-a1": "仍与基线一致 -> 可执行。",
-    "fictional-adset-a3": "已被人工暂停成目标值 -> 已满足，跳过不写。",
-    "fictional-adset-a9": "人工已把预算改到 30（既非基线 10 也非目标 20）-> 冲突隔离。",
-    "fictional-adset-b1": "刻意不在快照里 -> 未知，先复拉。"
+    "fictional-adset-a1": "Still equals the baseline -> ready.",
+    "fictional-adset-a3": "Already paused, which is the target -> satisfied, nothing to write.",
+    "fictional-adset-a9": "Budget hand-edited to 30 (neither baseline 20 nor target 40) -> conflict, isolated.",
+    "fictional-adset-b2": "Deliberately absent: the re-read did not return it -> unknown, re-read first."
   }
 }
