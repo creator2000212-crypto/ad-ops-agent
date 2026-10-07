@@ -1,0 +1,77 @@
+{
+  "kind": "build_plan",
+  "notice": "Fictional build plan for the readback replay. Every key, name, amount and URL is invented; example.com is a reserved domain. Money is in major units. The geo value is a location ID in the form the TikTok API uses, not an account or audience identifier.",
+  "platform": "tiktok",
+  "account_key": "fictional-tiktok-account-a",
+  "currency": "USD",
+  "url_parameters": {
+    "utm_source": "tiktok",
+    "utm_medium": "paid",
+    "utm_campaign": "__CAMPAIGN_NAME__",
+    "utm_content": "__CID_NAME__"
+  },
+  "objects": [
+    {
+      "level": "campaign",
+      "object_key": "cmp-t-quote-01",
+      "name": "LG | Home quote",
+      "objective": "WEB_CONVERSIONS"
+    },
+    {
+      "level": "adset",
+      "object_key": "ag-t1",
+      "parent_key": "cmp-t-quote-01",
+      "name": "1n1 | T1 | MAX | $30",
+      "optimization_goal": "CONVERT",
+      "optimization_event": "FORM",
+      "daily_budget": "30.00",
+      "bid_strategy": "BID_TYPE_NO_BID",
+      "attribution": {
+        "click_days": 7,
+        "view_days": 1
+      },
+      "geo": [
+        "6252001"
+      ],
+      "placements": [
+        "PLACEMENT_TIKTOK"
+      ]
+    },
+    {
+      "level": "adset",
+      "object_key": "ag-t2",
+      "parent_key": "cmp-t-quote-01",
+      "name": "1n1 | T2 | MAX | $30",
+      "optimization_goal": "CONVERT",
+      "optimization_event": "FORM",
+      "daily_budget": "30.00",
+      "bid_strategy": "BID_TYPE_NO_BID",
+      "attribution": {
+        "click_days": 7,
+        "view_days": 1
+      },
+      "geo": [
+        "6252001"
+      ],
+      "placements": [
+        "PLACEMENT_TIKTOK"
+      ]
+    },
+    {
+      "level": "ad",
+      "object_key": "ad-t1",
+      "parent_key": "ag-t1",
+      "name": "T1",
+      "destination_url": "https://example.com/quote",
+      "cta": "LEARN_MORE"
+    },
+    {
+      "level": "ad",
+      "object_key": "ad-t2",
+      "parent_key": "ag-t2",
+      "name": "T2",
+      "destination_url": "https://example.com/quote",
+      "cta": "LEARN_MORE"
+    }
+  ]
+}

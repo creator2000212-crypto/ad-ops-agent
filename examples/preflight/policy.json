@@ -1,0 +1,75 @@
+{
+  "kind": "preflight_policy",
+  "version": "2026-10-07",
+  "notice": "Example pre-flight policy. The naming convention and expected parameter values are this project's own conventions. The macro lists and special-ad-category values are copied from the platform pages named in each 'source' on the 'checked' date; platforms change these lists, so re-check them before relying on this file.",
+  "naming": {
+    "adset": {
+      "separator": " | ",
+      "tokens": ["structure", "creative", "bid", "budget"],
+      "example": "1n1 | H1 | MAX | $20 (one creative per ad set, creative H1, lowest cost, 20 per day)",
+      "budget_prefix": "$",
+      "bid_tokens": {
+        "meta": {
+          "MAX": "LOWEST_COST_WITHOUT_CAP",
+          "CC": "COST_CAP",
+          "BC": "LOWEST_COST_WITH_BID_CAP"
+        },
+        "tiktok": {
+          "MAX": "BID_TYPE_NO_BID"
+        }
+      }
+    }
+  },
+  "destination_url": {
+    "platforms": {
+      "meta": {
+        "required_parameters": {
+          "utm_source": "meta",
+          "utm_medium": "paid",
+          "utm_campaign": "{{campaign.name}}",
+          "utm_content": "{{ad.name}}"
+        },
+        "macro_pattern": "\\{\\{[^{}]*\\}\\}",
+        "known_macros": [
+          "{{campaign.id}}", "{{campaign.name}}",
+          "{{adset.id}}", "{{adset.name}}",
+          "{{ad.id}}", "{{ad.name}}",
+          "{{placement}}", "{{site_source_name}}"
+        ],
+        "source": "Meta Business Help Center article on dynamic URL parameters, https://www.facebook.com/business/help/2360940870872492",
+        "checked": "2026-10-07"
+      },
+      "tiktok": {
+        "required_parameters": {
+          "utm_source": "tiktok",
+          "utm_medium": "paid",
+          "utm_campaign": "__CAMPAIGN_NAME__",
+          "utm_content": "__CID_NAME__"
+        },
+        "macro_pattern": "__[A-Z0-9_]+?__",
+        "known_macros": [
+          "__CAMPAIGN_ID__", "__CAMPAIGN_NAME__",
+          "__AID__", "__AID_NAME__",
+          "__CID__", "__CID_NAME__",
+          "__PLACEMENT__"
+        ],
+        "source": "TikTok Ads Manager help, 'Track offsite web events with UTM parameters', https://ads.tiktok.com/help/article/track-offsite-web-events-with-utm-parameters",
+        "checked": "2026-10-07"
+      }
+    }
+  },
+  "special_ad_categories": {
+    "meta": {
+      "source": "Meta Marketing API, Special Ad Categories, https://developers.facebook.com/docs/marketing-api/audiences/special-ad-category",
+      "checked": "2026-10-07",
+      "declaration_field": "special_ad_categories",
+      "offer_categories": {
+        "credit_cards": "FINANCIAL_PRODUCTS_SERVICES",
+        "personal_loans": "FINANCIAL_PRODUCTS_SERVICES",
+        "job_listings": "EMPLOYMENT",
+        "housing_listings": "HOUSING"
+      },
+      "note": "The offer categories on the left are this project's own labels. The check confirms only that the campaign declares the category; it does not decide whether an offer belongs to one."
+    }
+  }
+}

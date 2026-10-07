@@ -1,0 +1,151 @@
+{
+  "kind": "build_checklist",
+  "notice": "Fictional build checklist for the pre-flight replay. Every key, name, amount, file and URL is invented; example.com is a reserved domain. Money is in major units. url_parameters is the separate URL parameters field Meta ads carry next to the destination URL.",
+  "platform": "meta",
+  "currency": "USD",
+  "campaigns": [
+    {
+      "campaign_key": "cmp-quote-01",
+      "name": "LG | Home quote",
+      "objective": "OUTCOME_LEADS",
+      "offer_category": "home_services",
+      "special_ad_categories": [],
+      "adsets": [
+        {
+          "adset_key": "as-h1",
+          "name": "1n1 | H1 | MAX | $20",
+          "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+          "bid_amount": null,
+          "daily_budget": "20.00",
+          "attribution": {
+            "click_days": 7,
+            "view_days": 1
+          },
+          "ads": [
+            {
+              "ad_key": "ad-h1",
+              "name": "H1",
+              "destination_url": "https://example.com/quote",
+              "url_parameters": "utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+              "creative": {
+                "file": "h1",
+                "sha256": "7371f2e10d307b1fb9e5bc8870c45d9272e5f9eb50d7db6238cd70b74aa88156"
+              }
+            }
+          ]
+        },
+        {
+          "adset_key": "as-h2",
+          "name": "1n1 | H2 | MAX | $20",
+          "bid_strategy": "COST_CAP",
+          "bid_amount": "6.50",
+          "daily_budget": "20.00",
+          "attribution": {
+            "click_days": 7,
+            "view_days": 1
+          },
+          "ads": [
+            {
+              "ad_key": "ad-h2",
+              "name": "H2",
+              "destination_url": "https://example.com/quote",
+              "url_parameters": "utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content=h2",
+              "creative": {
+                "file": "h2",
+                "sha256": "3bad47623aa572499c3b7235520c2738c46fab519903b99dd4516977bb7d740c"
+              }
+            }
+          ]
+        },
+        {
+          "adset_key": "as-h3",
+          "name": "1n1 | H3 | CC6.50 | $25",
+          "bid_strategy": "COST_CAP",
+          "bid_amount": "6.50",
+          "daily_budget": "20.00",
+          "attribution": {
+            "click_days": 7,
+            "view_days": 1
+          },
+          "ads": [
+            {
+              "ad_key": "ad-h3",
+              "name": "H3",
+              "destination_url": "http://example.com/quote",
+              "url_parameters": "utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad_name}}",
+              "creative": {
+                "file": "h3",
+                "sha256": "b4331ac03cd42cb1296ca268fcefe71f6f289544bc37c444421322b885b6e51e"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "campaign_key": "cmp-hire-01",
+      "name": "LG | Hiring",
+      "objective": "OUTCOME_LEADS",
+      "offer_category": "job_listings",
+      "special_ad_categories": [],
+      "adsets": [
+        {
+          "adset_key": "as-j1",
+          "name": "1n1 | J1 | MAX | $15",
+          "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+          "bid_amount": null,
+          "daily_budget": "15.00",
+          "attribution": {
+            "click_days": 7,
+            "view_days": 1
+          },
+          "ads": [
+            {
+              "ad_key": "ad-j1",
+              "name": "J1",
+              "destination_url": "https://example.com/quote",
+              "url_parameters": "utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+              "creative": {
+                "file": "j1",
+                "sha256": "90f11d21d2316cbd441f0a8faa0e857ff3fbc8d205153be31328445d28585313"
+              }
+            }
+          ]
+        },
+        {
+          "adset_key": "as-j2",
+          "name": "J2 test",
+          "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+          "bid_amount": null,
+          "daily_budget": "30.00",
+          "attribution": {
+            "click_days": 1,
+            "view_days": 0
+          },
+          "ads": [
+            {
+              "ad_key": "ad-j2a",
+              "name": "J2a",
+              "destination_url": "https://example.com/quote",
+              "url_parameters": "utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+              "creative": {
+                "file": "j2a",
+                "sha256": "2521dc2c5b3409367ac12bff8a58fed2b70a3ecaa9b6d21754d28e59d1762072"
+              }
+            },
+            {
+              "ad_key": "ad-j2b",
+              "name": "J2b",
+              "destination_url": "https://example.com/quote",
+              "url_parameters": "utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}",
+              "creative": {
+                "file": "j2a-copy",
+                "sha256": "2521dc2c5b3409367ac12bff8a58fed2b70a3ecaa9b6d21754d28e59d1762072"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "kind": "build_plan",
+  "notice": "Fictional build plan for the readback replay. Every key, name, amount and URL is invented; example.com is a reserved domain. Money is in major units (20.00 means 20 US dollars).",
+  "platform": "meta",
+  "account_key": "fictional-meta-account-a",
+  "currency": "USD",
+  "url_parameters": {
+    "utm_source": "meta",
+    "utm_medium": "paid",
+    "utm_campaign": "{{campaign.name}}",
+    "utm_content": "{{ad.name}}"
+  },
+  "objects": [
+    {
+      "level": "campaign",
+      "object_key": "cmp-quote-01",
+      "name": "LG | Home quote",
+      "objective": "OUTCOME_LEADS"
+    },
+    {
+      "level": "adset",
+      "object_key": "as-h1",
+      "parent_key": "cmp-quote-01",
+      "name": "1n1 | H1 | MAX | $20",
+      "optimization_goal": "OFFSITE_CONVERSIONS",
+      "optimization_event": "LEAD",
+      "daily_budget": "20.00",
+      "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+      "attribution": {"click_days": 7, "view_days": 1},
+      "geo": ["US"],
+      "placements": ["facebook", "instagram"]
+    },
+    {
+      "level": "adset",
+      "object_key": "as-h2",
+      "parent_key": "cmp-quote-01",
+      "name": "1n1 | H2 | MAX | $20",
+      "optimization_goal": "OFFSITE_CONVERSIONS",
+      "optimization_event": "LEAD",
+      "daily_budget": "20.00",
+      "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+      "attribution": {"click_days": 7, "view_days": 1},
+      "geo": ["US"],
+      "placements": ["facebook", "instagram"]
+    },
+    {
+      "level": "adset",
+      "object_key": "as-h3",
+      "parent_key": "cmp-quote-01",
+      "name": "1n1 | H3 | CC6.50 | $20",
+      "optimization_goal": "OFFSITE_CONVERSIONS",
+      "optimization_event": "LEAD",
+      "daily_budget": "20.00",
+      "bid_strategy": "COST_CAP",
+      "bid_amount": "6.50",
+      "attribution": {"click_days": 7, "view_days": 1},
+      "geo": ["US"],
+      "placements": ["facebook", "instagram"]
+    },
+    {
+      "level": "ad",
+      "object_key": "ad-h1",
+      "parent_key": "as-h1",
+      "name": "H1",
+      "destination_url": "https://example.com/quote",
+      "cta": "LEARN_MORE"
+    },
+    {
+      "level": "ad",
+      "object_key": "ad-h2",
+      "parent_key": "as-h2",
+      "name": "H2",
+      "destination_url": "https://example.com/quote",
+      "cta": "LEARN_MORE"
+    },
+    {
+      "level": "ad",
+      "object_key": "ad-h3",
+      "parent_key": "as-h3",
+      "name": "H3",
+      "destination_url": "https://example.com/quote",
+      "cta": "LEARN_MORE"
+    }
+  ]
+}

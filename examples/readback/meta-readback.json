@@ -1,0 +1,236 @@
+{
+  "kind": "build_readback",
+  "notice": "Fictional readback for the replay. Each response follows the shape of the public Meta Marketing API (ad account, campaign, ad set, and ad with its creative expanded) as returned for the requested fields; every ID, name, amount and URL is invented. Money fields are in minor units, as the API returns them.",
+  "platform": "meta",
+  "api_reference": "https://developers.facebook.com/docs/marketing-api/reference/",
+  "created_at": "2026-09-23T02:00:00Z",
+  "read_at": "2026-09-23T02:03:00Z",
+  "account": {
+    "response": {
+      "currency": "USD",
+      "account_status": 1
+    }
+  },
+  "objects": [
+    {
+      "object_key": "cmp-quote-01",
+      "level": "campaign",
+      "response": {
+        "id": "FICTIONAL-CAMPAIGN-1",
+        "name": "LG | Home quote",
+        "objective": "OUTCOME_LEADS",
+        "special_ad_categories": [],
+        "status": "PAUSED",
+        "effective_status": "PAUSED"
+      }
+    },
+    {
+      "object_key": "as-h1",
+      "level": "adset",
+      "response": {
+        "id": "FICTIONAL-ADSET-1",
+        "name": "1n1 | H1 | MAX | $20",
+        "campaign_id": "FICTIONAL-CAMPAIGN-1",
+        "optimization_goal": "OFFSITE_CONVERSIONS",
+        "billing_event": "IMPRESSIONS",
+        "promoted_object": {
+          "pixel_id": "FICTIONAL-PIXEL-1",
+          "custom_event_type": "LEAD"
+        },
+        "daily_budget": "2000",
+        "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+        "attribution_spec": [
+          {
+            "event_type": "CLICK_THROUGH",
+            "window_days": 7
+          },
+          {
+            "event_type": "VIEW_THROUGH",
+            "window_days": 1
+          }
+        ],
+        "targeting": {
+          "geo_locations": {
+            "countries": [
+              "US"
+            ]
+          },
+          "age_min": 18,
+          "publisher_platforms": [
+            "facebook",
+            "instagram"
+          ]
+        },
+        "status": "PAUSED",
+        "effective_status": "PAUSED"
+      }
+    },
+    {
+      "object_key": "as-h2",
+      "level": "adset",
+      "response": {
+        "id": "FICTIONAL-ADSET-2",
+        "name": "1n1 | H2 | MAX | $20",
+        "campaign_id": "FICTIONAL-CAMPAIGN-1",
+        "optimization_goal": "OFFSITE_CONVERSIONS",
+        "billing_event": "IMPRESSIONS",
+        "promoted_object": {
+          "pixel_id": "FICTIONAL-PIXEL-1",
+          "custom_event_type": "LEAD"
+        },
+        "daily_budget": "2000",
+        "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+        "attribution_spec": [
+          {
+            "event_type": "CLICK_THROUGH",
+            "window_days": 7
+          },
+          {
+            "event_type": "VIEW_THROUGH",
+            "window_days": 1
+          }
+        ],
+        "targeting": {
+          "geo_locations": {
+            "countries": [
+              "US"
+            ]
+          },
+          "age_min": 18,
+          "publisher_platforms": [
+            "facebook",
+            "instagram"
+          ]
+        },
+        "status": "PAUSED",
+        "effective_status": "PAUSED"
+      }
+    },
+    {
+      "object_key": "as-h3",
+      "level": "adset",
+      "response": {
+        "id": "FICTIONAL-ADSET-3",
+        "name": "1n1 | H3 | CC6.50 | $20",
+        "campaign_id": "FICTIONAL-CAMPAIGN-1",
+        "optimization_goal": "OFFSITE_CONVERSIONS",
+        "billing_event": "IMPRESSIONS",
+        "promoted_object": {
+          "pixel_id": "FICTIONAL-PIXEL-1",
+          "custom_event_type": "LEAD"
+        },
+        "daily_budget": "2000",
+        "bid_strategy": "COST_CAP",
+        "bid_amount": 650,
+        "attribution_spec": [
+          {
+            "event_type": "CLICK_THROUGH",
+            "window_days": 7
+          },
+          {
+            "event_type": "VIEW_THROUGH",
+            "window_days": 1
+          }
+        ],
+        "targeting": {
+          "geo_locations": {
+            "countries": [
+              "US"
+            ]
+          },
+          "age_min": 18,
+          "publisher_platforms": [
+            "facebook",
+            "instagram"
+          ]
+        },
+        "status": "PAUSED",
+        "effective_status": "PAUSED"
+      }
+    },
+    {
+      "object_key": "ad-h1",
+      "level": "ad",
+      "response": {
+        "id": "FICTIONAL-AD-1",
+        "name": "H1",
+        "adset_id": "FICTIONAL-ADSET-1",
+        "status": "PAUSED",
+        "effective_status": "IN_PROCESS",
+        "creative": {
+          "id": "FICTIONAL-CREATIVE-1",
+          "object_story_spec": {
+            "page_id": "FICTIONAL-PAGE-1",
+            "link_data": {
+              "link": "https://example.com/quote",
+              "message": "Fictional ad copy.",
+              "call_to_action": {
+                "type": "LEARN_MORE",
+                "value": {
+                  "link": "https://example.com/quote"
+                }
+              }
+            }
+          },
+          "url_tags": "utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}"
+        }
+      }
+    },
+    {
+      "object_key": "ad-h2",
+      "level": "ad",
+      "response": {
+        "id": "FICTIONAL-AD-2",
+        "name": "H2",
+        "adset_id": "FICTIONAL-ADSET-2",
+        "status": "PAUSED",
+        "effective_status": "IN_PROCESS",
+        "creative": {
+          "id": "FICTIONAL-CREATIVE-2",
+          "object_story_spec": {
+            "page_id": "FICTIONAL-PAGE-1",
+            "link_data": {
+              "link": "https://example.com/quote",
+              "message": "Fictional ad copy.",
+              "call_to_action": {
+                "type": "LEARN_MORE",
+                "value": {
+                  "link": "https://example.com/quote"
+                }
+              }
+            }
+          },
+          "url_tags": "utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}"
+        }
+      }
+    },
+    {
+      "object_key": "ad-h3",
+      "level": "ad",
+      "response": {
+        "id": "FICTIONAL-AD-3",
+        "name": "H3",
+        "adset_id": "FICTIONAL-ADSET-3",
+        "status": "PAUSED",
+        "effective_status": "IN_PROCESS",
+        "creative": {
+          "id": "FICTIONAL-CREATIVE-3",
+          "object_story_spec": {
+            "page_id": "FICTIONAL-PAGE-1",
+            "link_data": {
+              "link": "https://example.com/quote",
+              "message": "Fictional ad copy.",
+              "call_to_action": {
+                "type": "LEARN_MORE",
+                "value": {
+                  "link": "https://example.com/quote"
+                }
+              }
+            }
+          },
+          "url_tags": "utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}"
+        }
+      }
+    }
+  ]
+}

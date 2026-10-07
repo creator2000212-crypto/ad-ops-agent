@@ -1,0 +1,109 @@
+{
+  "kind": "build_readback",
+  "notice": "Fictional readback for the replay. Each response follows the shape of the public TikTok API for Business (advertiser info, campaign, ad group and ad) as returned for the requested fields; every ID, name, amount and URL is invented. TikTok returns budgets in major units, and operation_status DISABLE is its paused state.",
+  "platform": "tiktok",
+  "api_reference": "https://business-api.tiktok.com/portal/docs",
+  "created_at": "2026-09-23T02:10:00Z",
+  "read_at": "2026-09-23T02:12:00Z",
+  "account": {
+    "response": {
+      "currency": "USD"
+    }
+  },
+  "objects": [
+    {
+      "object_key": "cmp-t-quote-01",
+      "level": "campaign",
+      "response": {
+        "advertiser_id": "FICTIONAL-ADVERTISER-T1",
+        "campaign_id": "FICTIONAL-CAMPAIGN-T1",
+        "campaign_name": "LG | Home quote",
+        "objective_type": "WEB_CONVERSIONS",
+        "budget_mode": "BUDGET_MODE_INFINITE",
+        "operation_status": "DISABLE"
+      }
+    },
+    {
+      "object_key": "ag-t1",
+      "level": "adset",
+      "response": {
+        "advertiser_id": "FICTIONAL-ADVERTISER-T1",
+        "campaign_id": "FICTIONAL-CAMPAIGN-T1",
+        "adgroup_id": "FICTIONAL-ADGROUP-T1",
+        "adgroup_name": "1n1 | T1 | MAX | $30",
+        "pixel_id": "FICTIONAL-PIXEL-T1",
+        "optimization_goal": "CONVERT",
+        "optimization_event": "FORM",
+        "budget_mode": "BUDGET_MODE_DAY",
+        "budget": 30.0,
+        "bid_type": "BID_TYPE_NO_BID",
+        "click_attribution_window": "SEVEN_DAYS",
+        "view_attribution_window": "ONE_DAY",
+        "location_ids": [
+          "6252001"
+        ],
+        "placement_type": "PLACEMENT_TYPE_NORMAL",
+        "placements": [
+          "PLACEMENT_TIKTOK"
+        ],
+        "operation_status": "DISABLE"
+      }
+    },
+    {
+      "object_key": "ag-t2",
+      "level": "adset",
+      "response": {
+        "advertiser_id": "FICTIONAL-ADVERTISER-T1",
+        "campaign_id": "FICTIONAL-CAMPAIGN-T1",
+        "adgroup_id": "FICTIONAL-ADGROUP-T2",
+        "adgroup_name": "1n1 | T2 | MAX | $30",
+        "pixel_id": "FICTIONAL-PIXEL-T1",
+        "optimization_goal": "CONVERT",
+        "optimization_event": "FORM",
+        "budget_mode": "BUDGET_MODE_DAY",
+        "budget": 30.0,
+        "bid_type": "BID_TYPE_NO_BID",
+        "click_attribution_window": "SEVEN_DAYS",
+        "view_attribution_window": "ONE_DAY",
+        "location_ids": [
+          "6252001"
+        ],
+        "placement_type": "PLACEMENT_TYPE_NORMAL",
+        "placements": [
+          "PLACEMENT_TIKTOK"
+        ],
+        "operation_status": "DISABLE"
+      }
+    },
+    {
+      "object_key": "ad-t1",
+      "level": "ad",
+      "response": {
+        "advertiser_id": "FICTIONAL-ADVERTISER-T1",
+        "adgroup_id": "FICTIONAL-ADGROUP-T1",
+        "ad_id": "FICTIONAL-AD-T1",
+        "ad_name": "T1",
+        "ad_text": "Fictional ad copy.",
+        "video_id": "FICTIONAL-VIDEO-T1",
+        "landing_page_url": "https://example.com/quote?utm_source=tiktok&utm_medium=paid&utm_campaign=__CAMPAIGN_NAME__&utm_content=__CID_NAME__",
+        "call_to_action": "LEARN_MORE",
+        "operation_status": "DISABLE"
+      }
+    },
+    {
+      "object_key": "ad-t2",
+      "level": "ad",
+      "response": {
+        "advertiser_id": "FICTIONAL-ADVERTISER-T1",
+        "adgroup_id": "FICTIONAL-ADGROUP-T2",
+        "ad_id": "FICTIONAL-AD-T2",
+        "ad_name": "T2",
+        "ad_text": "Fictional ad copy.",
+        "video_id": "FICTIONAL-VIDEO-T2",
+        "landing_page_url": "https://example.com/quote?utm_source=tiktok&utm_medium=paid&utm_campaign=__CAMPAIGN_NAME__&utm_content=__CID_NAME__",
+        "call_to_action": "LEARN_MORE",
+        "operation_status": "DISABLE"
+      }
+    }
+  ]
+}
