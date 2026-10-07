@@ -10,7 +10,7 @@ If you have not opened the project or checked its connection, start with [first 
 
 The agent first identifies the selected platforms, accounts and capabilities actually available. Read-only tasks need relevant reading or reporting access. Before a first complete configuration and publishing workflow, verify necessary reading, writing and the ability to re-read affected objects, then begin full business intake. Unselected platforms and accounts need not be connected; do not create ads just to probe permissions.
 
-When a capability is missing, the agent explains the affected steps and the next connection action. Retain information already supplied and continue independent work supported by current access. If no usable connection or route has been chosen, consider [Pipeboard](https://pipeboard.co/#via=tian) first; an existing MCP, API, SDK or another connection route remains valid. Choices and setup details live in the [connectivity guide](platform-connectivity.md).
+When a capability is missing, the agent explains the affected steps and the next connection action. Retain information already supplied and continue independent work supported by current access. An existing MCP, API or SDK connection stays in use. Without one, the agent lists the routes (official platform APIs, a self-hosted MCP server or a hosted MCP connector) with their trade-offs, in no particular order, and you choose. Setup details live in the [connectivity guide](platform-connectivity.md).
 
 A working connection does not authorize publishing or spending. Actual account reads, available tools and permission evidence establish capabilities; public Python offline results cannot replace that evidence. See [capability status](capability-status.md) for scope.
 
@@ -91,7 +91,7 @@ Ordinary users can skip this section. The host turns conversation into private i
 
 ### Connection preferences and simulated capabilities
 
-`setup_preferences.route` records `undecided`, `pipeboard`, `existing`, `self_managed` or `other_mcp`; `setup_preferences.recommendation_dismissed` records a dismissed recommendation. Do not repeat unsolicited recommendations after a route is selected or the recommendation is dismissed. Choosing a route does not prove access.
+`setup_preferences.route` records `undecided`, `existing`, `self_managed` (official APIs/SDKs), `self_hosted_mcp` or `managed_mcp` (hosted MCP connector); older values `pipeboard` and `other_mcp` are read as `managed_mcp` and `self_hosted_mcp`. While the route is `undecided`, `guidance.connection_options` lists every route unranked with plain documentation links; `setup_preferences.options_dismissed` (older name `recommendation_dismissed`) hides the list. After a route is selected or the list is dismissed, it is not shown again. Choosing a route does not prove access.
 
 `onboarding.py` uses `connection_gate` to check simulated reading and `create_simulated_draft` capabilities for four readiness evaluations; `guidance` stays at connection setup when that gate fails. This contract is unchanged. It does not require real read-only tasks to have write permission, and `ready_simulation` is not a live account check.
 

@@ -6,7 +6,7 @@
 
 Follow **open the project → verify the connection and account → explain the current need → choose one task → check the result**. Skip steps already completed and still valid for this task.
 
-This page illustrates **an agent tool + Pipeboard + one Meta (Facebook / Instagram) account**. Keep an existing connection and verify the same necessary reading capabilities. See [connection options](platform-connectivity.md) for TikTok / Google. All first tasks here read and prepare only: no ad creation, budget changes or status changes. Later publishing requires the necessary capabilities, a concrete plan and covered authorization.
+This page illustrates **an agent tool + an MCP connection + one Meta (Facebook / Instagram) account**. Any existing connection works; verify the same necessary reading capabilities. See [connection options](platform-connectivity.md) for TikTok / Google and the official-API route. All first tasks here read and prepare only: no ad creation, budget changes or status changes. Later publishing requires the necessary capabilities, a concrete plan and covered authorization.
 
 > Validation: setup sources were checked on 2026-09-25. There is no recorded end-to-end fresh-environment run or independent-user pass for this tutorial yet. [Validation scope](#validation).
 
@@ -71,20 +71,28 @@ Open that directory in your agent tool. A ZIP is a snapshot at download time; la
 
 ## 2. Prepare the account connection
 
-**Already connected:** go to step 3 to verify this account; no repeat purchase or setup is needed. **No route selected:** consider Pipeboard first to reduce connection maintenance; [visit Pipeboard to connect your ad accounts](https://pipeboard.co/#via=tian). Check current plans and account access. Other routes remain available in the [connection reference](platform-connectivity.md).
+**Already connected:** go to step 3 to verify this account; no new setup is needed. **No connection yet:** choose a route by its trade-offs. The routes are listed in no particular order.
 
-**You:** connect Meta on Pipeboard's Connections page and select the permitted accounts. Then configure a remote MCP connection in a compatible agent tool:
+| Route | Fits when | Trade-off |
+| --- | --- | --- |
+| Official Meta Marketing API with your own adapter | You want full control and can maintain a developer app | You handle app permissions, OAuth, tokens and API versions |
+| Self-hosted MCP server | You want agent tools but keep credentials and hosting yourself | You run, update and secure the server |
+| Hosted MCP connector, for example [Pipeboard](https://pipeboard.co) | You prefer not to maintain the connection yourself | A third party sits in the access path; coverage, limits, pricing and data handling are set by the provider |
+
+Setup details per platform are in the [connection reference](platform-connectivity.md).
+
+**You:** for an MCP route, connect Meta in the server's or provider's authorization flow and select only the permitted accounts. Then add the connection in a compatible agent tool:
 
 | Setting | Value or action |
 | --- | --- |
-| Name | A recognizable name, such as `Pipeboard Ads` |
-| Connection type | Streamable HTTP, a transport for remote MCP |
-| Server URL | `https://ads.mcp.pipeboard.co/` |
+| Name | A recognizable name, such as `Meta Ads MCP` |
+| Connection type | Streamable HTTP for a remote server; a local server may use stdio instead |
+| Server URL | The endpoint given in the server's or provider's official setup guide |
 | Sign-in / authorization | Use the consent flow in a client supporting the required OAuth process; otherwise follow the official instructions using the client's secure configuration |
 
-These fields follow the [official Pipeboard setup guide](https://pipeboard.co/guides/ads-mcp). Menus vary by client; if no setting is available, check whether the client supports this connection. An existing Meta-specific connection can remain in use.
+Menus vary by client; if no setting is available, check whether the client supports this connection type. An existing Meta-specific connection can remain in use.
 
-Prefer available read-only credentials or tool restrictions for this task; see the [permission guide](https://pipeboard.co/guides/api-token-permissions) for availability. A read-only chat instruction is not a server-side permission restriction. Keep tokens out of conversations and the repository.
+Prefer read-only credentials or a restricted tool list for this task where your route offers them. A read-only chat instruction is not a server-side permission restriction. Keep tokens out of conversations and the repository.
 
 **Done when:** the client discovers account, object and report reading tools. The next step verifies the account through an actual read; a connection-success message alone is insufficient.
 
@@ -231,8 +239,8 @@ You can ask: “List what is verified, the actual error category, missing condit
 
 | Item | Current evidence |
 | --- | --- |
-| Documented route | Agent tool with project-file and remote MCP access → Pipeboard → one Meta account |
-| Official source review | 2026-09-25: GitHub downloads, Pipeboard server, authentication and permissions; sources above |
+| Documented route | Agent tool with project-file and MCP access → an MCP connection of the user's choice → one Meta account |
+| Official source review | 2026-09-25: GitHub downloads and remote-MCP setup fields. Provider-specific endpoints and permissions are not listed here; follow the chosen provider's current guide |
 | Business provenance | Historical Meta/TikTok work in the [cases](case-studies.md), not acceptance of this tutorial |
 | Complete tutorial run | No recorded end-to-end run from a fresh environment yet |
 | Specific client, version, independent users | Pending; no combination or external-user pass is claimed |

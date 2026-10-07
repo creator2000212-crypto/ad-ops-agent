@@ -191,8 +191,8 @@ class SetupFlowTests(unittest.TestCase):
         self.profile['connections']['checks'][0]['write'] = {'status': 'unknown', 'scopes': []}
         before = self.evaluate()
         self.profile['setup_preferences'] = {
-            'route': 'pipeboard',
-            'visited_url': 'https://example.invalid/fictional-affiliate-link',
+            'route': 'managed_mcp',
+            'visited_url': 'https://example.invalid/fictional-provider-page',
             'purchased': True,
         }
         self.profile['collaboration']['approach'] = 'guided'
@@ -205,10 +205,10 @@ class SetupFlowTests(unittest.TestCase):
         self.assertEqual(after['next_questions'], [])
         self.assertEqual(after['profile_snapshot']['connections']['checks'][0]['write']['status'], 'unknown')
 
-    def test_valid_existing_route_is_not_promoted_again(self):
+    def test_valid_existing_route_does_not_list_connection_options_again(self):
         result = self.evaluate()
         self.assertEqual(result['connection_gate']['status'], 'ready_simulation')
-        self.assertIsNone(result['guidance']['recommendation'])
+        self.assertIsNone(result['guidance']['connection_options'])
         self.assertTrue(all(state['status'] == 'ready' for state in result['readiness'].values()))
 
     def test_unselected_account_failure_does_not_block_the_scoped_workflow(self):
@@ -221,7 +221,7 @@ class SetupFlowTests(unittest.TestCase):
         self.assertEqual(scoped['connection_gate']['status'], 'ready_simulation')
         self.assertEqual(scoped['connection_gate']['selected_accounts'], scope)
         self.assertTrue(all(state['status'] == 'ready' for state in scoped['readiness'].values()))
-        self.assertIsNone(scoped['guidance']['recommendation'])
+        self.assertIsNone(scoped['guidance']['connection_options'])
         onboarding.write(self.source, self.profile)
         onboarding.build_context(self.source, self.output, as_of=self.as_of)
         binding = onboarding.validate_context(self.output / 'context.json', targets=scope, as_of=self.as_of)
@@ -240,7 +240,27 @@ class SetupFlowTests(unittest.TestCase):
         questions = onboarding.read(self.output / 'questions.json')
         self.assertEqual(questions['next_questions'], [])
         self.assertTrue(questions['machine_actions'])
-        self.assertIn('connection_setup', (self.output / 'setup.md').read_text(encoding='utf-8'))
+        setup_text = (self.output / 'setup.md').read_text(encoding='utf-8')
+        self.assertIn('connection_setup', setup_text)
+        self.assertIsNone(context['guidance']['connection_options'])
+
+    def test_undecided_setup_writes_neutral_options_without_tracking_links(self):
+        self.profile['connections']['checks'] = []
+        self.profile['setup_preferences'] = {'route': 'undecided', 'options_dismissed': False}
+        completed = self.run_cli()
+        self.assertEqual(completed.returncode, 2, completed.stderr)
+        context = self.assert_setup_artifacts()
+        options = context['guidance']['connection_options']
+        self.assertEqual(options['ordering'], 'unranked')
+        self.assertEqual({item['route'] for item in options['routes']},
+                         {'self_managed', 'self_hosted_mcp', 'managed_mcp'})
+        setup_text = (self.output / 'setup.md').read_text(encoding='utf-8')
+        self.assertIn('不分先后', setup_text)
+        self.assertNotIn('via=', setup_text)
+        self.assertNotIn('推荐', setup_text)
+        for url in (link['url'] for item in options['routes'] for link in item['links']):
+            self.assertNotIn('#', url)
+            self.assertNotIn('?', url)
 
     def test_connected_business_intake_cli_succeeds_with_unresolved_facts(self):
         self.unknown_fact('product_name')

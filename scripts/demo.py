@@ -32,12 +32,12 @@ def run(output):
     setup = cli('onboarding.py', '--input', ROOT / 'examples/onboarding-setup-required.json',
                 '--out', output / 'setup-required', expected_code=2)
     require(setup['connection_gate']['status'] == 'needs_input' and not setup['next_questions'], 'Setup gate failed')
-    require(setup['guidance']['recommendation'] is not None, 'First-run recommendation missing')
+    require(setup['guidance']['connection_options'] is not None, 'First-run connection options missing')
     cli('onboarding.py', '--input', ROOT / 'examples/onboarding-learning.json',
         '--out', profile, '--refresh-simulation-fixture')
     intake = cli('onboarding.py', '--input', profile, '--out', context)
     require(intake['connection_gate']['status'] == 'ready_simulation', 'Connection fixture not ready')
-    require(intake['guidance']['recommendation'] is None, 'Existing connection should not be upsold')
+    require(intake['guidance']['connection_options'] is None, 'Connection options shown despite an existing connection')
     knowledge_report = cli('knowledge.py', 'assess', '--profile', profile,
                            '--observations', ROOT / 'examples/knowledge-observations.json',
                            '--stage', 'diagnosis', '--out', output / 'knowledge')

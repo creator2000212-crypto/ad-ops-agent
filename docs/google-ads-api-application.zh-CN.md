@@ -22,7 +22,7 @@
 3. **Google Ads 账户访问：**确定目标生产账户的 10 位 customer ID，以及谁有该账户的管理员权限。Cloud 项目批准**不会自动授予任何广告账户访问权**；之后仍需把 OAuth 用户或 service account 加入对应 Ads 账户。经理账户在管理多个客户账户时有用，但新申请 Google Ads API 不再要求必须拥有经理账户。[Google 迁移说明](https://developers.google.com/google-ads/api/docs/api-policy/developer-token) · [服务账户授权](https://developers.google.com/google-ads/api/docs/oauth/service-accounts)
 4. **用途说明：**准备真实、具体的应用说明：内部自用还是外部客户；只做报表还是会创建/修改广告；预计账户数量、操作量、权限范围、人工确认和撤销方式。若申请 Standard，还要准备可演示的功能及符合其要求的材料。[Standard 审核说明](https://developers.google.com/google-ads/api/docs/api-policy/access-levels)
 
-不要把“代码仓库公开”“已有 Google Ads 广告账户”“已经连接 Pipeboard”当成 Google 对**这个 Cloud 项目**的 API 生产访问批准。
+不要把“代码仓库公开”“已有 Google Ads 广告账户”“已经接入某个 MCP 连接器”当成 Google 对**这个 Cloud 项目**的 API 生产访问批准。
 
 如果申请界面要求描述工具，可以根据实际阶段改写下面这段，不要填写尚未实现的能力为已上线：
 

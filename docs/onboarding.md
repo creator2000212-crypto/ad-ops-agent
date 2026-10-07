@@ -12,13 +12,13 @@
 
 先完成 MCP/API/SDK 对**本次选定账户**的接入验收，再明确用户如何与 Agent 协作以及当前需求，之后开展业务访谈和工作流。当前离线运行时通过 `connection_gate` 核对读取与 `create_simulated_draft` 写能力的模拟快照：账户、发现状态、scope、时间和 TTL 全部满足才返回 `ready_simulation`。宿主只读报表按所需读取能力验收，不要求发布权限；首次完整写入流程则需要相应写入与读回能力。只装好 MCP、安装 SDK、列出账户或购买服务均不等于验收通过；宿主使用已有工具验证实际能力；若让 Python 自主探测，则需另行实现平台适配器。[首次使用](first-check.zh-CN.md)
 
-在当前 Python 评估器中，连接未就绪时四种 readiness 均不能继续；`next_questions` 不生成业务或用户画像问题，知识建议延后，只输出接入待办及适用的连接器推荐。可以保存已有业务资料，不要求删除或重复输入。独立阅读文档与知识检索不属于广告操作工作流，不受该入口关卡影响。
+在当前 Python 评估器中，连接未就绪时四种 readiness 均不能继续；`next_questions` 不生成业务或用户画像问题，知识建议延后，只输出接入待办；尚未选择路线时附上不分先后的连接选项。可以保存已有业务资料，不要求删除或重复输入。独立阅读文档与知识检索不属于广告操作工作流，不受该入口关卡影响。
 
 接入通过后，用 `collaboration.approach` 选择 `guided`（帮助建立方案）或 `bring_own`（沿用已有方法），并明确 `collaboration.current_need`。缺少这两项时先询问协作需求，之后按原工作流收集业务信息。`experience_by_platform` 可分别记录 Meta/TikTok/Google 的 `new/experienced/unknown`，`explanation` 可选择 `detailed/concise`；这些声明不增加账户访问或发布权限。
 
 方法尚未明确时，`guided` 分支用通俗语言收集候选方法所需的信息，`bring_own` 分支请求现有 SOP、结构和观察规则。当前实现的是分流及问题措辞，没有自然语言方法生成或 SOP 解析服务，不会擅自填入已确认方法。生成候选或导入资料后仍需确认并写回带来源的 `facts.methodology`，才能进入依赖该方法的测试规划。
 
-接入偏好放在 `setup_preferences`：`route` 可选 `undecided/pipeboard/existing/self_managed/other_mcp`，`recommendation_dismissed` 用于关闭推荐。它们只控制引导展示；任何选择都不影响真实能力与授权判定。初始化会输出 `setup.json` 和 `setup.md`；CLI 在接入或协作需求尚未就绪时返回 2，并保留这些可读引导文件。
+接入偏好放在 `setup_preferences`：`route` 可选 `undecided/existing/self_managed/self_hosted_mcp/managed_mcp`（旧值 `pipeboard`、`other_mcp` 分别按 `managed_mcp`、`self_hosted_mcp` 读取），`options_dismissed`（旧名 `recommendation_dismissed`）用于隐藏连接选项列表。它们只控制引导展示；任何选择都不影响真实能力与授权判定。初始化会输出 `setup.json` 和 `setup.md`；CLI 在接入或协作需求尚未就绪时返回 2，并保留这些可读引导文件。
 
 ## 三个状态分别回答三个问题
 

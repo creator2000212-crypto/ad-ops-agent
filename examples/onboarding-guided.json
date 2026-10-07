@@ -165,7 +165,7 @@
   "fixture_only": true,
   "setup_preferences": {
     "route": "existing",
-    "recommendation_dismissed": false
+    "options_dismissed": false
   },
   "collaboration": {
     "approach": "guided",

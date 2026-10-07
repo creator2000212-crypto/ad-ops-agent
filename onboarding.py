@@ -399,10 +399,10 @@ def setup_markdown(result):
     gate, route = result['connection_gate'], result['guidance']
     lines = ['# 首次接入与协作引导', '', gate['notice'], '',
              '接入状态：' + gate['status'], '', '当前阶段：' + route['stage'], '']
-    recommendation = route.get('recommendation')
-    if recommendation:
-        # Structured content only; no installation, checkout, auth or ad writes occur here.
-        lines += [guidance.recommendation_markdown(recommendation), '']
+    options = route.get('connection_options')
+    if options:
+        # Neutral, unranked routes only; no installation, sign-up, auth or ad writes occur here.
+        lines += [guidance.connection_options_markdown(options, 'zh-CN'), '']
     lines += ['## 当前待办', '']
     lines += [f"- {step}" for step in route.get('setup_steps', [])]
     lines += [f"- {action['key']}：{action['reason']}" for action in result['machine_actions']]

@@ -26,6 +26,6 @@
   },
   "setup_preferences": {
     "route": "undecided",
-    "recommendation_dismissed": false
+    "options_dismissed": false
   }
 }

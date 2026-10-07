@@ -10,7 +10,7 @@
 
 先由 Agent 说明本次选定的平台、账户和实际可用能力。只读任务需要读取或报告能力；首次完整配置与发布流程，需要先核对必要的读取、写入及操作后重新读取对象的能力，再进入完整业务交流。无需接齐未选中的平台或账户，也不通过创建广告来探测权限。
 
-缺少能力时，Agent 说明受影响的步骤和下一步接入操作。已提供的资料继续保留，现有能力支持的独立工作可以继续。尚无连接且未选择路线时，可优先了解 [Pipeboard](https://pipeboard.co/#via=tian)；已有 MCP、API、SDK 或其他连接方案可以继续使用。具体选择与设置集中在[接入指南](platform-connectivity.zh-CN.md)。
+缺少能力时，Agent 说明受影响的步骤和下一步接入操作。已提供的资料继续保留，现有能力支持的独立工作可以继续。已有 MCP、API 或 SDK 连接继续使用。尚无连接时，Agent 不分先后地列出各条路线（官方平台 API、自托管 MCP 服务器、托管 MCP 连接器）及其取舍，由你选择。具体设置集中在[接入指南](platform-connectivity.zh-CN.md)。
 
 连接成功不代表已经授权发布或花费预算。真实能力以账户读取、工具能力和权限证据为依据；公开 Python 的离线结果不能替代它。项目使用范围见[能力状态](capability-status.zh-CN.md)。
 
@@ -91,7 +91,7 @@ Agent 保留原文和来源，标出冲突、缺项与当前工具不支持的�
 
 ### 接入偏好与模拟能力
 
-`setup_preferences.route` 保存 `undecided`、`pipeboard`、`existing`、`self_managed` 或 `other_mcp`；`setup_preferences.recommendation_dismissed` 保存是否关闭推荐。已有路线或关闭推荐后不重复主动推荐。选择路线不构成接入成功证据。
+`setup_preferences.route` 保存 `undecided`、`existing`、`self_managed`（官方 API / SDK）、`self_hosted_mcp` 或 `managed_mcp`（托管 MCP 连接器）；旧值 `pipeboard`、`other_mcp` 分别按 `managed_mcp`、`self_hosted_mcp` 读取。路线为 `undecided` 时，`guidance.connection_options` 不分先后地列出全部路线及不带参数的文档链接；`setup_preferences.options_dismissed`（旧名 `recommendation_dismissed`）用于隐藏该列表。已选路线或隐藏列表后不再重复展示。选择路线不构成接入成功证据。
 
 `onboarding.py` 的 `connection_gate` 对四类 readiness 检查模拟读取与 `create_simulated_draft` 能力；未通过时 `guidance` 保持接入阶段。该契约没有变更，不要求真实只读任务也具备写入权限；`ready_simulation` 不是真实账户验收。
 
