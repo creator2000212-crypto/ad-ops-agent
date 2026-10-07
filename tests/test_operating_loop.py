@@ -1,17 +1,25 @@
 """The operating loop must refuse to guess: unknown evidence, small samples and
 unexplained current-state differences each have a distinct, testable outcome."""
+import contextlib
 import copy
+import io
 import json
+import math
 from pathlib import Path
+import re
+import subprocess
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import operating_loop
 import operating_rules as rules
+from scripts import render_decision_matrix as matrix
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES = ROOT / 'examples' / 'operating'
+CJK = re.compile(r'[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]')
 
 
 # Synthetic economics of the reference methodology: a 10.00 lead, 90% approval,
@@ -123,26 +131,74 @@ class MetricTests(unittest.TestCase):
             rules.adset_metrics(adset(spend='not-a-number'), PRICE, methodology())
 
 
-class AttributionTests(unittest.TestCase):
+class CpaDriverTests(unittest.TestCase):
     def reference(self):
         return {'cpm': 58.82, 'ctr': 0.1411, 'cvr': 0.1179, 'cpa': 3.54}
 
+    def test_known_inputs_split_exactly(self):
+        # CPA 10 -> 15: CPM 10 -> 12 and CVR 0.05 -> 0.04, CTR unchanged.
+        result = rules.cpa_driver_decomposition(
+            {'cpm': 10, 'ctr': 0.02, 'cvr': 0.05, 'cpa': 10},
+            {'cpm': 12, 'ctr': 0.02, 'cvr': 0.04, 'cpa': 15})
+        self.assertTrue(result['complete'])
+        self.assertEqual(result['terms'], {'cpm': round(math.log(1.2), 4), 'ctr': 0.0,
+                                           'cvr': round(-math.log(0.8), 4)})
+        self.assertEqual(result['observed_total'], round(math.log(1.5), 4))
+        self.assertEqual(result['residual'], 0.0)
+        self.assertEqual(result['shares'], {'cpm': 0.4497, 'ctr': 0.0, 'cvr': 0.5503})
+        self.assertEqual(result['driver'], 'cvr')
+
     def test_terms_reconstruct_the_total(self):
-        result = rules.attribution(self.reference(),
-                                   {'cpm': 68.58, 'ctr': 0.1224, 'cvr': 0.0413, 'cpa': 13.57})
+        result = rules.cpa_driver_decomposition(
+            self.reference(), {'cpm': 68.58, 'ctr': 0.1224, 'cvr': 0.0413, 'cpa': 13.57})
         self.assertTrue(result['complete'])
         # The identity holds only up to the rounding of the quoted CPA, so the
         # residual is itself the signal that the inputs are reported values.
         self.assertLess(abs(result['residual']), 0.002)
         # CVR must dominate: the cost gap is a post-click problem here.
-        self.assertEqual(max(result['shares'], key=result['shares'].get), 'cvr')
+        self.assertEqual(result['driver'], 'cvr')
 
-    def test_missing_metric_refuses_to_attribute(self):
+    def test_falling_cpa_has_negative_terms(self):
+        result = rules.cpa_driver_decomposition(
+            {'cpm': 10, 'ctr': 0.02, 'cvr': 0.04, 'cpa': 12.5},
+            {'cpm': 10, 'ctr': 0.025, 'cvr': 0.04, 'cpa': 10})
+        self.assertLess(result['terms']['ctr'], 0)
+        self.assertEqual(result['driver'], 'ctr')
+
+    def test_missing_metric_refuses_to_decompose(self):
         broken = self.reference()
         broken['cvr'] = None
-        result = rules.attribution(broken, {'cpm': 68.58, 'ctr': 0.1224, 'cvr': 0.0413, 'cpa': 13.57})
+        result = rules.cpa_driver_decomposition(
+            broken, {'cpm': 68.58, 'ctr': 0.1224, 'cvr': 0.0413, 'cpa': 13.57})
         self.assertFalse(result['complete'])
         self.assertIsNone(result['terms'])
+        self.assertEqual(result['missing'], ['reference.cvr'])
+
+    def test_zero_metric_is_not_decomposed(self):
+        result = rules.cpa_driver_decomposition(self.reference(),
+                                                {'cpm': 68.58, 'ctr': 0, 'cvr': 0.0413, 'cpa': 13.57})
+        self.assertFalse(result['complete'])
+        self.assertEqual(result['missing'], ['observed.ctr'])
+
+    def test_attribution_is_an_alias(self):
+        self.assertIs(rules.attribution, rules.cpa_driver_decomposition)
+
+    def test_fixture_drivers_are_computed_from_the_snapshot(self):
+        snapshot = operating_loop.load(EXAMPLES / 'snapshot-primary.json')
+        entries = {entry['adset_key']: entry
+                   for item in snapshot['accounts'] for entry in rules.cpa_drivers(item, methodology())}
+        self.assertEqual(sorted(entries), ['fictional-adgroup-d1', 'fictional-adset-a1',
+                                           'fictional-adset-a10', 'fictional-adset-a4'])
+        self.assertEqual(entries['fictional-adset-a4']['driver'], 'cvr')
+        self.assertEqual(entries['fictional-adset-a4']['current_cpa'], '20.00')
+        self.assertEqual(entries['fictional-adset-a1']['driver'], 'ctr')
+        self.assertEqual(entries['fictional-adgroup-d1']['driver'], 'cvr')
+        self.assertFalse(entries['fictional-adset-a10']['complete'])
+        self.assertEqual(entries['fictional-adset-a10']['missing'], ['reference.cvr'])
+        for entry in entries.values():
+            if entry['complete']:
+                # Prior CPAs are quoted to the cent, so only rounding is unexplained.
+                self.assertLess(abs(entry['residual']), 0.001)
 
 
 class CreativeRuleTests(unittest.TestCase):
@@ -246,7 +302,11 @@ class DecisionTests(unittest.TestCase):
             account([adset(daily_budget='20.00', spend='6.40', impressions=1500, clicks=96, results=4)]),
             methodology())
         self.assertEqual([p['code'] for p in proposals], ['TEST_UNDERTESTED'])
-        self.assertIn('花不动', ' '.join(proposals[0]['evidence']))
+        self.assertIn('limited delivery', ' '.join(proposals[0]['evidence']))
+        chinese, _ = rules.decide_account(
+            account([adset(daily_budget='20.00', spend='6.40', impressions=1500, clicks=96, results=4)]),
+            methodology(), 'zh-CN')
+        self.assertIn('花不动', ' '.join(chinese[0]['evidence']))
 
     def test_link_failure_pauses_without_waiting(self):
         proposals, _ = rules.decide_account(account([adset(linked=False)]), methodology())
@@ -461,7 +521,7 @@ class GateTests(unittest.TestCase):
         self.assertEqual(verdict['gate'], rules.UNKNOWN)
         self.assertEqual(verdict['writable_fields'], [])
         self.assertEqual(rules.writable_rows([verdict]), [])
-        self.assertIn('基线未记录', ' '.join(verdict['gate_detail']))
+        self.assertIn('the baseline does not record this field', ' '.join(verdict['gate_detail']))
 
     def test_omitted_baseline_document_is_unknown(self):
         verdict = rules.gate(
@@ -479,7 +539,7 @@ class GateTests(unittest.TestCase):
                 self.assertEqual(verdict['gate'], rules.UNKNOWN)
                 self.assertEqual(verdict['writable_fields'], [])
                 self.assertEqual(rules.writable_rows([verdict]), [])
-                self.assertIn('基线明确为 null', ' '.join(verdict['gate_detail']))
+                self.assertIn('the baseline is explicitly null', ' '.join(verdict['gate_detail']))
 
     def test_missing_or_null_baseline_does_not_block_an_already_satisfied_target(self):
         for baseline in ({}, {'daily_budget': None}):
@@ -534,8 +594,9 @@ class GateTests(unittest.TestCase):
                 self.assertEqual(verdict['gate'], rules.UNKNOWN)
                 self.assertEqual(verdict['conflict_fields'], ['daily_budget'])
                 self.assertEqual(verdict['writable_fields'], [])
-                self.assertIn('基线未记录', ' '.join(verdict['gate_detail']))
-                self.assertIn('暂缓修改并核对变更来源', ' '.join(verdict['gate_detail']))
+                self.assertIn('the baseline does not record this field', ' '.join(verdict['gate_detail']))
+                self.assertIn('hold the change and check where the difference came from',
+                              ' '.join(verdict['gate_detail']))
 
     def test_generated_pause_preserves_missing_and_null_status_baselines(self):
         for code, overrides in (
@@ -624,7 +685,8 @@ class SnapshotContractTests(unittest.TestCase):
     def test_reference_fixtures_are_valid(self):
         snapshot = operating_loop.load(EXAMPLES / 'snapshot-primary.json')
         operating_loop.validate_snapshot(snapshot)
-        self.assertEqual(len(snapshot['accounts']), 3)
+        self.assertEqual([item['platform'] for item in snapshot['accounts']],
+                         ['meta', 'meta', 'meta', 'tiktok'])
 
     def test_snapshot_without_unit_price_is_rejected(self):
         snapshot = operating_loop.load(EXAMPLES / 'snapshot-primary.json')
@@ -650,7 +712,6 @@ class SnapshotContractTests(unittest.TestCase):
 
 class EndToEndTests(unittest.TestCase):
     def setUp(self):
-        import tempfile
         self.tmp = tempfile.TemporaryDirectory()
         self.out = Path(self.tmp.name) / 'round'
         self.ledger = Path(self.tmp.name) / 'ledger.jsonl'
@@ -658,9 +719,7 @@ class EndToEndTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def run_round(self, out=None, ledger=None):
-        import io
-        import contextlib
+    def run_round(self, out=None, ledger=None, lang=None):
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             code = operating_loop.main([
@@ -673,7 +732,7 @@ class EndToEndTests(unittest.TestCase):
                 '--ledger', str(ledger or self.ledger),
                 '--out', str(out or self.out),
                 '--at', '2026-09-24T03:58:00+00:00',
-            ])
+            ] + (['--lang', lang] if lang else []))
         self.assertEqual(code, 0)
         return json.loads(stdout.getvalue())
 
@@ -708,16 +767,16 @@ class EndToEndTests(unittest.TestCase):
         self.assertEqual(len(events), 2)
         for event, verdict in zip(events, gate['verdicts']):
             self.assertEqual(event['type'], 'skipped')
-            self.assertIn('原方案基线证据不足', event['reason'])
+            self.assertIn("the plan's baseline evidence is missing", event['reason'])
             self.assertEqual(event['detail'], verdict['gate_detail'])
-        self.assertIn('基线未记录', ' '.join(events[0]['detail']))
-        self.assertIn('基线明确为 null', ' '.join(events[1]['detail']))
+        self.assertIn('the baseline does not record this field', ' '.join(events[0]['detail']))
+        self.assertIn('the baseline is explicitly null', ' '.join(events[1]['detail']))
 
     def test_round_catches_the_ineffective_write(self):
         summary = self.run_round()
         self.assertEqual(summary['reconciliation']['ineffective'], 1)
         report = (self.out / 'report.md').read_text(encoding='utf-8')
-        self.assertIn('| `fictional-adset-a10` | LADDER_PROMOTE | **不匹配** |', report)
+        self.assertIn('| `fictional-adset-a10` | LADDER_PROMOTE | **No** |', report)
 
     def test_ledger_is_append_only_and_folds(self):
         self.run_round()
@@ -736,12 +795,58 @@ class EndToEndTests(unittest.TestCase):
     def test_report_states_the_conflict_and_the_ineffective_write(self):
         self.run_round()
         report = (self.out / 'report.md').read_text(encoding='utf-8')
+        self.assertIn('Conflict (isolated)', report)
+        self.assertIn('current value 30.00 matches neither baseline 20.00 nor target 40.00', report)
+        self.assertIn('hold the change and check where the difference came from', report)
+        self.assertNotIn('hand-edited', report)
+        self.assertIn('treat as not in effect', report)
+        self.assertIn('OFFLINE ANALYSIS ONLY', report)
+
+    def test_chinese_report_keeps_the_same_statements(self):
+        self.run_round(lang='zh-CN')
+        report = (self.out / 'report.md').read_text(encoding='utf-8')
         self.assertIn('冲突隔离', report)
         self.assertIn('当前值 30.00 与基线 20.00、目标 40.00 均不一致', report)
         self.assertIn('暂缓修改并核对变更来源', report)
         self.assertNotIn('人工改过', report)
-        self.assertIn('未生效', report)
+        self.assertIn('| `fictional-adset-a10` | LADDER_PROMOTE | **不匹配** |', report)
         self.assertIn('不连接任何广告平台', report)
+        self.assertIn('## 平台与结算对账', report)
+        self.assertIn('## CPA 为什么变了', report)
+
+    def test_english_report_contains_no_chinese(self):
+        self.run_round()
+        report = (self.out / 'report.md').read_text(encoding='utf-8')
+        self.assertIsNone(CJK.search(report), CJK.search(report) and report[CJK.search(report).start() - 40:][:80])
+        for name in ('gate.json', 'application.json', 'reconciliation.json', 'account-signals.json'):
+            with self.subTest(artifact=name):
+                self.assertIsNone(CJK.search((self.out / name).read_text(encoding='utf-8')))
+
+    def test_decisions_do_not_depend_on_language(self):
+        root = Path(self.tmp.name)
+        english = self.run_round(out=root / 'en', ledger=root / 'en.jsonl')
+        chinese = self.run_round(out=root / 'zh', ledger=root / 'zh.jsonl', lang='zh-CN')
+        for key in ('proposals', 'gate', 'planned_writes', 'reconciliation', 'settlement',
+                    'measurement_unreconciled', 'open_rows'):
+            self.assertEqual(english[key], chinese[key], key)
+
+        def neutral(folder):
+            gate = json.loads((folder / 'gate.json').read_text(encoding='utf-8'))
+            return [(v['code'], v['object_key'], v['gate'], v.get('target'), v['writable_fields'])
+                    for v in gate['verdicts']]
+        self.assertEqual(neutral(root / 'en'), neutral(root / 'zh'))
+
+    def test_report_explains_why_cpa_moved(self):
+        self.run_round()
+        report = (self.out / 'report.md').read_text(encoding='utf-8')
+        self.assertIn('## Why CPA moved', report)
+        drivers = json.loads((self.out / 'findings.json').read_text(encoding='utf-8'))['cpa_drivers']
+        a4 = next(entry for entry in drivers if entry['adset_key'] == 'fictional-adset-a4')
+        # The report shows the computed terms, not hand-typed numbers.
+        cvr = f"+{a4['terms']['cvr'] * 100:.1f} ({round(a4['shares']['cvr'] * 100)}%)"
+        self.assertIn(f"| `fictional-adset-a4` | 2026-09-22 | 5.41 → 20.00 | ", report)
+        self.assertIn(cvr, report)
+        self.assertIn('not decomposed: prior CVR missing', report)
 
     def test_repeat_run_is_deterministic(self):
         root = Path(self.tmp.name)
@@ -768,11 +873,22 @@ class EndToEndTests(unittest.TestCase):
                 ('fictional-adset-a6', 'LADDER_HOLD'),
                 ('fictional-adset-a7', 'AD_STATUS'),
                 ('fictional-adset-b1', 'LADDER_HOLD'),
-                ('fictional-adset-b2', 'TEST_EARLY_STOP')):
+                ('fictional-adset-b2', 'TEST_EARLY_STOP'),
+                ('fictional-adgroup-d1', 'LADDER_PROMOTE'),
+                ('fictional-adgroup-d2', 'TEST_UNDERTESTED')):
             self.assertIn(expected, codes)
+        held = [(p['object_key'], p['downgraded']['status']) for p in findings['proposals']
+                if p.get('downgraded')]
+        self.assertEqual(held, [('fictional-adgroup-d1', 'RECON_GAP')])
+        self.assertEqual({row['account_key']: row['status'] for row in findings['settlement']['rows']},
+                         {'fictional-meta-account-a': 'RECON_OK', 'fictional-meta-account-b': 'RECON_TZ',
+                          'fictional-meta-account-c': 'RECON_SCOPE',
+                          'fictional-tiktok-account-d': 'RECON_GAP',
+                          'fictional-meta-account-e': 'RECON_SCOPE'})
         states = {(v['object_key'], v['gate']) for v in gate['verdicts']}
         for expected in (('fictional-adset-a1', 'ready'), ('fictional-adset-a3', 'satisfied'),
-                         ('fictional-adset-a9', 'conflict'), ('fictional-adset-b2', 'unknown')):
+                         ('fictional-adset-a9', 'conflict'), ('fictional-adset-b2', 'unknown'),
+                         ('fictional-adgroup-d1', 'advisory')):
             self.assertIn(expected, states)
         self.assertEqual([r['object_key'] for r in reconciliation['rows']
                           if r['checked'] and not r['effective']], ['fictional-adset-a10'])
@@ -785,14 +901,30 @@ class EndToEndTests(unittest.TestCase):
     def test_settlement_target_comes_from_the_methodology(self):
         self.run_round()
         report = (self.out / 'report.md').read_text(encoding='utf-8')
-        self.assertIn('| meta | `fictional-meta-account-a` | 10.00 | 176.30 | 19 | 190.00 | 9.28 | 7.20 |', report)
-        self.assertIn('| meta | `fictional-meta-account-b` | 8.00 | 24.70 | 3 | 24.00 | 8.23 | 5.76 |', report)
-        self.assertNotIn('混量', report)
-        self.assertIn('目标 ROAS 1.25　|　线索通过率 0.90', report)
+        self.assertIn('## Platform vs settlement', report)
+        self.assertIn('| `fictional-meta-account-a` | 176.30 → 176.12 (-0.1%) | 21 → 19 (18.9, +0.5%) | '
+                      '8.40 / 9.27 | 7.20 / 8.00 | 1.0788 | **RECON_OK** |', report)
+        self.assertIn('| `fictional-tiktok-account-d` | 29.40 → 29.40 (+0.0%) | 7 → 3 (6.3, -52.4%) | '
+                      '4.20 / 9.80 | 8.64 / 9.60 | 1.2245 | **RECON_GAP** |', report)
+        self.assertIn('approval rate 0.90 · target ROAS 1.25', report)
+        document = methodology()
+        document['target_roas'] = '1.50'
+        rules.validate_methodology(document)
+        path = Path(self.tmp.name) / 'methodology.json'
+        path.write_text(json.dumps(document), encoding='utf-8')
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            operating_loop.main(['round', '--snapshot', str(EXAMPLES / 'snapshot-primary.json'),
+                                 '--writeback', str(EXAMPLES / 'writeback-snapshot.json'),
+                                 '--after', str(EXAMPLES / 'after-snapshot.json'),
+                                 '--methodology', str(path),
+                                 '--settlement', str(EXAMPLES / 'settlement-daily.json'),
+                                 '--out', str(Path(self.tmp.name) / 'roas'), '--at', '2026-09-24T03:58:00+00:00'])
+        changed = (Path(self.tmp.name) / 'roas' / 'report.md').read_text(encoding='utf-8')
+        # 10.00 x 0.90 / 1.50 = 6.00; per approved lead 10.00 / 1.50 = 6.67.
+        self.assertIn('| 6.00 / 6.67 |', changed)
 
     def test_missing_ledger_raises(self):
-        import io
-        import contextlib
         missing = Path(self.tmp.name) / 'nowhere' / 'ledger.jsonl'
         for call in (operating_loop.read_events, operating_loop.fold, operating_loop.open_rows):
             with self.subTest(call=call.__name__):
@@ -827,8 +959,6 @@ class EndToEndTests(unittest.TestCase):
         self.assertTrue(operating_loop.fold(self.ledger))
 
     def test_blocked_round_returns_two_without_a_traceback(self):
-        import io
-        import contextlib
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
             code = operating_loop.main([
@@ -839,6 +969,142 @@ class EndToEndTests(unittest.TestCase):
             ])
         self.assertEqual(code, 2)
         self.assertIn('blocked', stderr.getvalue())
+
+
+class ActionTextTests(unittest.TestCase):
+    """Reviewer-facing text exists in English for every action, and the
+    methodology's flags agree with what the engine actually emits."""
+
+    def test_every_action_has_english_text_and_a_trigger(self):
+        for action in methodology()['actions']:
+            with self.subTest(code=action['code']):
+                english = action['en']
+                for key in rules.ACTION_TEXT_KEYS + ('trigger',):
+                    self.assertTrue(english.get(key), key)
+                    self.assertIsNone(CJK.search(english[key]), key)
+
+    def test_p0_actions_respond_within_two_hours(self):
+        for action in methodology()['actions']:
+            if action['level'] != 'P0':
+                continue
+            with self.subTest(code=action['code']):
+                self.assertIn(action['en']['window'], ('Immediately', 'Within 2 hours'))
+                self.assertNotIn(action['window'], ('次轮', '不适用'))
+
+    def test_implemented_flags_match_the_engine(self):
+        for action in methodology()['actions']:
+            with self.subTest(code=action['code']):
+                self.assertEqual(action['implemented'], action['code'] in rules.ENGINE_CODES)
+
+    def test_contradicting_implemented_flag_is_rejected(self):
+        for code, flag in (('LADDER_PROMOTE', False), ('SCALE_ADD20', True)):
+            with self.subTest(code=code):
+                document = methodology()
+                next(a for a in document['actions'] if a['code'] == code)['implemented'] = flag
+                with self.assertRaises(rules.RuleError):
+                    rules.validate_methodology(document)
+
+    def test_missing_engine_action_is_rejected(self):
+        document = methodology()
+        document['actions'] = [a for a in document['actions'] if a['code'] != 'LADDER_HOLD']
+        with self.assertRaises(rules.RuleError):
+            rules.validate_methodology(document)
+
+    def test_incomplete_english_block_is_rejected(self):
+        document = methodology()
+        del document['actions'][0]['en']['acceptance']
+        with self.assertRaises(rules.RuleError):
+            rules.validate_methodology(document)
+
+    def test_proposal_text_follows_the_language(self):
+        english = rules.proposal(account([]), None, 'AD_STATUS', methodology(), object_type='account')
+        chinese = rules.proposal(account([]), None, 'AD_STATUS', methodology(), object_type='account',
+                                 lang='zh-CN')
+        self.assertIn('Request Review', english['action'])
+        self.assertEqual(english['window'], 'Within 2 hours')
+        self.assertIn('拒审原因', chinese['action'])
+
+    def test_methodology_without_english_falls_back_to_its_own_text(self):
+        document = methodology()
+        for action in document['actions']:
+            del action['en']
+        rules.validate_methodology(document)
+        item = rules.proposal(account([]), None, 'ACC_STOPPED', document, object_type='account')
+        self.assertEqual(item['action'], next(a for a in document['actions']
+                                              if a['code'] == 'ACC_STOPPED')['action'])
+
+    def test_unknown_language_is_rejected(self):
+        with self.assertRaises(rules.RuleError):
+            rules.decide_account(account([adset()]), methodology(), 'fr')
+        with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+            operating_loop.main(['open', '--ledger', 'x.jsonl', '--lang', 'fr'])
+
+    def test_unimplemented_keys_are_marked(self):
+        document = methodology()
+        self.assertIs(document['learning']['implemented'], False)
+        self.assertIs(document['recommended_creatives_per_adset']['implemented'], False)
+        self.assertIs(document['utilisation']['at_cap_above']['implemented'], False)
+        self.assertIs(document['reporting_rules']['implemented'], False)
+
+
+class DecisionMatrixTests(unittest.TestCase):
+    def test_committed_matrix_matches_the_methodology(self):
+        page = matrix.render(methodology(), 'examples/operating/methodology-reference.json')
+        self.assertEqual((ROOT / 'docs' / 'decision-matrix.md').read_text(encoding='utf-8'), page)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(matrix.main(['--check']), 0)
+
+    def test_thresholds_come_from_the_methodology(self):
+        document = methodology()
+        document['sample_gate']['impressions_for_dead'] = 450
+        document['creative_rules']['circuit_breaker_spend_share_above'] = '0.55'
+        page = matrix.render(document, 'copy.json')
+        self.assertIn('Zero leads, at least 450 impressions and spend >= 3T', page)
+        self.assertIn('more than 55% of ad-set spend', page)
+
+    def test_who_decides_is_derived_from_the_engine(self):
+        page = matrix.render(methodology(), 'm.json')
+        rows = {line.split(' | ')[0].strip('| `'): line for line in page.splitlines()
+                if line.startswith('| `') and line.count(' | ') >= 7}
+        self.assertIn('Engine: proposes `daily_budget` ×2 through the write gate', rows['LADDER_PROMOTE'])
+        self.assertIn('advisory when the settlement does not reconcile', rows['LADDER_PROMOTE'])
+        self.assertIn('Engine: proposes `status` → PAUSED', rows['TEST_STOP_NOCONV'])
+        self.assertNotIn('settlement', rows['TEST_STOP_NOCONV'])
+        self.assertIn('Engine: detects; advisory', rows['AD_STATUS'])
+        self.assertIn('Human judgment', rows['SCALE_ADD20'])
+        self.assertIn('Within 2 hours', rows['ACC_BALANCE_LOW'])
+        self.assertIn('- `learning`', page)
+        self.assertIn('- action `CAMP_GHOST_SPEND`', page)
+
+    def test_unknown_placeholder_is_rejected(self):
+        document = methodology()
+        document['actions'][0]['en']['trigger'] = 'At least {promotion.nothing} leads'
+        with self.assertRaises(matrix.MatrixError):
+            matrix.render(document, 'm.json')
+
+    def test_stale_matrix_fails_the_check(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            stale = Path(tmp) / 'decision-matrix.md'
+            stale.write_text('# Decision matrix\n', encoding='utf-8')
+            with contextlib.redirect_stderr(io.StringIO()) as stderr:
+                self.assertEqual(matrix.main(['--check', '--out', str(stale)]), 1)
+            self.assertIn('+| `LADDER_PROMOTE`', stderr.getvalue())
+
+
+class DemoGoldenTests(unittest.TestCase):
+    def test_demo_check_passes_in_both_languages(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run([sys.executable, str(ROOT / 'demo' / 'run_demo.py'), '--check',
+                                     '--out', tmp], cwd=ROOT, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn(str(Path.home()), result.stdout + result.stderr)
+
+    def test_committed_reports_exist_in_both_languages(self):
+        english = (ROOT / 'demo' / 'expected' / 'report.md').read_text(encoding='utf-8')
+        chinese = (ROOT / 'demo' / 'expected' / 'report.zh-CN.md').read_text(encoding='utf-8')
+        self.assertTrue(english.startswith('# 12-hour check'))
+        self.assertIsNone(CJK.search(english))
+        self.assertTrue(chinese.startswith('# 快循环回执'))
 
 
 if __name__ == '__main__':

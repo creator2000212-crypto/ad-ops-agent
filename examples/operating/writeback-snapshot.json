@@ -18,12 +18,15 @@
     "fictional-adset-a10": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
     "fictional-adset-b1": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
     "fictional-meta-account-b": {"balance": "41.20", "today_spend": "0.00"},
-    "fictional-meta-account-c": {"balance": "300.00", "today_spend": "0.00"}
+    "fictional-meta-account-c": {"balance": "300.00", "today_spend": "0.00"},
+    "fictional-adgroup-d1": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"},
+    "fictional-adgroup-d2": {"daily_budget": "20.00", "status": "ACTIVE", "bid_strategy": "LOWEST_COST_WITHOUT_CAP"}
   },
   "scenario_notes": {
     "fictional-adset-a1": "Still equals the baseline -> ready.",
     "fictional-adset-a3": "Already paused, which is the target -> satisfied, nothing to write.",
     "fictional-adset-a9": "Budget hand-edited to 30 (neither baseline 20 nor target 40) -> conflict, isolated.",
-    "fictional-adset-b2": "Deliberately absent: the re-read did not return it -> unknown, re-read first."
+    "fictional-adset-b2": "Deliberately absent: the re-read did not return it -> unknown, re-read first.",
+    "fictional-adgroup-d1": "Still equals the baseline, but the promotion never reaches the gate as a write: account D does not reconcile with the settlement."
   }
 }

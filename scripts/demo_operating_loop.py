@@ -9,12 +9,17 @@ What this demonstrates, in order:
    crosses both the sample gate and the loss line is.
 3. Rule precedence: an ad set that meets the promotion numbers is held when a
    creative or account problem comes first (one change per ad set per round).
-4. The five-state write gate separates ready, already satisfied, conflict (a
+4. Platform vs settlement: an account whose numbers do not reconcile with the
+   settlement cannot drive a promotion; an account outside the settlement is
+   reported as missing, never as zero.
+5. The five-state write gate separates ready, already satisfied, conflict (a
    current value matching neither baseline nor target), unknown (state not
    read) and advisory (nothing to write).
-5. A write that did not take effect is caught by the write-back reconciliation.
-6. The ledger is append-only: a second round adds rows and keeps the unresolved
+6. A write that did not take effect is caught by the write-back reconciliation.
+7. The ledger is append-only: a second round adds rows and keeps the unresolved
    ones visible instead of resetting the round.
+8. The report says why CPA moved, and the decisions do not depend on the
+   report language.
 
 No network calls. All fixtures are under ``examples/operating/``.
 """
@@ -39,6 +44,14 @@ def cli(script, *arguments, expected_code=0):
     return json.loads(result.stdout)
 
 
+def display(path):
+    """Print paths relative to the repository; never a home directory."""
+    try:
+        return Path(path).resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return Path(path).name
+
+
 def require(condition, message):
     if not condition:
         raise RuntimeError(message)
@@ -55,15 +68,15 @@ def run(output):
         '--settlement': FIXTURES / 'settlement-daily.json',
     }
 
-    def round_(*, out, at):
+    def round_(*, out, at, lang='en', ledger=ledger):
         return cli('operating_loop.py', 'round', '--out', out, '--ledger', ledger, '--at', at,
-                   *[part for pair in fixtures.items() for part in pair])
+                   '--lang', lang, *[part for pair in fixtures.items() for part in pair])
 
     first = round_(out=output / 'round-1', at='2026-09-24T03:58:00+00:00')
 
     require(first['mode'] == 'offline_analysis_only', 'Round did not declare offline mode')
     require(first['native_platform_calls'] == 0, 'Round attempted a platform call')
-    require(first['accounts'] == 3, 'Expected three fictional accounts')
+    require(first['accounts'] == 4, 'Expected four fictional accounts (three Meta, one TikTok)')
 
     # (2) the sample gate has to split two ad sets that both show zero results.
     findings = json.loads((output / 'round-1' / 'findings.json').read_text(encoding='utf-8'))
@@ -84,13 +97,26 @@ def run(output):
         require('LADDER_HOLD' in codes and 'LADDER_PROMOTE' not in codes,
                 f'{held} should be held, not promoted')
 
-    # (4) all five gate states must be present.
+    # (4) measurement first: the TikTok account's leads look cheap on the platform,
+    # but the settlement approves too few of them, so its promotion is advisory.
+    settlement = {row['account_key']: row['status'] for row in findings['settlement']['rows']}
+    require(settlement.get('fictional-tiktok-account-d') == 'RECON_GAP',
+            'The account the settlement does not confirm should be a gap')
+    require(settlement.get('fictional-meta-account-c') == 'RECON_SCOPE',
+            'The account outside the settlement should be reported as out of scope')
+    held = [item for item in proposals if item.get('downgraded')]
+    require([(item['object_key'], item['code']) for item in held]
+            == [('fictional-adgroup-d1', 'LADDER_PROMOTE')],
+            'Only the unreconciled promotion should be held as advisory')
+    require('target' not in held[0], 'An unreconciled promotion must not carry a write intent')
+
+    # (5) all five gate states must be present.
     gate = json.loads((output / 'round-1' / 'gate.json').read_text(encoding='utf-8'))
     summary = gate['summary']
     for state in ('ready', 'satisfied', 'conflict', 'unknown', 'advisory'):
         require(summary[state] >= 1, f'Gate never produced a {state} row')
     conflict = next(v for v in gate['verdicts'] if v['gate'] == 'conflict')
-    require('暂缓修改并核对变更来源' in ' '.join(conflict['gate_detail']),
+    require('check where the difference came from' in ' '.join(conflict['gate_detail']),
             'Conflict row did not explain how to handle the unexplained difference')
     require(conflict['conflict_fields'] == ['daily_budget'],
             'Conflict row did not name the field that differs')
@@ -101,18 +127,18 @@ def run(output):
     require(first['planned_writes'] == summary['ready'], 'Write plan does not match the ready rows')
     require(first['planned_writes'] < first['proposals'], 'The gate wrote everything, so it gated nothing')
 
-    # (5) a write that silently did not take effect must be visible, not assumed.
+    # (6) a write that silently did not take effect must be visible, not assumed.
     require(first['reconciliation']['ineffective'] == 1,
             'The ineffective write was not detected')
     reconciliation = json.loads((output / 'round-1' / 'reconciliation.json').read_text(encoding='utf-8'))
     missed = [row['object_key'] for row in reconciliation['rows'] if row['checked'] and not row['effective']]
     require(missed == ['fictional-adset-a10'], 'The write that did not take should be a10')
     report = (output / 'round-1' / 'report.md').read_text(encoding='utf-8')
-    require('| `fictional-adset-a10` | LADDER_PROMOTE | **不匹配** |' in report,
+    require('| `fictional-adset-a10` | LADDER_PROMOTE | **No** |' in report,
             'Report did not flag the ineffective write')
-    require('不连接任何广告平台' in report, 'Report did not carry the offline notice')
+    require('OFFLINE ANALYSIS ONLY' in report, 'Report did not carry the offline notice')
 
-    # (6) the ledger grows and unresolved rows stay open across rounds.
+    # (7) the ledger grows and unresolved rows stay open across rounds.
     events_after_first = len(ledger.read_text(encoding='utf-8').strip().splitlines())
     open_first = cli('operating_loop.py', 'open', '--ledger', ledger)['open']
     require(open_first >= 1, 'The ineffective write should remain an open row')
@@ -125,16 +151,33 @@ def run(output):
     open_second = cli('operating_loop.py', 'open', '--ledger', ledger)['open']
     require(open_second >= open_first, 'Open rows were silently dropped between rounds')
 
+    # (8) the report explains the CPA movement it can compute, and the same
+    # round in Chinese reaches the same decisions.
+    require('## Why CPA moved' in report, 'Report did not decompose the CPA change')
+    drivers = {entry['adset_key']: entry for entry in findings['cpa_drivers']}
+    require(drivers['fictional-adset-a4']['driver'] == 'cvr',
+            "a4's CPA rise should be driven by CVR")
+    require(not drivers['fictional-adset-a10']['complete'],
+            'A prior window without CVR must stay visibly undecomposed')
+    chinese = round_(out=output / 'round-zh', at='2026-09-24T03:58:00+00:00', lang='zh-CN',
+                     ledger=output / 'ledger-zh.jsonl')
+    for key in ('proposals', 'gate', 'planned_writes', 'reconciliation', 'settlement'):
+        require(chinese[key] == first[key], f'The Chinese round differs from the English one on {key}')
+    report_zh = (output / 'round-zh' / 'report.md').read_text(encoding='utf-8')
+    require('不连接任何广告平台' in report_zh, 'Chinese report did not carry the offline notice')
+
     return {
         'mode': 'offline_analysis_only',
         'result': 'passed',
-        'out': str(output),
+        'out': display(output),
         'rounds': 2,
         'ledger_events': events_after_second,
         'proposals': first['proposals'],
         'planned_writes': first['planned_writes'],
         'gate': summary,
         'reconciliation': first['reconciliation'],
+        'settlement': first['settlement'],
+        'measurement_unreconciled': first['measurement_unreconciled'],
         'open_rows_after_round_1': open_first,
         'open_rows_after_round_2': open_second,
         'fixtures': sorted(p.name for p in FIXTURES.glob('*.json')),

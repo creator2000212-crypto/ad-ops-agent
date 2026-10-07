@@ -1,20 +1,25 @@
 {
   "schema_version": 1,
   "kind": "settlement_daily",
-  "notice": "FICTIONAL FIXTURE — all accounts, prices and amounts are fictional. Used to show the platform view and the settlement view checking each other.",
+  "notice": "FICTIONAL FIXTURE — all accounts, prices and amounts are fictional. Used to check the platform view against the settlement view, joined on account and date.",
   "date": "2026-09-23",
+  "timezone": "Etc/GMT",
   "currency": "USD",
   "rows": [
     {"platform": "meta", "account_key": "fictional-meta-account-a", "offer_key": "fictional-offer-alpha",
-     "unit_price": "10.00", "spend": "176.30", "results": 19, "value": "190.00"},
+     "unit_price": "10.00", "spend": "176.12", "results": 19, "value": "190.00"},
     {"platform": "meta", "account_key": "fictional-meta-account-b", "offer_key": "fictional-offer-beta",
-     "unit_price": "8.00", "spend": "24.70", "results": 3, "value": "24.00"},
-    {"platform": "meta", "account_key": "fictional-meta-account-c", "offer_key": "fictional-offer-gamma",
-     "unit_price": "10.00", "spend": "0.00", "results": 0, "value": "0.00"}
+     "unit_price": "8.00", "spend": "22.90", "results": 3, "value": "24.00"},
+    {"platform": "tiktok", "account_key": "fictional-tiktok-account-d", "offer_key": "fictional-offer-delta",
+     "unit_price": "12.00", "spend": "29.40", "results": 3, "value": "36.00"},
+    {"platform": "meta", "account_key": "fictional-meta-account-e", "offer_key": "fictional-offer-epsilon",
+     "unit_price": "10.00", "spend": "12.50", "results": 1, "value": "10.00"}
   ],
-  "reconciliation_rules": [
-    "先看口径是否一致：账户时区、归因窗口、转化去重、结算单价来源。",
-    "盘面与结算对不上时，先修口径，不要先改预算。",
-    "收入未经结算成熟前，ROAS 只能标「截至某时、尚待成熟」。"
-  ]
+  "scenario_notes": {
+    "fictional-meta-account-a": "Within tolerance: spend -0.1%, 19 settled leads against 21 x 0.90 = 18.9 expected (RECON_OK).",
+    "fictional-meta-account-b": "The account reports in Etc/GMT+5 and the settlement in Etc/GMT, so the day buckets differ (RECON_TZ).",
+    "fictional-meta-account-c": "Deliberately absent: this account is outside the settlement's scope (RECON_SCOPE, platform side only). It is not zero-filled.",
+    "fictional-tiktok-account-d": "Spend matches, but only 3 of 7 platform leads are approved against 6.3 expected (RECON_GAP).",
+    "fictional-meta-account-e": "In the settlement but not in the platform pull (RECON_SCOPE, settlement side only). The platform side is missing, not zero."
+  }
 }

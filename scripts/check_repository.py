@@ -47,7 +47,8 @@ REQUIRED = [
     'examples/operating/writeback-snapshot.json', 'examples/operating/after-snapshot.json',
     'examples/operating/settlement-daily.json',
     'demo/README.md', 'demo/README.zh-CN.md', 'demo/run_demo.py',
-    'demo/expected/report.md', 'demo/expected/summary.json',
+    'demo/expected/report.md', 'demo/expected/report.zh-CN.md', 'demo/expected/summary.json',
+    'tests/test_reconciliation.py', 'scripts/render_decision_matrix.py', 'docs/decision-matrix.md',
     'docs/build-from-zero.md', 'docs/build-from-zero.zh-CN.md',
     '.github/workflows/ci.yml', '.gitignore', '.gitattributes'
 ]

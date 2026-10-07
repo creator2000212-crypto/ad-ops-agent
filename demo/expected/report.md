@@ -1,129 +1,158 @@
-# 快循环回执 · demo-20260924-1150
+# 12-hour check · demo-20260924-1150
 
-> OFFLINE ANALYSIS ONLY — 不连接任何广告平台、不写任何账户、不上传素材。输出的动作清单是给人审阅的建议，不是已执行的指令。
+> OFFLINE ANALYSIS ONLY — no ad platform is contacted, no account is written and no media is uploaded. The action list is a proposal for human review, not an executed instruction.
 
-**数据截止：** 2026-09-24T11:50:00+08:00　|　**口径：** reference-1n1-ladder v2026-10-07.1　|　**快照指纹：** `d4d8fa2a0e8f`
+**Data as of:** 2026-09-24T11:50:00+08:00 · **Method:** reference-1n1-ladder v2026-10-07.2 · **Snapshot hash:** `52ff73b9f09b`
 
-**观察窗口：** 2026-09-23（settled_day，覆盖完整投放日：是） — 自然日桶。小时级明细在本连接下不可用，所以判定窗口只能到自然日，近似性在此声明。
+**Observation window:** 2026-09-23 (settled_day; full delivery day: yes) — Calendar-day buckets. Hourly detail is not available through this connection, so the decision window is one calendar day; the approximation is stated here.
 
-## 本轮结果
+## This round
 
-- 诊断产生 **18 条发现**，不代表 18 个不同对象。发现覆盖账户、广告组和素材；同一对象可以触发多条规则，下方列出全部 12 个广告组的诊断。
-- `ready` **4 条**表示差异计划通过当前快照核对、可供审阅，**不表示已获操作授权**。
-- `apply` 仅向本地台账登记 **4 条差异计划 / 4 个拟改字段**；没有调用平台或写入广告账户。
-- 对照输入的 `after` 快照：**3 条匹配、1 条不匹配**。演示使用预置快照，这些结果不证明真实修改已经生效。
+- Diagnosis produced **20 findings** across accounts, ad sets and creatives. One object can trigger several rules, so this is not 20 objects; all 14 ad sets are listed under "Decisions by ad set".
+- **4 rows are `ready`**: each change passed the current-state check and is ready for review. `ready` is not approval to act.
+- `apply` recorded **4 planned changes / 4 fields** in the local ledger; nothing was sent to a platform.
+- Against the supplied `after` snapshot: **3 matched, 1 did not match**.
+- Platform vs settlement: RECON_SCOPE 2 · RECON_TZ 1 · RECON_GAP 1 · RECON_OK 1. Cost-based proposals held as advisory until the numbers reconcile: **1**.
 
-## 先处理这些待办
+## Handle these first
 
-**闸门待确认 2 条**（见 `gate.json`）：
+**Gate rows that need a human: 2** (`gate.json`):
 
-- `fictional-adset-a9` · LADDER_PROMOTE · **冲突隔离** — daily_budget：当前值 30.00 与基线 20.00、目标 40.00 均不一致 ⇒ 隔离该行，暂缓修改并核对变更来源。
-- `fictional-adset-b2` · TEST_EARLY_STOP · **未知** — 写前状态里没有 'fictional-adset-b2' 的记录 ⇒ 先复拉，不要盲写。
+- `fictional-adset-a9` · LADDER_PROMOTE · **Conflict (isolated)** — daily_budget: current value 30.00 matches neither baseline 20.00 nor target 40.00 ⇒ isolate the row, hold the change and check where the difference came from.
+- `fictional-adset-b2` · TEST_EARLY_STOP · **Unknown** — The pre-write read has no record of 'fictional-adset-b2' ⇒ re-read first; never write blind.
 
-**快照对照不匹配 1 条**（见 `reconciliation.json`）：
+**After-snapshot mismatches: 1** (`reconciliation.json`):
 
-- `fictional-adset-a10` · LADDER_PROMOTE — 写后回读与目标不一致 ⇒ 视为未真正生效，不要按已执行推进下一档：daily_budget：期望 40.00，实读 20.00
+- `fictional-adset-a10` · LADDER_PROMOTE — After snapshot differs from the target ⇒ treat as not in effect; do not move to the next step as if it ran: daily_budget: expected 40.00, read 20.00
 
-`open` 只列台账中待对照或已对照但不匹配的行；**不包含被闸门隔离的冲突、缺失行，不能视为完整待办**。交接时应合并查看以上两组待办。规则原文中的“生效/未生效”仅指本次快照值是否匹配。
+**Measurement unreconciled: 1** (`findings.json`, see "Platform vs settlement"):
 
-## 账户信号
+- `fictional-adgroup-d1` · LADDER_PROMOTE · RECON_GAP — Settlement approved 3 of 7 leads; expected 6.3 at the declared approval rate 0.90 (-52.4%, tolerance ±20.0%). Advisory until platform and settlement agree; no budget or status change this round.
 
-| 账户 | offer | 单价 | configured 在投 | effective 可投 | 总组 | 今日消耗 | 余额 | 额度 | 备注 |
+`open` lists only ledger rows that await comparison or failed it. **Gate conflicts and missing state are not in `open`, so it is not the whole to-do list**; hand over every list above.
+
+## Account signals
+
+| Account | Platform | Offer | Value per lead | Configured live | Able to deliver | Ad sets | Today's spend | Balance | Spend cap | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `fictional-meta-account-a` | meta | fictional-offer-alpha | 10.00 | 10 | 9 | 10 | 28.40 | 820.00 | 6000.00 | 1 ad set(s) configured live but unable to deliver |
+| `fictional-meta-account-b` | meta | fictional-offer-beta | 8.00 | 2 | 2 | 2 | 0.00 | 41.20 | — | spend_cap reads back null; the headroom alert is unavailable |
+| `fictional-meta-account-c` | meta | fictional-offer-gamma | 10.00 | 0 | 0 | 0 | 0.00 | 300.00 | 2000.00 | — |
+| `fictional-tiktok-account-d` | tiktok | fictional-offer-delta | 12.00 | 2 | 2 | 2 | 17.80 | 640.00 | 3000.00 | — |
+
+## Platform vs settlement
+
+Settlement date 2026-09-23 · time zone Etc/GMT · currency USD · tolerance: spend ±2.0%, settled leads ±20.0% of platform leads × approval rate 0.90 · target ROAS 1.25
+
+| Account | Spend: platform → settled | Leads: platform → settled (expected) | CPA: platform / settled | T / settled target | Settled ROAS | Status |
+|---|---|---|---|---|---|---|
+| `fictional-meta-account-a` | 176.30 → 176.12 (-0.1%) | 21 → 19 (18.9, +0.5%) | 8.40 / 9.27 | 7.20 / 8.00 | 1.0788 | **RECON_OK** |
+| `fictional-meta-account-b` | 24.70 → 22.90 (-7.3%) | 3 → 3 (2.7, +11.1%) | 8.23 / 7.63 | 5.76 / 6.40 | 1.0480 | **RECON_TZ** |
+| `fictional-meta-account-c` | — → — | — → — | — / — | 7.20 / 8.00 | — | **RECON_SCOPE** |
+| `fictional-tiktok-account-d` | 29.40 → 29.40 (+0.0%) | 7 → 3 (6.3, -52.4%) | 4.20 / 9.80 | 8.64 / 9.60 | 1.2245 | **RECON_GAP** |
+| `fictional-meta-account-e` | — → 12.50 | — → 1 | — / 12.50 | — / — | — | **RECON_SCOPE** |
+
+- `fictional-meta-account-b` · RECON_TZ — Account time zone Etc/GMT+5 differs from settlement time zone Etc/GMT; the day buckets differ, so the gap cannot be read. Align time zones first.
+- `fictional-meta-account-c` · RECON_SCOPE — In the snapshot but not in the settlement export: outside the settlement's scope; reported as missing, not as zero.
+- `fictional-tiktok-account-d` · RECON_GAP — Settlement approved 3 of 7 leads; expected 6.3 at the declared approval rate 0.90 (-52.4%, tolerance ±20.0%).
+- `fictional-meta-account-e` · RECON_SCOPE — In the settlement export but not returned by the platform pull: the platform side is missing, not zero; re-pull before reading totals.
+
+Settled CPA is spend per approved lead, so it is compared with the settled target, T ÷ approval rate (value per lead ÷ target ROAS), not with T. A row that exists on one side only is shown as missing, never as zero. In accounts with RECON_GAP or RECON_TZ or RECON_WINDOW, LADDER_PROMOTE or TEST_STOP_OVERCOST become advisory ("measurement unreconciled").
+
+## Decisions by ad set
+
+| Ad set | Stage | Spend | Impr. | Leads | CPA | T | Stop line | Utilisation | Rules fired |
 |---|---|---|---|---|---|---|---|---|---|
-| `fictional-meta-account-a` | fictional-offer-alpha | 10.00 | 10 | 9 | 10 | 28.40 | 820.00 | 6000.00 | 1 个组配置为在投但实际不可投 |
-| `fictional-meta-account-b` | fictional-offer-beta | 8.00 | 2 | 2 | 2 | 0.00 | 41.20 | — | spend_cap 读回为 null，余量预警不可用 |
-| `fictional-meta-account-c` | fictional-offer-gamma | 10.00 | 0 | 0 | 0 | 0.00 | 300.00 | 2000.00 | — |
+| `fictional-adset-a1` | T | 19.80 | 4600 | 3 | 6.60 | 7.20 | 21.60 | 99.0% | LADDER_PROMOTE(P1) |
+| `fictional-adset-a2` | T | 4.60 | 210 | 0 | — | 7.20 | 21.60 | 46.0% | TEST_UNDERTESTED(P2) |
+| `fictional-adset-a3` | T | 22.40 | 640 | 0 | — | 7.20 | 21.60 | 112.0% | TEST_STOP_NOCONV(P0) |
+| `fictional-adset-a4` | 2T | 40.00 | 9300 | 2 | 20.00 | 7.20 | 21.60 | 100.0% | TEST_STOP_OVERCOST(P0) |
+| `fictional-adset-a5` | T | 8.40 | 1900 | 3 | 2.80 | 7.20 | 21.60 | 42.0% | TEST_UNDERTESTED(P2) |
+| `fictional-adset-a6` | T | 21.00 | 4900 | 4 | 5.25 | 7.20 | 21.60 | 105.0% | CREATIVE_BREAKER(P1); CREATIVE_FATIGUE(P2); LADDER_HOLD(P2) |
+| `fictional-adset-a7` | T | 6.10 | 1100 | 0 | — | 7.20 | 21.60 | 30.5% | AD_STATUS(P0) |
+| `fictional-adset-a8` | T | 14.20 | 2700 | 2 | 7.10 | 7.20 | 21.60 | 71.0% | LINK_OR_TRACKING_BAD(P0) |
+| `fictional-adset-a9` | T | 19.20 | 4300 | 3 | 6.40 | 7.20 | 21.60 | 96.0% | LADDER_PROMOTE(P1) |
+| `fictional-adset-a10` | T | 20.60 | 4800 | 4 | 5.15 | 7.20 | 21.60 | 103.0% | LADDER_PROMOTE(P1) |
+| `fictional-adset-b1` | T | 15.60 | 3700 | 3 | 5.20 | 5.76 | 17.28 | 78.0% | CREATIVE_OVERFLOW(P2); LADDER_HOLD(P2) |
+| `fictional-adset-b2` | T | 9.10 | 190 | 0 | — | 5.76 | 17.28 | 45.5% | TEST_EARLY_STOP(P1) |
+| `fictional-adgroup-d1` | T | 19.60 | 5800 | 5 | 3.92 | 8.64 | 25.92 | 98.0% | LADDER_PROMOTE(P1, advisory: measurement unreconciled) |
+| `fictional-adgroup-d2` | T | 9.80 | 2600 | 2 | 4.90 | 8.64 | 25.92 | 49.0% | TEST_UNDERTESTED(P2) |
 
-## 判定明细（按 ad set）
+## Why CPA moved
 
-| ad set | 阶段 | 花费 | 展示 | 转化 | CPA | T | 止损线 | 利用率 | 判据 |
-|---|---|---|---|---|---|---|---|---|---|
-| `fictional-adset-a1` | T | 19.80 | 4600 | 3 | 6.60 | 7.20 | 21.60 | 0.9900 | LADDER_PROMOTE(P1) |
-| `fictional-adset-a2` | T | 4.60 | 210 | 0 | — | 7.20 | 21.60 | 0.4600 | TEST_UNDERTESTED(P2) |
-| `fictional-adset-a3` | T | 22.40 | 640 | 0 | — | 7.20 | 21.60 | 1.1200 | TEST_STOP_NOCONV(P0) |
-| `fictional-adset-a4` | 2T | 40.00 | 9300 | 2 | 20.00 | 7.20 | 21.60 | 1.0000 | TEST_STOP_OVERCOST(P0) |
-| `fictional-adset-a5` | T | 8.40 | 1900 | 3 | 2.80 | 7.20 | 21.60 | 0.4200 | TEST_UNDERTESTED(P2) |
-| `fictional-adset-a6` | T | 21.00 | 4900 | 4 | 5.25 | 7.20 | 21.60 | 1.0500 | CREATIVE_BREAKER(P1)；CREATIVE_FATIGUE(P2)；LADDER_HOLD(P2) |
-| `fictional-adset-a7` | T | 6.10 | 1100 | 0 | — | 7.20 | 21.60 | 0.3050 | AD_STATUS(P0) |
-| `fictional-adset-a8` | T | 14.20 | 2700 | 2 | 7.10 | 7.20 | 21.60 | 0.7100 | LINK_OR_TRACKING_BAD(P0) |
-| `fictional-adset-a9` | T | 19.20 | 4300 | 3 | 6.40 | 7.20 | 21.60 | 0.9600 | LADDER_PROMOTE(P1) |
-| `fictional-adset-a10` | T | 20.60 | 4800 | 4 | 5.15 | 7.20 | 21.60 | 1.0300 | LADDER_PROMOTE(P1) |
-| `fictional-adset-b1` | T | 15.60 | 3700 | 3 | 5.20 | 5.76 | 17.28 | 0.7800 | CREATIVE_OVERFLOW(P2)；LADDER_HOLD(P2) |
-| `fictional-adset-b2` | T | 9.10 | 190 | 0 | — | 5.76 | 17.28 | 0.4550 | TEST_EARLY_STOP(P1) |
+CPA = CPM ÷ (1000 × CTR × CVR), so the change in log CPA splits exactly into a CPM, a CTR and a CVR term. Each cell is that term in log-points (100 × change in the natural log; negative pushed CPA down) and its share of the total movement. The residual is what the quoted prior CPA leaves unexplained (rounding). It is an accounting identity, not a cause.
 
-## 闸门结果与已登记的差异计划
+| Ad set | Prior window | CPA: prior → now | Δ log CPA | CPM | CTR | CVR | Residual | Main driver |
+|---|---|---|---|---|---|---|---|---|
+| `fictional-adset-a1` | 2026-09-22 | 7.03 → 6.60 | -6.3 | +2.5 (22%) | -6.7 (60%) | -2.0 (18%) | -0.1 | **CTR** |
+| `fictional-adset-a4` | 2026-09-22 | 5.41 → 20.00 | +130.8 | +9.8 (7%) | +3.2 (2%) | +117.7 (90%) | +0.1 | **CVR** |
+| `fictional-adset-a10` | 2026-09-22 | 5.38 → 5.15 | — | — | — | — | — | not decomposed: prior CVR missing |
+| `fictional-adgroup-d1` | 2026-09-22 | 7.21 → 3.92 | -60.9 | +3.9 (5%) | +2.5 (3%) | -67.3 (91%) | -0.1 | **CVR** |
 
-| 结果 | 条数 | 含义 |
+Read the largest share first: CVR points after the click (destination, form, lead quality), CTR to the hook, CPM to the auction.
+
+## Gate results and recorded difference plan
+
+| Result | Rows | Meaning |
 |---|---|---|
-| 待审差异计划（ready） | 4 | 现值与基线一致；只列差异字段，尚未获得执行授权 |
-| 已满足 | 1 | 目标值已就位，跳过不写 |
-| 冲突隔离 | 1 | 检测到状态不一致，无法判定修改者；隔离并确认 |
-| 未知 | 1 | 没读到写前状态或字段缺失，先复拉 |
-| 仅建议 | 11 | 该发现不涉及写入字段，不过闸门 |
+| Ready for review (`ready`) | 4 | Current value equals the baseline; only differing fields are listed; not yet approved |
+| Satisfied | 1 | Target already in place; skipped |
+| Conflict (isolated) | 1 | State matches neither baseline nor target; the values do not say who changed it; isolate and confirm |
+| Unknown | 1 | Pre-write state not read, a field missing or no usable baseline; re-read first |
+| Advisory | 13 | No field change declared, or downgraded; nothing to gate |
 
-下表是 `apply` 登记的拟改字段，不是已经提交的操作：
+Fields `apply` recorded. They are planned, not submitted:
 
-| 对象 | 规则 | 拟改字段 |
+| Object | Rule | Planned fields |
 |---|---|---|
 | `fictional-adset-a1` | LADDER_PROMOTE | `daily_budget` → 40.00 |
 | `fictional-adset-a4` | TEST_STOP_OVERCOST | `status` → PAUSED |
 | `fictional-adset-a8` | LINK_OR_TRACKING_BAD | `status` → PAUSED |
 | `fictional-adset-a10` | LADDER_PROMOTE | `daily_budget` → 40.00 |
 
-仅建议（11 条，不涉及写入，不需要过闸门）：`fictional-adset-a2`·TEST_UNDERTESTED、`fictional-adset-a5`·TEST_UNDERTESTED、`a6-c1`·CREATIVE_BREAKER、`a6-c2`·CREATIVE_FATIGUE、`fictional-adset-a6`·LADDER_HOLD、`fictional-adset-a7`·AD_STATUS、`fictional-meta-account-b`·ACC_NO_DELIVERY、`fictional-meta-account-b`·ACC_BALANCE_LOW、`fictional-adset-b1`·CREATIVE_OVERFLOW、`fictional-adset-b1`·LADDER_HOLD、`fictional-meta-account-c`·ACC_STOPPED
+Advisory (13 rows, no field change, not gated): `fictional-adset-a2`·TEST_UNDERTESTED, `fictional-adset-a5`·TEST_UNDERTESTED, `a6-c1`·CREATIVE_BREAKER, `a6-c2`·CREATIVE_FATIGUE, `fictional-adset-a6`·LADDER_HOLD, `fictional-adset-a7`·AD_STATUS, `fictional-meta-account-b`·ACC_NO_DELIVERY, `fictional-meta-account-b`·ACC_BALANCE_LOW, `fictional-adset-b1`·CREATIVE_OVERFLOW, `fictional-adset-b1`·LADDER_HOLD, `fictional-meta-account-c`·ACC_STOPPED, `fictional-adgroup-d1`·LADDER_PROMOTE, `fictional-adgroup-d2`·TEST_UNDERTESTED
 
-## 与 after 快照逐条对照
+## After-snapshot comparison
 
-这里对比目标值与输入快照，不执行平台写入。说明列保留原始判据，其中“生效”不代表真实操作已完成。
+Targets compared with the supplied after file; no platform write happens here.
 
-| 对象 | 规则 | 快照是否匹配 | 原始判据 |
+| Object | Rule | Matches | Detail |
 |---|---|---|---|
-| `fictional-adset-a1` | LADDER_PROMOTE | 匹配 | 写后回读与目标一致。 |
-| `fictional-adset-a4` | TEST_STOP_OVERCOST | 匹配 | 写后回读与目标一致。 |
-| `fictional-adset-a8` | LINK_OR_TRACKING_BAD | 匹配 | 写后回读与目标一致。 |
-| `fictional-adset-a10` | LADDER_PROMOTE | **不匹配** | 写后回读与目标不一致 ⇒ 视为未真正生效，不要按已执行推进下一档：daily_budget：期望 40.00，实读 20.00 |
+| `fictional-adset-a1` | LADDER_PROMOTE | Yes | After snapshot matches the target. |
+| `fictional-adset-a4` | TEST_STOP_OVERCOST | Yes | After snapshot matches the target. |
+| `fictional-adset-a8` | LINK_OR_TRACKING_BAD | Yes | After snapshot matches the target. |
+| `fictional-adset-a10` | LADDER_PROMOTE | **No** | After snapshot differs from the target ⇒ treat as not in effect; do not move to the next step as if it ran: daily_budget: expected 40.00, read 20.00 |
 
-**本轮未对照 14 条，完整列出如下：**
+**Not compared this round: 16 rows, listed in full:**
 
-- `fictional-adset-a2` · TEST_UNDERTESTED — 闸门为 仅建议，本轮未写入。
-- `fictional-adset-a3` · TEST_STOP_NOCONV — 闸门为 已满足，本轮未写入。
-- `fictional-adset-a5` · TEST_UNDERTESTED — 闸门为 仅建议，本轮未写入。
-- `a6-c1` · CREATIVE_BREAKER — 闸门为 仅建议，本轮未写入。
-- `a6-c2` · CREATIVE_FATIGUE — 闸门为 仅建议，本轮未写入。
-- `fictional-adset-a6` · LADDER_HOLD — 闸门为 仅建议，本轮未写入。
-- `fictional-adset-a7` · AD_STATUS — 闸门为 仅建议，本轮未写入。
-- `fictional-adset-a9` · LADDER_PROMOTE — 闸门为 冲突隔离，本轮未写入。
-- `fictional-meta-account-b` · ACC_NO_DELIVERY — 闸门为 仅建议，本轮未写入。
-- `fictional-meta-account-b` · ACC_BALANCE_LOW — 闸门为 仅建议，本轮未写入。
-- `fictional-adset-b1` · CREATIVE_OVERFLOW — 闸门为 仅建议，本轮未写入。
-- `fictional-adset-b1` · LADDER_HOLD — 闸门为 仅建议，本轮未写入。
-- `fictional-adset-b2` · TEST_EARLY_STOP — 闸门为 未知，本轮未写入。
-- `fictional-meta-account-c` · ACC_STOPPED — 闸门为 仅建议，本轮未写入。
+- `fictional-adset-a2` · TEST_UNDERTESTED — Gate is Advisory; not written this round.
+- `fictional-adset-a3` · TEST_STOP_NOCONV — Gate is Satisfied; not written this round.
+- `fictional-adset-a5` · TEST_UNDERTESTED — Gate is Advisory; not written this round.
+- `a6-c1` · CREATIVE_BREAKER — Gate is Advisory; not written this round.
+- `a6-c2` · CREATIVE_FATIGUE — Gate is Advisory; not written this round.
+- `fictional-adset-a6` · LADDER_HOLD — Gate is Advisory; not written this round.
+- `fictional-adset-a7` · AD_STATUS — Gate is Advisory; not written this round.
+- `fictional-adset-a9` · LADDER_PROMOTE — Gate is Conflict (isolated); not written this round.
+- `fictional-meta-account-b` · ACC_NO_DELIVERY — Gate is Advisory; not written this round.
+- `fictional-meta-account-b` · ACC_BALANCE_LOW — Gate is Advisory; not written this round.
+- `fictional-adset-b1` · CREATIVE_OVERFLOW — Gate is Advisory; not written this round.
+- `fictional-adset-b1` · LADDER_HOLD — Gate is Advisory; not written this round.
+- `fictional-adset-b2` · TEST_EARLY_STOP — Gate is Unknown; not written this round.
+- `fictional-meta-account-c` · ACC_STOPPED — Gate is Advisory; not written this round.
+- `fictional-adgroup-d1` · LADDER_PROMOTE — Gate is Advisory; not written this round.
+- `fictional-adgroup-d2` · TEST_UNDERTESTED — Gate is Advisory; not written this round.
 
-## 结算口径对账
+## Structure warnings (no action, but they limit how far a verdict can be trusted)
 
-日期 2026-09-23　|　目标 ROAS 1.25　|　线索通过率 0.90　|　口径 reference-1n1-ladder v2026-10-07.1
+- `fictional-adset-a5` — Name says MAX but bid_strategy = LOWEST_COST_WITH_COST_CAP (5.00) ⇒ the name does not match the setup; read structure from bid_strategy, not from the name.
+- `fictional-adset-a7` — configured_status=ACTIVE but effective_status=DISAPPROVED ⇒ judge whether it can deliver by effective_status.
+- `fictional-meta-account-b` — spend_cap reads back null ⇒ the headroom alert cannot be computed; reported as a gap, never inferred from the balance.
 
-| 平台 | 账户 | 单价 | 花费 | 转化 | 收入 | 盘面 CPA | 目标 CPA(T) | ROAS |
-|---|---|---|---|---|---|---|---|---|
-| meta | `fictional-meta-account-a` | 10.00 | 176.30 | 19 | 190.00 | 9.28 | 7.20 | 1.0777 |
-| meta | `fictional-meta-account-b` | 8.00 | 24.70 | 3 | 24.00 | 8.23 | 5.76 | 0.9717 |
-| meta | `fictional-meta-account-c` | 10.00 | 0.00 | 0 | 0.00 | — | 7.20 | — |
+## Handoff rules
 
-- 先看口径是否一致：账户时区、归因窗口、转化去重、结算单价来源。
-- 盘面与结算对不上时，先修口径，不要先改预算。
-- 收入未经结算成熟前，ROAS 只能标「截至某时、尚待成熟」。
-
-## 结构警告（不产生动作，但会影响判定可信度）
-
-- `fictional-adset-a5` — 组名写「MAX」但实际 bid_strategy = LOWEST_COST_WITH_COST_CAP（5.00）⇒ 命名与实际不符，读结构一律以详情接口的 bid_strategy 为准。
-- `fictional-adset-a7` — configured_status=ACTIVE 但 effective_status=DISAPPROVED ⇒ 判「能不能投」必须看 effective_status。
-- `fictional-meta-account-b` — spend_cap 读回为 null ⇒ 余量预警无法计算，如实标注，不得用 balance 反推。
-
-## 交接边界
-
-- 本轮只生成建议、登记本地台账并对照快照；真实 API 接入、操作授权、提交和平台回读仍需后续独立实现。
-- 「已满足」不产生差异计划；「冲突」隔离并确认原因，不推断修改者。
-- 样本不足（展示未达判死门槛）不判素材好坏，只记录。
-- 能力缺口如实说明（如额度字段读回为 null），不用推断填空。
+- `satisfied` produces no change. A `conflict` is isolated and its cause confirmed; the values alone do not say who changed it.
+- An insufficient sample (impressions below the floor) is recorded, not judged.
+- Capability gaps are stated (for example a spend cap that reads back null), never filled by inference.
+- Platform numbers that do not reconcile with the settlement do not drive budget or pause changes until they do.
+- Approval, submission and live readback are outside this offline round.
 

@@ -2,8 +2,9 @@
 """Reference operating rules for a paid-media test loop. Pure functions, offline.
 
 This module is the *decision* layer of a recurring test loop: turning a settled
-observation window into metrics, deciding which declared rule fires, and asking
-the write gate to confirm the current state before anything is written back.
+observation window into metrics, deciding which declared rule fires, checking
+the platform view against the settlement view, and asking the write gate to
+confirm the current state before anything is written back.
 
 Boundaries kept from the rest of the repository:
 
@@ -18,17 +19,24 @@ Boundaries kept from the rest of the repository:
 Thresholds are data, not code: they arrive in a methodology document so a team
 can version its own numbers without editing this module. The bundled
 ``examples/operating/methodology-reference.json`` is a fictional reference.
+
+Human-readable text (evidence, gate details, labels) is generated in English
+(``lang='en'``, the default) or Chinese (``lang='zh-CN'``) from the same numbers.
+Codes and gate states are language-neutral, so a decision never depends on the
+language it is reported in.
 """
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import json
 import math
 
-VERSION = '1.0'
+VERSION = '1.1'
 
 MONEY = Decimal('0.01')
 RATIO = Decimal('0.0001')
+HUNDRED = Decimal('100')
 
 LEVELS = ('P0', 'P1', 'P2')
+LANGUAGES = ('en', 'zh-CN')
 
 # Fields a proposal may ask the gate to change, per object type. Kept explicit
 # so an unknown field is rejected instead of being written blindly: ``gate()``
@@ -41,9 +49,244 @@ WRITABLE_FIELDS = {
     'account': (),
 }
 
+# Every code the engine can emit, and the one field it asks the gate to change
+# (``None``: an advisory finding with nothing to write). A methodology must
+# declare an action for each of these; an action it marks ``"implemented": true``
+# must appear here, and one marked ``false`` must not.
+ENGINE_CODES = {
+    'LADDER_PROMOTE': 'daily_budget',
+    'LADDER_HOLD': None,
+    'TEST_STOP_NOCONV': 'status',
+    'TEST_STOP_OVERCOST': 'status',
+    'TEST_EARLY_STOP': 'status',
+    'TEST_UNDERTESTED': None,
+    'LINK_OR_TRACKING_BAD': 'status',
+    'AD_STATUS': None,
+    'CREATIVE_BREAKER': None,
+    'CREATIVE_FATIGUE': None,
+    'CREATIVE_OVERFLOW': None,
+    'ACC_NO_DELIVERY': None,
+    'ACC_STOPPED': None,
+    'ACC_BALANCE_LOW': None,
+}
+
+# Settlement reconciliation outcomes, in precedence order: the first that
+# applies is the account's status.
+RECON_SCOPE, RECON_WINDOW, RECON_TZ, RECON_GAP, RECON_OK = (
+    'RECON_SCOPE', 'RECON_WINDOW', 'RECON_TZ', 'RECON_GAP', 'RECON_OK')
+RECON_CODES = (RECON_SCOPE, RECON_WINDOW, RECON_TZ, RECON_GAP, RECON_OK)
+
+DRIVER_KEYS = ('cpm', 'ctr', 'cvr')
+
 
 class RuleError(ValueError):
     """Input did not satisfy the declared observation contract."""
+
+
+# --------------------------------------------------------------------------
+# text
+# --------------------------------------------------------------------------
+
+TEXT = {
+    'en': {
+        # creative findings
+        'creative_count': '{count} creatives in the ad set, above the cap of {cap} ⇒ trim before scaling.',
+        'circuit_breaker': ('Creative {key} took {share_pct} of ad-set spend at CPA {cpa} > {multiple}× T '
+                            '({line}) ⇒ switch off this creative; leave the ad set running.'),
+        'fatigue': ('Creative {key} meets all three: frequency {frequency} >= {min_frequency}, CTR down '
+                    '{ctr_drop_pct}, CVR down {cvr_drop_pct} ⇒ fatigued; add a new creative.'),
+        # structure findings
+        'name_mismatch': ('Name says MAX but bid_strategy = {strategy} ({bid}) ⇒ the name does not match '
+                          'the setup; read structure from bid_strategy, not from the name.'),
+        'no_bid': 'no bid',
+        'effective_status': ('configured_status=ACTIVE but effective_status=DISAPPROVED ⇒ judge whether '
+                             'it can deliver by effective_status.'),
+        'capability_gap': ('spend_cap reads back null ⇒ the headroom alert cannot be computed; reported '
+                           'as a gap, never inferred from the balance.'),
+        # account findings
+        'acc_no_adsets': 'No ad set returned for this account.',
+        'acc_none_configured': 'No ad set has configured_status ACTIVE.',
+        'acc_no_delivery': ('{configured} ad set(s) configured ACTIVE ({effective} able to deliver), '
+                            "but today's spend is 0."),
+        'acc_balance_low': 'Balance {balance} <= alert line {low}.',
+        # ad-set findings
+        'hold': ('Promotion blocked by {blockers} ⇒ resolve the creative, structure or account issue '
+                 'first; budget unchanged this round; one change per ad set per round.'),
+        'list_sep': ', ',
+        'ad_status': 'effective_status=DISAPPROVED while configured_status is still ACTIVE.',
+        'link_bad': 'The declared destination or tracking check failed.',
+        'blocked': 'Missing spend / impressions / results; cannot classify.',
+        'q_noconv': 'Are the destination and conversion tracking working?',
+        'noconv': ('Zero leads with {impressions} impressions >= sample floor {floor}, and spend '
+                   '{spend} >= stop line {line}.'),
+        'q_early': 'Does the hook need fixing first?',
+        'early_cpc': 'CPC {cpc} > {limit}',
+        'early_ctr': 'CTR {ctr} < {limit}',
+        'early_sep': '; ',
+        'early': ('Early-stop line crossed ({parts}), but {impressions} impressions < sample floor '
+                  '{floor} ⇒ stop new spend; no verdict on the creative.'),
+        'q_bid_or_budget': 'Is the bid failing to enter auctions, or is the budget capped?',
+        'undertested_zero': ('Zero leads but {impressions} impressions < sample floor {floor} ⇒ sample '
+                             'too small; record only.'),
+        'q_overcost': 'Has conversion reporting matured?',
+        'overcost': 'Spend − T × leads = {margin} >= stop line {line}.',
+        'q_sample_time': 'How long until the current budget gathers enough sample?',
+        'undertested_few': '{results} leads < minimum sample {min} ⇒ too few to judge the creative.',
+        'undertested_util': ('Budget utilisation {utilisation} <= {under} ⇒ limited delivery; fix whether '
+                             'it can spend before changing creatives.'),
+        'q_promote': 'This step\'s CPA {cpa} <= T {t}; move up to {stage}?',
+        'promote': 'Leads {results} >= {min}, full delivery day = {day}, CPA {cpa} <= T {t}.',
+        'yes': 'yes', 'no': 'no',
+        'not_fresh': 'CPA meets T but the step has not covered a full delivery day ⇒ no promotion this round.',
+        'q_cpa_acceptable': "Is this step's CPA already unacceptable?",
+        'undertested_cpa': ('CPA {cpa} > T {t} but below the stop line {line} ⇒ keep the budget; add no '
+                            'more money.'),
+        # settlement downgrade
+        'downgrade': ('Measurement unreconciled ({status}): {detail} ⇒ advisory only; no budget or status '
+                      'change on platform numbers until they reconcile with the settlement.'),
+        # write gate
+        'gate_advisory': 'The finding declares no field change (advisory only); nothing to gate.',
+        'gate_downgraded': ('Measurement unreconciled ({status}): advisory only this round; nothing to '
+                            'gate.'),
+        'gate_no_record': 'The pre-write read has no record of {key} ⇒ re-read first; never write blind.',
+        'gate_absent_field': ('{field}: not in the pre-write read (the field is missing, not empty) ⇒ '
+                              're-read to confirm current state.'),
+        'gate_satisfied': '{field}: already at target ({wanted}) ⇒ skip, nothing to write.',
+        'gate_no_baseline': ('{field}: the baseline does not record this field, so current value '
+                             '{present} cannot be checked against the plan ⇒ hold the change; recover '
+                             "the plan's baseline, or regenerate and review the plan."),
+        'gate_null_baseline': ('{field}: the baseline is explicitly null, so there is no usable baseline '
+                               'for this change ⇒ hold the change; verify what the null means and the '
+                               "plan's baseline, or regenerate and review the plan."),
+        'gate_write': '{field}: {present} -> {wanted} (matches the baseline; only this field is sent).',
+        'gate_conflict': ('{field}: current value {present} matches neither baseline {held} nor target '
+                          '{wanted} ⇒ isolate the row, hold the change and check where the difference '
+                          'came from.'),
+        # after-snapshot comparison
+        'recon_not_written': 'Gate is {label}; not written this round.',
+        'recon_not_in_after': 'Object not in the after snapshot.',
+        'recon_match': 'After snapshot matches the target.',
+        'recon_miss_field': '{field}: expected {wanted}, read {current}',
+        'recon_miss_sep': '; ',
+        'recon_mismatch': ('After snapshot differs from the target ⇒ treat as not in effect; do not '
+                           'move to the next step as if it ran: {details}'),
+        # settlement reconciliation
+        'settle_ok': 'Spend and settled leads are within tolerance.',
+        'settle_scope_platform': ('In the snapshot but not in the settlement export: outside the '
+                                  "settlement's scope; reported as missing, not as zero."),
+        'settle_scope_settlement': ('In the settlement export but not returned by the platform pull: '
+                                    'the platform side is missing, not zero; re-pull before reading '
+                                    'totals.'),
+        'settle_window': ('Settlement has this account for {settled} but the observation date is '
+                          '{platform}; dates must match before comparing.'),
+        'settle_tz': ('Account time zone {account_tz} differs from settlement time zone {settle_tz}; '
+                      'the day buckets differ, so the gap cannot be read. Align time zones first.'),
+        'settle_tz_undeclared': ('Time zone not declared (account {account_tz}, settlement {settle_tz}); '
+                                 'the day buckets cannot be matched.'),
+        'settle_platform_incomplete': ('Platform totals are incomplete (an ad set has no spend or '
+                                       'leads); missing is not zero.'),
+        'settle_settled_missing': 'Settlement row has no spend or leads.',
+        'settle_price': 'Settlement unit price {settled} differs from the offer price {platform}.',
+        'settle_spend': 'Spend differs by {delta} (tolerance ±{tolerance}%).',
+        'settle_spend_from_zero': 'Settled spend {settled} where the platform shows 0.',
+        'settle_results': ('Settlement approved {settled} of {platform} leads; expected {expected} at the '
+                           'declared approval rate {rate} ({delta}, tolerance ±{tolerance}%).'),
+        'settle_results_from_zero': 'Settled leads {settled} where the platform shows none.',
+        'undeclared': 'not declared',
+    },
+    'zh-CN': {
+        'creative_count': '组内素材 {count} 条，超过硬上界 {cap} 条 ⇒ 先裁剪再扩量。',
+        'circuit_breaker': ('素材 {key} 吃掉组内 {share_ratio} 花费、CPA {cpa} > 目标 x{multiple}'
+                            '（{line}）⇒ 熔断该素材，不动整组。'),
+        'fatigue': ('素材 {key} 三条同时满足：频次 {frequency} >= {min_frequency}、CTR 降 {ctr_drop}、'
+                    'CVR 降 {cvr_drop} ⇒ 判衰竭，换素材。'),
+        'name_mismatch': ('组名写「MAX」但实际 bid_strategy = {strategy}（{bid}）⇒ 命名与实际不符，'
+                          '读结构一律以详情接口的 bid_strategy 为准。'),
+        'no_bid': '无 bid',
+        'effective_status': ('configured_status=ACTIVE 但 effective_status=DISAPPROVED'
+                             ' ⇒ 判「能不能投」必须看 effective_status。'),
+        'capability_gap': 'spend_cap 读回为 null ⇒ 余量预警无法计算，如实标注，不得用 balance 反推。',
+        'acc_no_adsets': '账户下没有任何广告组记录。',
+        'acc_none_configured': '没有任何 configured_status 为 ACTIVE 的广告组。',
+        'acc_no_delivery': 'configured_status 为 ACTIVE 的组有 {configured} 个（其中 effective 可投 {effective} 个），但今日消耗为 0。',
+        'acc_balance_low': '余额 {balance} <= 警示线 {low}。',
+        'hold': '晋级被阻断：{blockers} ⇒ 先处理素材/结构/账户问题，本轮预算不变；每个广告组每轮只做一项变更。',
+        'list_sep': '、',
+        'ad_status': 'effective_status=DISAPPROVED，configured_status 仍为 ACTIVE。',
+        'link_bad': '声明的链接有效性或回传完整性未通过。',
+        'blocked': '缺少 spend / impressions / results，无法判定。',
+        'q_noconv': '链路与回传是否正常？',
+        'noconv': '零转化且展示 {impressions} >= 判死门槛 {floor}，累计花费 {spend} >= 止损线 {line}。',
+        'q_early': '钩子是否需要先修？',
+        'early_cpc': 'CPC {cpc} > {limit}',
+        'early_ctr': 'CTR {ctr} < {limit}',
+        'early_sep': '；',
+        'early': '早停触线（{parts}），但展示 {impressions} < 判死门槛 {floor} ⇒ 停新增花费、不下「素材无效」结论。',
+        'q_bid_or_budget': '是出价进不了场，还是预算撞顶？',
+        'undertested_zero': '零转化但展示 {impressions} < 判死门槛 {floor} ⇒ 样本不足，只记录。',
+        'q_overcost': '回传是否已成熟？',
+        'overcost': '累计花费 − T x 转化数 = {margin} >= 止损线 {line}。',
+        'q_sample_time': '现有预算下还要多久才能攒够样本？',
+        'undertested_few': '转化 {results} < 最低可判样本 {min} ⇒ 样本不足，不判素材好坏。',
+        'undertested_util': '预算利用率 {utilisation} <= {under} ⇒ 花不动，先解决能不能花的问题，而不是换素材。',
+        'q_promote': '本档 CPA {cpa} <= T {t}，是否升到 {stage}？',
+        'promote': '转化 {results} >= {min}、覆盖完整投放日 = {day}、CPA {cpa} <= T {t}。',
+        'yes': '是', 'no': '否',
+        'not_fresh': 'CPA 达标但该档未覆盖完整投放日 ⇒ 本轮不晋级。',
+        'q_cpa_acceptable': '这一档的 CPA 是否已到不可接受？',
+        'undertested_cpa': 'CPA {cpa} > T {t}，但未达止损线 {line} ⇒ 保持预算、不继续加钱。',
+        'downgrade': '口径未对齐（{status}）：{detail} ⇒ 仅建议；平台数与结算数对齐之前，不按平台数改预算或状态。',
+        'gate_advisory': '该发现不涉及写入字段（仅建议），不过闸门。',
+        'gate_downgraded': '口径未对齐（{status}）：本轮仅建议，不过闸门。',
+        'gate_no_record': '写前状态里没有 {key} 的记录 ⇒ 先复拉，不要盲写。',
+        'gate_absent_field': '{field}：写前状态里读不到（不是值为空，是字段不在快照里）⇒ 先复拉确认现状。',
+        'gate_satisfied': '{field}：已是目标值（{wanted}）⇒ 跳过不写。',
+        'gate_no_baseline': ('{field}：基线未记录该字段，无法核对当前值 {present} 与原方案是否一致 '
+                             '⇒ 暂缓修改，补充原方案基线证据；必要时重新生成并审阅计划。'),
+        'gate_null_baseline': ('{field}：基线明确为 null，尚无可用于本次修改的基线值 '
+                               '⇒ 暂缓修改，核实空值含义与原方案基线；必要时重新生成并审阅计划。'),
+        'gate_write': '{field}：{present} -> {wanted}（与基线一致，只发这个字段）。',
+        'gate_conflict': '{field}：当前值 {present} 与基线 {held}、目标 {wanted} 均不一致 ⇒ 隔离该行，暂缓修改并核对变更来源。',
+        'recon_not_written': '闸门为 {label}，本轮未写入。',
+        'recon_not_in_after': '写后回读里没有该对象。',
+        'recon_match': '写后回读与目标一致。',
+        'recon_miss_field': '{field}：期望 {wanted}，实读 {current}',
+        'recon_miss_sep': '；',
+        'recon_mismatch': '写后回读与目标不一致 ⇒ 视为未真正生效，不要按已执行推进下一档：{details}',
+        'settle_ok': '花费与结算线索数均在容差内。',
+        'settle_scope_platform': '快照里有、结算导出里没有：不在结算范围内；按缺失报告，不补零。',
+        'settle_scope_settlement': '结算导出里有、平台拉取没有返回：平台侧是缺失，不是零；先复拉再看合计。',
+        'settle_window': '结算里该账户的日期是 {settled}，观察日是 {platform}；日期一致后才能比较。',
+        'settle_tz': '账户时区 {account_tz} 与结算时区 {settle_tz} 不同，自然日切分不一致，差额无法解读；先对齐时区。',
+        'settle_tz_undeclared': '时区未声明（账户 {account_tz}，结算 {settle_tz}），无法对齐自然日。',
+        'settle_platform_incomplete': '平台合计不完整（有广告组缺少花费或线索数）；缺失不等于零。',
+        'settle_settled_missing': '结算行缺少花费或线索数。',
+        'settle_price': '结算单价 {settled} 与 offer 单价 {platform} 不一致。',
+        'settle_spend': '花费差 {delta}（容差 ±{tolerance}%）。',
+        'settle_spend_from_zero': '平台花费为 0，结算花费却是 {settled}。',
+        'settle_results': '结算认可 {settled}/{platform} 条线索；按声明通过率 {rate} 应为 {expected}（{delta}，容差 ±{tolerance}%）。',
+        'settle_results_from_zero': '平台没有线索，结算却有 {settled} 条。',
+        'undeclared': '未声明',
+    },
+}
+
+GATE_LABELS = {
+    'en': {'ready': 'Ready for review', 'satisfied': 'Satisfied', 'conflict': 'Conflict (isolated)',
+           'unknown': 'Unknown', 'advisory': 'Advisory'},
+    'zh-CN': {'ready': '可执行', 'satisfied': '已满足', 'conflict': '冲突隔离',
+              'unknown': '未知', 'advisory': '仅建议'},
+}
+
+
+def check_lang(lang):
+    if lang not in LANGUAGES:
+        raise RuleError(f'lang must be one of {list(LANGUAGES)}, got {lang!r}.')
+    return lang
+
+
+def say(lang, message, /, **values):
+    """Render one message in ``lang`` from named values."""
+    return TEXT[check_lang(lang)][message].format(**values)
 
 
 # --------------------------------------------------------------------------
@@ -55,13 +298,13 @@ def dec(value, label):
     if value is None:
         return None
     if isinstance(value, bool) or not isinstance(value, (str, int, float, Decimal)):
-        raise RuleError(f'{label} 必须是数字或数字字符串，当前为 {type(value).__name__}。')
+        raise RuleError(f'{label} must be a number or numeric string, got {type(value).__name__}.')
     try:
         result = Decimal(str(value))
     except InvalidOperation as exc:
-        raise RuleError(f'{label} 不是合法十进制数：{value!r}') from exc
+        raise RuleError(f'{label} is not a valid decimal: {value!r}') from exc
     if not result.is_finite():
-        raise RuleError(f'{label} 不能是 NaN 或无穷。')
+        raise RuleError(f'{label} cannot be NaN or infinite.')
     return result
 
 
@@ -70,7 +313,7 @@ def integer(value, label):
     if parsed is None:
         return None
     if parsed != parsed.to_integral_value():
-        raise RuleError(f'{label} 必须是整数：{parsed}')
+        raise RuleError(f'{label} must be an integer: {parsed}')
     return int(parsed)
 
 
@@ -96,6 +339,21 @@ def num(value, digits='0.0001'):
 
 def num2(value):
     return num(value, '0.01')
+
+
+def pct(value, digits='0.1'):
+    """Render a ratio (0.619) as a percentage (``61.9%``)."""
+    if value is None:
+        return None
+    return num(value * HUNDRED, digits) + '%'
+
+
+def signed_pct(value, digits='0.1'):
+    """Render a percentage change with its sign (``+0.5%``, ``-52.4%``)."""
+    if value is None:
+        return None
+    text = num(value, digits)
+    return ('+' + text if not text.startswith('-') else text) + '%'
 
 
 def same_number(left, right):
@@ -130,49 +388,71 @@ REQUIRED_METHODOLOGY_KEYS = (
     'balance_alert_below', 'max_creatives_per_adset',
 )
 REQUIRED_ACTION_KEYS = ('code', 'level', 'action', 'window', 'acceptance', 'stop_condition')
+ACTION_TEXT_KEYS = ('action', 'window', 'acceptance', 'stop_condition')
 
 
 def required(methodology, key):
     """Read a threshold that must come from the methodology. No code default."""
     if not isinstance(methodology, dict) or methodology.get(key) is None:
-        raise RuleError(f'方法论缺少必需阈值 {key}；阈值只来自方法论文档，代码不提供默认值。')
+        raise RuleError(f'Methodology is missing required threshold {key}; thresholds come only from '
+                        'the methodology document, never from a code default.')
     return methodology[key]
 
 
 def validate_methodology(document):
     if not isinstance(document, dict):
-        raise RuleError('方法论文档必须是 JSON 对象。')
+        raise RuleError('Methodology document must be a JSON object.')
     missing = [key for key in REQUIRED_METHODOLOGY_KEYS if document.get(key) is None]
     if missing:
-        raise RuleError('方法论文档缺少必需字段：' + ', '.join(missing))
+        raise RuleError('Methodology document is missing required fields: ' + ', '.join(missing))
     if dec(document['target_roas'], 'target_roas') <= 0:
-        raise RuleError('target_roas 必须为正数。')
+        raise RuleError('target_roas must be positive.')
     if 'quality_factor' in document:
         quality = dec(document['quality_factor'], 'quality_factor')
         if quality is None or quality <= 0 or quality > 1:
-            raise RuleError('quality_factor（线索通过率）必须在 (0, 1] 之间。')
+            raise RuleError('quality_factor (lead approval rate) must be in (0, 1].')
     if dec(document['balance_alert_below'], 'balance_alert_below') < 0:
-        raise RuleError('balance_alert_below 不能为负数。')
+        raise RuleError('balance_alert_below cannot be negative.')
     if integer(document['max_creatives_per_adset'], 'max_creatives_per_adset') < 1:
-        raise RuleError('max_creatives_per_adset 必须是正整数。')
+        raise RuleError('max_creatives_per_adset must be a positive integer.')
     if not isinstance(document['ladder'], list) or not document['ladder']:
-        raise RuleError('ladder 必须是非空数组。')
+        raise RuleError('ladder must be a non-empty array.')
     actions = document.get('actions')
     if not isinstance(actions, list) or not actions:
-        raise RuleError('actions 必须是非空数组。')
+        raise RuleError('actions must be a non-empty array.')
     seen = set()
     for action in actions:
+        if not isinstance(action, dict):
+            raise RuleError('Every action must be a JSON object.')
         for key in REQUIRED_ACTION_KEYS:
             if not action.get(key):
-                raise RuleError(f'动作 {action.get("code", "?")} 缺少 {key}。')
+                raise RuleError(f'Action {action.get("code", "?")} is missing {key}.')
+        code = action['code']
         if action['level'] not in LEVELS:
-            raise RuleError(f'动作 {action["code"]} 的 level 必须是 {LEVELS} 之一。')
-        if action['code'] in seen:
-            raise RuleError(f'动作 code 重复：{action["code"]}')
-        seen.add(action['code'])
+            raise RuleError(f'Action {code} level must be one of {LEVELS}.')
+        if code in seen:
+            raise RuleError(f'Duplicate action code: {code}')
+        seen.add(code)
+        english = action.get('en')
+        if english is not None:
+            if not isinstance(english, dict):
+                raise RuleError(f'Action {code}: en must be an object.')
+            absent = [key for key in ACTION_TEXT_KEYS if not english.get(key)]
+            if absent:
+                raise RuleError(f'Action {code}: en is missing ' + ', '.join(absent))
+        implemented = action.get('implemented')
+        if implemented is True and code not in ENGINE_CODES:
+            raise RuleError(f'Action {code} is marked implemented but the engine never emits it.')
+        if implemented is False and code in ENGINE_CODES:
+            raise RuleError(f'Action {code} is marked not implemented but the engine emits it.')
+    absent = sorted(code for code in ENGINE_CODES if code not in seen)
+    if absent:
+        raise RuleError('Methodology declares no action for engine codes: ' + ', '.join(absent))
     for key in ('measured_in_t',):
         if key not in document['stop_loss']:
-            raise RuleError(f'stop_loss 缺少 {key}。')
+            raise RuleError(f'stop_loss is missing {key}.')
+    if document.get('reconciliation') is not None:
+        reconciliation_policy(document)
     return document
 
 
@@ -184,6 +464,17 @@ def load_methodology(path):
 
 def actions_by_code(methodology):
     return {action['code']: action for action in methodology['actions']}
+
+
+def action_text(action, lang='en'):
+    """The four reviewer-facing texts of one action, in ``lang`` when declared.
+
+    The base fields hold the methodology author's own language; an optional
+    ``en`` object holds the English version. Without it, the base text is used.
+    """
+    check_lang(lang)
+    source = action.get('en') if lang == 'en' and isinstance(action.get('en'), dict) else action
+    return {key: source[key] for key in ACTION_TEXT_KEYS}
 
 
 def target_cost(unit_price, methodology):
@@ -198,25 +489,32 @@ def target_cost(unit_price, methodology):
     """
     price = dec(unit_price, 'unit_price')
     if price is None or price <= 0:
-        raise RuleError('unit_price 必须为正数。')
-    quality = dec(methodology.get('quality_factor', '1'), 'quality_factor')
+        raise RuleError('unit_price must be positive.')
+    quality = quality_factor(methodology)
     roas = dec(methodology.get('target_roas'), 'target_roas')
-    if quality is None or roas is None or roas <= 0:
-        raise RuleError('target_roas 必须为正数，quality_factor 不能为 null。')
+    if roas is None or roas <= 0:
+        raise RuleError('target_roas must be positive.')
     return price * quality / roas
+
+
+def quality_factor(methodology):
+    quality = dec(methodology.get('quality_factor', '1'), 'quality_factor')
+    if quality is None or quality <= 0 or quality > 1:
+        raise RuleError('quality_factor (lead approval rate) must be in (0, 1].')
+    return quality
 
 
 def ladder_multiplier(stage, methodology):
     ladder = methodology['ladder']
     if stage in ladder:
         return Decimal(ladder.index(stage) + 1)
-    raise RuleError(f'未知的阶梯阶段 {stage!r}，已声明：{ladder}')
+    raise RuleError(f'Unknown ladder stage {stage!r}; declared: {ladder}')
 
 
 def next_stage(stage, methodology):
     ladder = methodology['ladder']
     if stage not in ladder:
-        raise RuleError(f'未知的阶梯阶段 {stage!r}，已声明：{ladder}')
+        raise RuleError(f'Unknown ladder stage {stage!r}; declared: {ladder}')
     index = ladder.index(stage)
     return ladder[index + 1] if index + 1 < len(ladder) else None
 
@@ -280,7 +578,7 @@ def adset_metrics(adset, unit_price, methodology):
         # never has to re-parse its own output.
         '_spend': spend, '_impressions': impressions, '_clicks': clicks,
         '_results': results, '_cpa': cpa, '_cpc': cpc, '_ctr': ctr, '_cvr': cvr,
-        '_utilisation': utilisation, '_overcost_margin': overcost_margin,
+        '_cpm': cpm, '_utilisation': utilisation, '_overcost_margin': overcost_margin,
         '_frequency': frequency, '_daily_budget': budget, '_T': t,
     }
 
@@ -295,47 +593,94 @@ def raw(values, key):
 
 
 # --------------------------------------------------------------------------
-# attribution
+# why CPA moved
 # --------------------------------------------------------------------------
 
-def attribution(reference, observed):
-    """Split a CPA gap into CPM, CTR and CVR contributions.
+def cpa_driver_decomposition(reference, observed):
+    """Split a CPA change into CPM, CTR and CVR contributions.
 
-    ``CPA = CPM / (1000 x CTR x CVR)``, so after taking logs the gaps add up:
+    ``CPA = CPM / (1000 x CTR x CVR)``, so after taking logs the changes add up:
     ``log(CPA/CPA_ref) = dlog(CPM) - dlog(CTR) - dlog(CVR)``.
 
-    The three signed terms are returned with their share of the absolute total,
-    which answers "which stage of the funnel moved the cost" instead of
-    "which number looks biggest". A term is ``None`` when either input metric is
-    missing, so an incomplete comparison stays visibly incomplete.
+    Each term is that metric's signed contribution to the change in log CPA
+    (negative pushed CPA down), returned with its share of the absolute total.
+    That answers "which stage of the funnel moved the cost" instead of "which
+    number looks biggest". It is an accounting identity, not a causal claim.
+    ``residual`` is the part of the observed CPA change the three terms do not
+    explain: zero when the inputs are internally consistent, small when a quoted
+    CPA was rounded, large when the windows or definitions differ.
+
+    A comparison with a missing or non-positive metric is returned as
+    incomplete, naming what is missing, so it stays visibly incomplete.
     """
-    keys = ('cpm', 'ctr', 'cvr', 'cpa')
-    if any(reference.get(key) is None or observed.get(key) is None for key in keys):
-        return {'complete': False, 'terms': None, 'shares': None,
-                'reason': '参考组或观察组缺少 CPM / CTR / CVR / CPA 之一，不做归因。'}
-    terms = {
-        'cpm': math.log(observed['cpm'] / reference['cpm']),
-        'ctr': -math.log(observed['ctr'] / reference['ctr']),
-        'cvr': -math.log(observed['cvr'] / reference['cvr']),
-    }
-    observed_total = math.log(observed['cpa'] / reference['cpa'])
+    keys = DRIVER_KEYS + ('cpa',)
+    missing = []
+    for side, values in (('reference', reference), ('observed', observed)):
+        for key in keys:
+            value = (values or {}).get(key)
+            if value is None or isinstance(value, bool) or float(value) <= 0:
+                missing.append(f'{side}.{key}')
+    if missing:
+        return {'complete': False, 'terms': None, 'shares': None, 'driver': None,
+                'missing': missing,
+                'reason': 'Missing or non-positive ' + ', '.join(missing) + '; not decomposed.'}
+
+    def log_ratio(key):
+        return math.log(float(observed[key]) / float(reference[key]))
+
+    terms = {'cpm': log_ratio('cpm'), 'ctr': -log_ratio('ctr'), 'cvr': -log_ratio('cvr')}
+    observed_total = log_ratio('cpa')
     magnitude = sum(abs(value) for value in terms.values())
-    shares = ({key: (abs(value) / magnitude if magnitude else 0.0) for key, value in terms.items()}
+    shares = ({key: abs(value) / magnitude for key, value in terms.items()}
               if magnitude else {key: 0.0 for key in terms})
+    driver = max(DRIVER_KEYS, key=lambda key: shares[key]) if magnitude else None
     return {
         'complete': True,
         'terms': {key: round(value, 4) for key, value in terms.items()},
         'shares': {key: round(value, 4) for key, value in shares.items()},
         'observed_total': round(observed_total, 4),
         'residual': round(observed_total - sum(terms.values()), 6),
+        'driver': driver,
+        'missing': [],
     }
+
+
+# Kept so existing callers keep working; the name described the maths poorly.
+attribution = cpa_driver_decomposition
+
+
+def cpa_drivers(account, methodology):
+    """Decompose the CPA change of every ad set that declares a prior window."""
+    unit_price = (account.get('offer') or {}).get('unit_price')
+    entries = []
+    for adset in account.get('adsets') or []:
+        prior = adset.get('prior_window')
+        if prior is None:
+            continue
+        if not isinstance(prior, dict):
+            raise RuleError(f"{adset.get('adset_key')}: prior_window must be an object.")
+        values = adset_metrics(adset, unit_price, methodology)
+        current = {key: raw(values, key) for key in DRIVER_KEYS + ('cpa',)}
+        reference = {key: dec(prior.get(key), f'prior_window.{key}') for key in DRIVER_KEYS + ('cpa',)}
+        result = cpa_driver_decomposition(reference, current)
+        entries.append({
+            'account_key': account.get('account_key'),
+            'adset_key': adset.get('adset_key'),
+            'prior_date': prior.get('date'),
+            'prior': {key: num(value) for key, value in reference.items()},
+            'current': {key: num(value) for key, value in current.items()},
+            'prior_cpa': num2(reference['cpa']),
+            'current_cpa': num2(current['cpa']),
+            **result,
+        })
+    return entries
 
 
 # --------------------------------------------------------------------------
 # creative level checks
 # --------------------------------------------------------------------------
 
-def creative_findings(adset, values, methodology):
+def creative_findings(adset, values, methodology, lang='en'):
     """Spend concentration, circuit breaker and fatigue for one ad set.
 
     The circuit breaker needs at least two creatives to be meaningful: with a
@@ -353,7 +698,7 @@ def creative_findings(adset, values, methodology):
     if len(creatives) > cap:
         findings.append({
             'kind': 'creative_count',
-            'detail': f'组内素材 {len(creatives)} 条，超过硬上界 {cap} 条 ⇒ 先裁剪再扩量。',
+            'detail': say(lang, 'creative_count', count=len(creatives), cap=cap),
             'severity': 'structure',
         })
 
@@ -373,9 +718,10 @@ def creative_findings(adset, values, methodology):
                 findings.append({
                     'kind': 'circuit_breaker',
                     'creative_key': creative.get('creative_key'),
-                    'detail': (f"素材 {creative.get('creative_key')} 吃掉组内 {num(share, '0.001')} 花费、"
-                               f"CPA {num2(creative_cpa)} > 目标 x{num(cpa_multiple, '0.1')}"
-                               f"（{num2(values['_T'] * cpa_multiple)}）⇒ 熔断该素材，不动整组。"),
+                    'detail': say(lang, 'circuit_breaker', key=creative.get('creative_key'),
+                                  share_ratio=num(share, '0.001'), share_pct=pct(share),
+                                  cpa=num2(creative_cpa), multiple=num(cpa_multiple, '0.1'),
+                                  line=num2(values['_T'] * cpa_multiple)),
                     'spend_share': num(share, '0.0001'),
                     'creative_cpa': num2(creative_cpa),
                 })
@@ -397,9 +743,10 @@ def creative_findings(adset, values, methodology):
             findings.append({
                 'kind': 'fatigue',
                 'creative_key': creative.get('creative_key'),
-                'detail': (f"素材 {creative.get('creative_key')} 三条同时满足：频次 {num(frequency, '0.01')} >= "
-                           f"{num(min_frequency, '0.1')}、CTR 降 {num(ctr_drop, '0.001')}、CVR 降 "
-                           f"{num(cvr_drop, '0.001')} ⇒ 判衰竭，换素材。"),
+                'detail': say(lang, 'fatigue', key=creative.get('creative_key'),
+                              frequency=num(frequency, '0.01'), min_frequency=num(min_frequency, '0.1'),
+                              ctr_drop=num(ctr_drop, '0.001'), cvr_drop=num(cvr_drop, '0.001'),
+                              ctr_drop_pct=pct(ctr_drop), cvr_drop_pct=pct(cvr_drop)),
                 'frequency': num(frequency, '0.01'),
                 'ctr_drop': num(ctr_drop, '0.0001'),
                 'cvr_drop': num(cvr_drop, '0.0001'),
@@ -414,7 +761,7 @@ def name_mismatch(adset):
     return 'MAX' in name.upper() and bool(strategy) and strategy != 'LOWEST_COST_WITHOUT_CAP'
 
 
-def structure_findings(account, methodology):
+def structure_findings(account, methodology, lang='en'):
     """Declared-versus-actual structure problems that need no metric to detect.
 
     Ad-set checks run for every ad set; the account-level capability gap is
@@ -427,22 +774,20 @@ def structure_findings(account, methodology):
             findings.append({
                 'kind': 'name_mismatch',
                 'object_key': adset.get('adset_key'),
-                'detail': (f'组名写「MAX」但实际 bid_strategy = {strategy}'
-                           f'（{adset.get("bid_amount") or "无 bid"}）⇒ 命名与实际不符，'
-                           '读结构一律以详情接口的 bid_strategy 为准。'),
+                'detail': say(lang, 'name_mismatch', strategy=strategy,
+                              bid=adset.get('bid_amount') or say(lang, 'no_bid')),
             })
         if adset.get('configured_status') == 'ACTIVE' and adset.get('effective_status') == 'DISAPPROVED':
             findings.append({
                 'kind': 'effective_status',
                 'object_key': adset.get('adset_key'),
-                'detail': ('configured_status=ACTIVE 但 effective_status=DISAPPROVED'
-                           ' ⇒ 判「能不能投」必须看 effective_status。'),
+                'detail': say(lang, 'effective_status'),
             })
     if account.get('spend_cap') is None:
         findings.append({
             'kind': 'capability_gap',
             'object_key': account.get('account_key'),
-            'detail': 'spend_cap 读回为 null ⇒ 余量预警无法计算，如实标注，不得用 balance 反推。',
+            'detail': say(lang, 'capability_gap'),
         })
     return findings
 
@@ -452,7 +797,7 @@ def structure_findings(account, methodology):
 # --------------------------------------------------------------------------
 
 def proposal(account, adset, code, methodology, *, object_type='adset', object_key=None,
-             parent_key=None, baseline=None, target=None, question=None, evidence=None):
+             parent_key=None, baseline=None, target=None, question=None, evidence=None, lang='en'):
     """Build one proposal in the shape the write gate expects.
 
     ``object_type`` is ``account``, ``adset`` or ``creative`` and decides which
@@ -462,10 +807,10 @@ def proposal(account, adset, code, methodology, *, object_type='adset', object_k
     finding is not silently detached from its ad set.
     """
     if object_type not in WRITABLE_FIELDS:
-        raise RuleError(f'未知的 object_type {object_type!r}，已声明：{sorted(WRITABLE_FIELDS)}')
+        raise RuleError(f'Unknown object_type {object_type!r}; declared: {sorted(WRITABLE_FIELDS)}')
     actions = actions_by_code(methodology)
     if code not in actions:
-        raise RuleError(f'方法论动作目录里没有 {code}。')
+        raise RuleError(f'The methodology action catalogue has no {code}.')
     action = actions[code]
     adset_key = adset.get('adset_key') if adset else None
     proposal = {
@@ -477,25 +822,23 @@ def proposal(account, adset, code, methodology, *, object_type='adset', object_k
         'object_key': object_key if object_key is not None else adset_key,
         'parent_key': parent_key if parent_key is not None else adset_key,
         'object_name': adset.get('name', '') if adset else '',
-        'action': action['action'],
-        'window': action['window'],
-        'acceptance': action['acceptance'],
-        'stop_condition': action['stop_condition'],
+        **action_text(action, lang),
         'evidence': evidence or [],
     }
     if question:
         proposal['question'] = question
     # Only attach a write intent when the rule actually wants a field changed.
-    # A proposal without 基线/变更 is a *finding*, and the gate will report it as
-    # "cannot compare" rather than silently passing it.
+    # A proposal without baseline/target is a *finding*, and the gate reports it
+    # as advisory rather than silently passing it.
     if target is not None:
         proposal['baseline'] = baseline or {}
         proposal['target'] = target
     return proposal
 
 
-def decide_account(account, methodology):
+def decide_account(account, methodology, lang='en'):
     """Produce every proposal for one account from a settled snapshot."""
+    check_lang(lang)
     offer = account.get('offer') or {}
     unit_price = offer.get('unit_price')
     proposals, diagnostics = [], []
@@ -505,7 +848,7 @@ def decide_account(account, methodology):
     if not adsets:
         proposals.append(proposal(account, None, 'ACC_STOPPED', methodology,
                                   object_type='account', object_key=account_key,
-                                  evidence=['账户下没有任何广告组记录。']))
+                                  evidence=[say(lang, 'acc_no_adsets')], lang=lang))
         return proposals, diagnostics
 
     # ACC_STOPPED is about "nothing is even configured to run". An ad set that is
@@ -517,18 +860,19 @@ def decide_account(account, methodology):
     if not configured_live:
         proposals.append(proposal(account, None, 'ACC_STOPPED', methodology,
                                   object_type='account', object_key=account_key,
-                                  evidence=['没有任何 configured_status 为 ACTIVE 的广告组。']))
+                                  evidence=[say(lang, 'acc_none_configured')], lang=lang))
     elif account.get('today_spend') is not None and dec(account.get('today_spend'), 'today_spend') == 0:
         proposals.append(proposal(account, None, 'ACC_NO_DELIVERY', methodology,
                                   object_type='account', object_key=account_key,
-                                  evidence=[f'configured_status 为 ACTIVE 的组有 {len(configured_live)} 个'
-                                            f'（其中 effective 可投 {len(effective_live)} 个），但今日消耗为 0。']))
+                                  evidence=[say(lang, 'acc_no_delivery', configured=len(configured_live),
+                                                effective=len(effective_live))], lang=lang))
     balance = dec(account.get('balance'), 'balance')
     low = dec(required(methodology, 'balance_alert_below'), 'balance_alert_below')
     if balance is not None and balance <= low:
         proposals.append(proposal(account, None, 'ACC_BALANCE_LOW', methodology,
                                   object_type='account', object_key=account_key,
-                                  evidence=[f'余额 {num2(balance)} <= 警示线 {num2(low)}。']))
+                                  evidence=[say(lang, 'acc_balance_low', balance=num2(balance),
+                                                low=num2(low))], lang=lang))
     # Any P0 account finding outranks scaling: no ad set in this account is
     # promoted until the account itself can deliver.
     account_blockers = [item['code'] for item in proposals
@@ -544,7 +888,7 @@ def decide_account(account, methodology):
         diagnostics.append({'account_key': account_key, **{
             key: value for key, value in values.items() if not key.startswith('_')}})
 
-        creatives = creative_findings(adset, values, methodology)
+        creatives = creative_findings(adset, values, methodology, lang)
         for finding in creatives:
             if finding['kind'] in ('circuit_breaker', 'fatigue'):
                 code = 'CREATIVE_BREAKER' if finding['kind'] == 'circuit_breaker' else 'CREATIVE_FATIGUE'
@@ -552,31 +896,31 @@ def decide_account(account, methodology):
                                           object_type='creative',
                                           object_key=finding.get('creative_key'),
                                           parent_key=adset.get('adset_key'),
-                                          evidence=[finding['detail']]))
+                                          evidence=[finding['detail']], lang=lang))
             else:
                 proposals.append(proposal(account, adset, 'CREATIVE_OVERFLOW', methodology,
-                                          evidence=[finding['detail']]))
+                                          evidence=[finding['detail']], lang=lang))
 
         if adset.get('configured_status') == 'ACTIVE' and adset.get('effective_status') == 'DISAPPROVED':
             proposals.append(proposal(account, adset, 'AD_STATUS', methodology,
-                                      evidence=['effective_status=DISAPPROVED，configured_status 仍为 ACTIVE。']))
+                                      evidence=[say(lang, 'ad_status')], lang=lang))
             continue
 
         if adset.get('linked') is False or adset.get('tracking_ok') is False:
             proposals.append(proposal(account, adset, 'LINK_OR_TRACKING_BAD', methodology,
-                                      evidence=['声明的链接有效性或回传完整性未通过。'],
+                                      evidence=[say(lang, 'link_bad')],
                                       target={'status': 'PAUSED'},
                                       baseline=({'status': adset['configured_status']}
-                                                if 'configured_status' in adset else {})))
+                                                if 'configured_status' in adset else {}), lang=lang))
             continue
 
         # A metric we could not read is missing evidence, not a passing result.
         if values['_spend'] is None or values['_results'] is None or values['_impressions'] is None:
-            diagnostics[-1]['blocked'] = '缺少 spend / impressions / results，无法判定。'
+            diagnostics[-1]['blocked'] = say(lang, 'blocked')
             continue
 
         code, question, evidence = _classify_adset(
-            adset, values, methodology, min_results, require_full_day, day_complete)
+            adset, values, methodology, min_results, require_full_day, day_complete, lang)
         if code is None:
             continue
         if code == 'LADDER_PROMOTE':
@@ -585,12 +929,10 @@ def decide_account(account, methodology):
                 # Rule precedence: one change per ad set per round, and a
                 # creative or account problem is fixed before money is added.
                 code, question = 'LADDER_HOLD', None
-                evidence = evidence + [
-                    '晋级被阻断：' + '、'.join(blockers)
-                    + ' ⇒ 先处理素材/结构/账户问题，本轮预算不变；每个广告组每轮只做一项变更。']
+                evidence = evidence + [say(lang, 'hold', blockers=say(lang, 'list_sep').join(blockers))]
         target, baseline = _write_intent(code, adset, values, methodology)
         proposals.append(proposal(account, adset, code, methodology, question=question,
-                                  evidence=evidence, target=target, baseline=baseline))
+                                  evidence=evidence, target=target, baseline=baseline, lang=lang))
     return proposals, diagnostics
 
 
@@ -613,7 +955,7 @@ def promotion_blockers(adset, creative_items, account_blockers):
     return blockers
 
 
-def _classify_adset(adset, values, methodology, min_results, require_full_day, day_complete):
+def _classify_adset(adset, values, methodology, min_results, require_full_day, day_complete, lang='en'):
     """Return ``(code, question, evidence)`` for one ad set, or ``(None, ...)``."""
     results = values['_results']
     spend = values['_spend']
@@ -623,56 +965,56 @@ def _classify_adset(adset, values, methodology, min_results, require_full_day, d
     early_cpc = dec(sample.get('early_stop_cpc_above'), 'early_stop_cpc_above')
     early_ctr = dec(sample.get('early_stop_ctr_below'), 'early_stop_ctr_below')
     stop_line = values['_T'] * dec(methodology['stop_loss']['measured_in_t'], 'stop_loss.measured_in_t')
+    line = num2(money(stop_line))
 
     if results == 0:
         enough_sample = impressions >= dead_impressions
         if values['_overcost_margin'] is not None and \
                 values['_overcost_margin'] >= stop_line and enough_sample:
-            return ('TEST_STOP_NOCONV', '链路与回传是否正常？',
-                    [f'零转化且展示 {impressions} >= 判死门槛 {dead_impressions}，'
-                     f"累计花费 {num2(spend)} >= 止损线 {num2(money(stop_line))}。"])
+            return ('TEST_STOP_NOCONV', say(lang, 'q_noconv'),
+                    [say(lang, 'noconv', impressions=impressions, floor=dead_impressions,
+                         spend=num2(spend), line=line)])
         early = []
         if early_cpc is not None and values['_cpc'] is not None and values['_cpc'] > early_cpc:
-            early.append(f"CPC {num2(values['_cpc'])} > {num2(early_cpc)}")
+            early.append(say(lang, 'early_cpc', cpc=num2(values['_cpc']), limit=num2(early_cpc)))
         if early_ctr is not None and values['_ctr'] is not None and values['_ctr'] < early_ctr:
-            early.append(f"CTR {num(values['_ctr'], '0.0001')} < {num(early_ctr, '0.0001')}")
+            early.append(say(lang, 'early_ctr', ctr=num(values['_ctr'], '0.0001'),
+                             limit=num(early_ctr, '0.0001')))
         if early:
-            return ('TEST_EARLY_STOP', '钩子是否需要先修？',
-                    ['早停触线（' + '；'.join(early) + '），但展示 '
-                     f'{impressions} < 判死门槛 {dead_impressions} ⇒ 停新增花费、不下「素材无效」结论。'])
-        return ('TEST_UNDERTESTED', '是出价进不了场，还是预算撞顶？',
-                [f"零转化但展示 {impressions} < 判死门槛 {dead_impressions} ⇒ 样本不足，只记录。"])
+            return ('TEST_EARLY_STOP', say(lang, 'q_early'),
+                    [say(lang, 'early', parts=say(lang, 'early_sep').join(early),
+                         impressions=impressions, floor=dead_impressions)])
+        return ('TEST_UNDERTESTED', say(lang, 'q_bid_or_budget'),
+                [say(lang, 'undertested_zero', impressions=impressions, floor=dead_impressions)])
     if values['_overcost_margin'] is not None and values['_overcost_margin'] >= stop_line:
-        return ('TEST_STOP_OVERCOST', '回传是否已成熟？',
-                [f"累计花费 − T x 转化数 = {num2(values['_overcost_margin'])} >= 止损线 "
-                 f"{num2(money(stop_line))}。"])
+        return ('TEST_STOP_OVERCOST', say(lang, 'q_overcost'),
+                [say(lang, 'overcost', margin=num2(values['_overcost_margin']), line=line)])
 
     if results < min_results:
-        return ('TEST_UNDERTESTED', '现有预算下还要多久才能攒够样本？',
-                [f'转化 {results} < 最低可判样本 {min_results} ⇒ 样本不足，不判素材好坏。'])
+        return ('TEST_UNDERTESTED', say(lang, 'q_sample_time'),
+                [say(lang, 'undertested_few', results=results, min=min_results)])
 
     stage = adset.get('ladder_stage')
     target_stage = next_stage(stage, methodology)
     utilisation = values['_utilisation']
     under = dec(methodology['utilisation']['under_delivering_below'], 'under_delivering_below')
     if utilisation is not None and under is not None and utilisation <= under:
-        return ('TEST_UNDERTESTED', '是出价进不了场，还是预算撞顶？',
-                [f'预算利用率 {num(utilisation, "0.001")} <= {num(under, "0.01")} ⇒ 花不动，'
-                 '先解决能不能花的问题，而不是换素材。'])
+        return ('TEST_UNDERTESTED', say(lang, 'q_bid_or_budget'),
+                [say(lang, 'undertested_util', utilisation=num(utilisation, '0.001'),
+                     under=num(under, '0.01'))])
 
     cpa_ok = values['_cpa'] is not None and values['_cpa'] <= values['_T']
     fresh = (not require_full_day) or day_complete
+    cpa, t = num2(values['_cpa']), num2(values['_T'])
     if cpa_ok and fresh and target_stage:
-        return ('LADDER_PROMOTE', f'本档 CPA {num2(values["_cpa"])} <= T {num2(values["_T"])}，是否升到 {target_stage}？',
-                [f'转化 {results} >= {min_results}、覆盖完整投放日 = {day_complete}、'
-                 f"CPA {num2(values['_cpa'])} <= T {num2(values['_T'])}。"])
+        return ('LADDER_PROMOTE', say(lang, 'q_promote', cpa=cpa, t=t, stage=target_stage),
+                [say(lang, 'promote', results=results, min=min_results,
+                     day=say(lang, 'yes' if day_complete else 'no'), cpa=cpa, t=t)])
     if cpa_ok and not fresh:
-        return (None, None, [f'CPA 达标但该档未覆盖完整投放日 ⇒ 本轮不晋级。'])
+        return (None, None, [say(lang, 'not_fresh')])
     if not cpa_ok:
-        return ('TEST_UNDERTESTED', '这一档的 CPA 是否已到不可接受？',
-                [f"CPA {num2(values['_cpa'])} > T {num2(values['_T'])}，但未达止损线 "
-                 f"{num2(money(stop_line))}"
-                 ' ⇒ 保持预算、不继续加钱。'])
+        return ('TEST_UNDERTESTED', say(lang, 'q_cpa_acceptable'),
+                [say(lang, 'undertested_cpa', cpa=cpa, t=t, line=line)])
     return (None, None, [])
 
 
@@ -691,25 +1033,293 @@ def _write_intent(code, adset, values, methodology):
 
 
 # --------------------------------------------------------------------------
+# platform vs settlement
+# --------------------------------------------------------------------------
+
+def reconciliation_policy(methodology):
+    """Read the tolerances and downgrade rules. No code default for any of them."""
+    block = required(methodology, 'reconciliation')
+    if not isinstance(block, dict):
+        raise RuleError('reconciliation must be an object.')
+    policy = {}
+    for key in ('spend_tolerance_pct', 'results_tolerance_pct'):
+        value = dec(block.get(key), f'reconciliation.{key}')
+        if value is None or value < 0:
+            raise RuleError(f'reconciliation.{key} is required and cannot be negative.')
+        policy[key] = value
+    downgrade_on = block.get('downgrade_on')
+    if not isinstance(downgrade_on, list) or any(code not in RECON_CODES or code == RECON_OK
+                                                 for code in downgrade_on):
+        raise RuleError('reconciliation.downgrade_on must list codes from '
+                        + ', '.join(code for code in RECON_CODES if code != RECON_OK) + '.')
+    downgrade_codes = block.get('downgrade_codes')
+    if not isinstance(downgrade_codes, list) or any(ENGINE_CODES.get(code) is None
+                                                    for code in downgrade_codes):
+        raise RuleError('reconciliation.downgrade_codes must list engine codes that carry a write intent.')
+    policy['downgrade_on'] = tuple(downgrade_on)
+    policy['downgrade_codes'] = tuple(downgrade_codes)
+    return policy
+
+
+def _platform_totals(account):
+    """Sum the ad-set rows. No rows, or any row without spend or leads, is ``None``."""
+    adsets = account.get('adsets') or []
+    if not adsets:
+        return None, None
+    spends = [dec(adset.get('spend'), 'spend') for adset in adsets]
+    results = [integer(adset.get('results'), 'results') for adset in adsets]
+    spend = None if any(value is None for value in spends) else sum(spends, Decimal('0'))
+    leads = None if any(value is None for value in results) else sum(results)
+    return spend, leads
+
+
+def reconcile_settlement(snapshot, settlement, methodology, lang='en'):
+    """Check the platform view of each account against the settlement view.
+
+    Rows are joined on account and date. Each account gets the first status
+    that applies, in this order:
+
+    ``RECON_SCOPE``   the account is on one side only. The missing side stays
+                      missing; it is never zero-filled.
+    ``RECON_WINDOW``  the settlement has the account, but not for the
+                      observation date.
+    ``RECON_TZ``      account and settlement time zones differ (or one is not
+                      declared), so the day buckets cannot be matched.
+    ``RECON_GAP``     spend, or settled leads against platform leads x the
+                      declared approval rate, is outside tolerance; or the unit
+                      price differs; or a side's totals are incomplete.
+    ``RECON_OK``      within tolerance.
+
+    Settled CPA is spend per *approved* lead, so it is compared with
+    ``T / quality_factor`` (value per lead / target ROAS), not with T.
+    Tolerances, and which statuses downgrade which codes, come only from the
+    methodology's ``reconciliation`` block.
+    """
+    check_lang(lang)
+    policy = reconciliation_policy(methodology)
+    if not isinstance(settlement, dict) or settlement.get('kind') != 'settlement_daily':
+        raise RuleError('Settlement document kind must be settlement_daily.')
+    rows = settlement.get('rows')
+    if not isinstance(rows, list):
+        raise RuleError('Settlement rows must be an array.')
+    default_date = settlement.get('date')
+    default_tz = settlement.get('timezone')
+    quality = quality_factor(methodology)
+    roas_target = dec(methodology['target_roas'], 'target_roas')
+    platform_date = (snapshot.get('observation') or {}).get('date')
+
+    settled = {}
+    order = []
+    for row in rows:
+        if not isinstance(row, dict) or not row.get('account_key'):
+            raise RuleError('Every settlement row needs an account_key.')
+        key = row['account_key']
+        date = row.get('date', default_date)
+        if key not in settled:
+            settled[key] = {}
+            order.append(key)
+        if date in settled[key]:
+            raise RuleError(f'Duplicate settlement row for {key} on {date}.')
+        settled[key][date] = row
+
+    accounts = snapshot.get('accounts') or []
+    snapshot_keys = {account.get('account_key') for account in accounts}
+    output = []
+    for account in accounts:
+        output.append(_reconcile_account(account, settled.get(account.get('account_key')), platform_date,
+                                         default_date, default_tz, policy, quality, roas_target,
+                                         methodology, lang))
+    for key in order:
+        if key in snapshot_keys:
+            continue
+        for date, row in settled[key].items():
+            spend = dec(row.get('spend'), 'settlement.spend')
+            leads = integer(row.get('results'), 'settlement.results')
+            output.append(_settlement_row(
+                key, row.get('platform'), RECON_SCOPE, 'settlement_only', policy,
+                [say(lang, 'settle_scope_settlement')],
+                platform_date=platform_date, settled_date=date,
+                settled_spend=spend, settled_results=leads,
+                settled_cpa=ratio(spend, Decimal(leads)) if spend is not None and leads else None,
+                settlement_timezone=row.get('timezone', default_tz),
+                unit_price_settled=num(dec(row.get('unit_price'), 'settlement.unit_price'))))
+
+    summary = {code: 0 for code in RECON_CODES}
+    for row in output:
+        summary[row['status']] += 1
+    return {
+        'date': default_date,
+        'timezone': default_tz,
+        'currency': settlement.get('currency'),
+        'tolerances': {'spend_pct': num(policy['spend_tolerance_pct'], '0.1'),
+                       'results_pct': num(policy['results_tolerance_pct'], '0.1')},
+        'approval_rate': num(quality, '0.01'),
+        'target_roas': num(roas_target, '0.01'),
+        'downgrade_on': list(policy['downgrade_on']),
+        'downgrade_codes': list(policy['downgrade_codes']),
+        'summary': summary,
+        'rows': output,
+    }
+
+
+def _settlement_row(account_key, platform, status, side, policy, reasons, **fields):
+    row = {
+        'account_key': account_key, 'platform': platform, 'status': status, 'side': side,
+        'platform_date': None, 'settled_date': None,
+        'account_timezone': None, 'settlement_timezone': None,
+        'platform_spend': None, 'settled_spend': None, 'spend_delta_pct': None,
+        'platform_results': None, 'settled_results': None, 'expected_settled_results': None,
+        'results_delta_pct': None, 'approval_rate': None,
+        'platform_cpa': None, 'settled_cpa': None, 'T': None, 'settled_target': None,
+        'settled_roas': None, 'unit_price': None, 'unit_price_settled': None,
+    }
+    for key, value in fields.items():
+        if isinstance(value, Decimal):
+            value = num2(value) if key in ('platform_spend', 'settled_spend', 'platform_cpa',
+                                           'settled_cpa', 'T', 'settled_target') else num(value)
+        row[key] = value
+    row['reasons'] = reasons
+    row['downgrade'] = status in policy['downgrade_on']
+    return row
+
+
+def _reconcile_account(account, dated_rows, platform_date, default_date, default_tz, policy, quality,
+                       roas_target, methodology, lang):
+    key = account.get('account_key')
+    offer = account.get('offer') or {}
+    price = dec(offer.get('unit_price'), 'unit_price')
+    t = target_cost(price, methodology)
+    settled_target = t / quality
+    platform_spend, platform_leads = _platform_totals(account)
+    common = dict(
+        platform_date=platform_date, account_timezone=account.get('account_timezone'),
+        platform_spend=platform_spend, platform_results=platform_leads,
+        platform_cpa=(ratio(platform_spend, Decimal(platform_leads))
+                      if platform_spend is not None and platform_leads else None),
+        T=money(t), settled_target=money(settled_target), unit_price=num2(price))
+    platform = account.get('platform')
+    if not dated_rows:
+        return _settlement_row(key, platform, RECON_SCOPE, 'platform_only', policy,
+                               [say(lang, 'settle_scope_platform')], **common)
+    row = dated_rows.get(platform_date) if platform_date else None
+    if row is None:
+        dates = sorted(str(date) for date in dated_rows)
+        return _settlement_row(key, platform, RECON_WINDOW, 'both', policy,
+                               [say(lang, 'settle_window', settled=', '.join(dates),
+                                    platform=platform_date or say(lang, 'undeclared'))],
+                               settled_date=', '.join(dates), **common)
+
+    settle_tz = row.get('timezone', default_tz)
+    settled_spend = dec(row.get('spend'), 'settlement.spend')
+    settled_leads = integer(row.get('results'), 'settlement.results')
+    settled_value = dec(row.get('value'), 'settlement.value')
+    settled_price = dec(row.get('unit_price'), 'settlement.unit_price')
+    spend_delta = None
+    if platform_spend is not None and settled_spend is not None:
+        if platform_spend:
+            spend_delta = (settled_spend - platform_spend) / platform_spend * HUNDRED
+        elif settled_spend == 0:
+            spend_delta = Decimal('0')
+    expected = platform_leads * quality if platform_leads is not None else None
+    results_delta = None
+    if expected is not None and settled_leads is not None:
+        if expected:
+            results_delta = (Decimal(settled_leads) - expected) / expected * HUNDRED
+        elif settled_leads == 0:
+            results_delta = Decimal('0')
+    fields = dict(
+        common, settled_date=platform_date, settlement_timezone=settle_tz,
+        settled_spend=settled_spend, settled_results=settled_leads,
+        spend_delta_pct=num(spend_delta, '0.01'),
+        expected_settled_results=num(expected, '0.01'),
+        results_delta_pct=num(results_delta, '0.01'),
+        approval_rate=(num(Decimal(settled_leads) / Decimal(platform_leads), '0.001')
+                       if settled_leads is not None and platform_leads else None),
+        settled_cpa=(ratio(settled_spend, Decimal(settled_leads))
+                     if settled_spend is not None and settled_leads else None),
+        settled_roas=(num(ratio(settled_value, settled_spend), '0.0001')
+                      if settled_value is not None and settled_spend else None),
+        unit_price_settled=num2(settled_price))
+
+    account_tz = account.get('account_timezone')
+    if not account_tz or not settle_tz:
+        return _settlement_row(key, platform, RECON_TZ, 'both', policy,
+                               [say(lang, 'settle_tz_undeclared',
+                                    account_tz=account_tz or say(lang, 'undeclared'),
+                                    settle_tz=settle_tz or say(lang, 'undeclared'))], **fields)
+    if account_tz != settle_tz:
+        return _settlement_row(key, platform, RECON_TZ, 'both', policy,
+                               [say(lang, 'settle_tz', account_tz=account_tz, settle_tz=settle_tz)],
+                               **fields)
+
+    gaps = []
+    if settled_price is not None and settled_price != price:
+        gaps.append(say(lang, 'settle_price', settled=num2(settled_price), platform=num2(price)))
+    if platform_spend is None or platform_leads is None:
+        gaps.append(say(lang, 'settle_platform_incomplete'))
+    if settled_spend is None or settled_leads is None:
+        gaps.append(say(lang, 'settle_settled_missing'))
+    tolerance = policy['spend_tolerance_pct']
+    if platform_spend is not None and settled_spend is not None:
+        if spend_delta is None:
+            gaps.append(say(lang, 'settle_spend_from_zero', settled=num2(settled_spend)))
+        elif abs(spend_delta) > tolerance:
+            gaps.append(say(lang, 'settle_spend', delta=signed_pct(spend_delta),
+                            tolerance=num(tolerance, '0.1')))
+    tolerance = policy['results_tolerance_pct']
+    if expected is not None and settled_leads is not None:
+        if results_delta is None:
+            gaps.append(say(lang, 'settle_results_from_zero', settled=settled_leads))
+        elif abs(results_delta) > tolerance:
+            gaps.append(say(lang, 'settle_results', settled=settled_leads, platform=platform_leads,
+                            expected=num(expected, '0.1'), rate=num(quality, '0.01'),
+                            delta=signed_pct(results_delta), tolerance=num(tolerance, '0.1')))
+    if gaps:
+        return _settlement_row(key, platform, RECON_GAP, 'both', policy, gaps, **fields)
+    return _settlement_row(key, platform, RECON_OK, 'both', policy, [say(lang, 'settle_ok')], **fields)
+
+
+def downgrade_unreconciled(proposals, reconciliation, lang='en'):
+    """Make cost-based writes advisory in accounts whose numbers do not reconcile.
+
+    A proposal whose code is in ``downgrade_codes``, in an account whose status
+    is in ``downgrade_on``, keeps its code and evidence but loses its write
+    intent, so the gate reports it as advisory. Nothing is dropped.
+    """
+    check_lang(lang)
+    rows = {row['account_key']: row for row in (reconciliation or {}).get('rows', [])
+            if row['side'] != 'settlement_only'}
+    codes = set((reconciliation or {}).get('downgrade_codes') or ())
+    result = []
+    for item in proposals:
+        row = rows.get(item.get('account_key'))
+        if row and row['downgrade'] and item.get('code') in codes:
+            item = dict(item)
+            item.pop('target', None)
+            item.pop('baseline', None)
+            detail = ' '.join(row['reasons'])
+            item['downgraded'] = {'reason': 'measurement_unreconciled', 'status': row['status'],
+                                  'detail': detail}
+            item['evidence'] = list(item.get('evidence') or []) + [
+                say(lang, 'downgrade', status=row['status'], detail=detail)]
+        result.append(item)
+    return result
+
+
+# --------------------------------------------------------------------------
 # write gate
 # --------------------------------------------------------------------------
 
 READY, SATISFIED, CONFLICT, UNKNOWN, ADVISORY = (
     'ready', 'satisfied', 'conflict', 'unknown', 'advisory')
 
-GATE_LABEL = {
-    READY: '可执行',
-    SATISFIED: '已满足',
-    CONFLICT: '冲突隔离',
-    UNKNOWN: '未知',
-    ADVISORY: '仅建议',
-}
+GATE_LABEL = GATE_LABELS['en']
 
 # States that need a human to look before the round can be considered closed.
 NEEDS_HUMAN = (CONFLICT, UNKNOWN)
 
 
-def gate(proposals, writeback):
+def gate(proposals, writeback, lang='en'):
     """Decide what may be written, using the state read back just before writing.
 
     Five outcomes, per proposal:
@@ -739,25 +1349,27 @@ def gate(proposals, writeback):
     table is a malformed plan, not a state question, so it raises ``RuleError``
     and blocks the round instead of becoming a sixth gate state.
     """
+    check_lang(lang)
     objects = (writeback or {}).get('objects') or {}
     results = []
     for item in proposals:
         target = item.get('target')
         _check_writable(item, target)
         if not target:
-            results.append(_verdict(item, ADVISORY,
-                                    ['该发现不涉及写入字段（仅建议），不过闸门。']))
+            downgraded = item.get('downgraded')
+            detail = (say(lang, 'gate_downgraded', status=downgraded.get('status'))
+                      if isinstance(downgraded, dict) else say(lang, 'gate_advisory'))
+            results.append(_verdict(item, ADVISORY, [detail], lang))
             continue
         current = objects.get(item.get('object_key'))
         if not isinstance(current, dict):
             results.append(_verdict(item, UNKNOWN,
-                                    [f"写前状态里没有 {item.get('object_key')!r} 的记录 ⇒ 先复拉，不要盲写。"]))
+                                    [say(lang, 'gate_no_record', key=repr(item.get('object_key')))], lang))
             continue
         absent = [field for field in target if field not in current]
         if absent:
             results.append(_verdict(item, UNKNOWN,
-                                    [f'{field}：写前状态里读不到（不是值为空，是字段不在快照里）⇒ 先复拉确认现状。'
-                                     for field in absent]))
+                                    [say(lang, 'gate_absent_field', field=field) for field in absent], lang))
             continue
         baseline = item.get('baseline') or {}
         detail, conflicts, unknown, writes, done = [], [], [], [], []
@@ -765,31 +1377,30 @@ def gate(proposals, writeback):
             present = current.get(field)
             held = baseline.get(field)
             if same_number(present, wanted):
-                detail.append(f'{field}：已是目标值（{wanted}）⇒ 跳过不写。')
+                detail.append(say(lang, 'gate_satisfied', field=field, wanted=wanted))
                 done.append(field)
             elif field not in baseline:
-                detail.append(f'{field}：基线未记录该字段，无法核对当前值 {present} 与原方案是否一致 '
-                              '⇒ 暂缓修改，补充原方案基线证据；必要时重新生成并审阅计划。')
+                detail.append(say(lang, 'gate_no_baseline', field=field, present=present))
                 unknown.append(field)
             elif held is None:
-                detail.append(f'{field}：基线明确为 null，尚无可用于本次修改的基线值 '
-                              '⇒ 暂缓修改，核实空值含义与原方案基线；必要时重新生成并审阅计划。')
+                detail.append(say(lang, 'gate_null_baseline', field=field))
                 unknown.append(field)
             elif same_number(present, held):
-                detail.append(f'{field}：{present} -> {wanted}（与基线一致，只发这个字段）。')
+                detail.append(say(lang, 'gate_write', field=field, present=present, wanted=wanted))
                 writes.append(field)
             else:
-                detail.append(f'{field}：当前值 {present} 与基线 {held}、目标 {wanted} 均不一致 ⇒ 隔离该行，暂缓修改并核对变更来源。')
+                detail.append(say(lang, 'gate_conflict', field=field, present=present, held=held,
+                                  wanted=wanted))
                 conflicts.append(field)
         if unknown:
-            results.append(_verdict(item, UNKNOWN, detail, conflict_fields=conflicts,
+            results.append(_verdict(item, UNKNOWN, detail, lang, conflict_fields=conflicts,
                                     satisfied_fields=done))
         elif conflicts:
-            results.append(_verdict(item, CONFLICT, detail, conflict_fields=conflicts))
+            results.append(_verdict(item, CONFLICT, detail, lang, conflict_fields=conflicts))
         elif not writes:
-            results.append(_verdict(item, SATISFIED, detail, satisfied_fields=done))
+            results.append(_verdict(item, SATISFIED, detail, lang, satisfied_fields=done))
         else:
-            results.append(_verdict(item, READY, detail, writable_fields=writes))
+            results.append(_verdict(item, READY, detail, lang, writable_fields=writes))
     return results
 
 
@@ -798,24 +1409,26 @@ def _check_writable(item, target):
     if target is None:
         return
     if not isinstance(target, dict):
-        raise RuleError(f"{item.get('code')} · {item.get('object_key')}：target 必须是对象。")
+        raise RuleError(f"{item.get('code')} · {item.get('object_key')}: target must be an object.")
     if not target:
         return
     object_type = item.get('object_type')
     allowed = WRITABLE_FIELDS.get(object_type)
     if allowed is None:
-        raise RuleError(f"{item.get('code')} · {item.get('object_key')}：object_type {object_type!r} "
-                        f'没有声明可写字段（已声明：{sorted(WRITABLE_FIELDS)}）⇒ 整轮闸门停止。')
+        raise RuleError(f"{item.get('code')} · {item.get('object_key')}: object_type {object_type!r} "
+                        f'declares no writable fields (declared: {sorted(WRITABLE_FIELDS)}) ⇒ the whole '
+                        'gate stops.')
     outside = sorted(field for field in target if field not in allowed)
     if outside:
-        raise RuleError(f"{item.get('code')} · {item.get('object_key')}：字段 {', '.join(outside)} "
-                        f'不在 {object_type} 的可写字段 {list(allowed)} 内 ⇒ 整轮闸门停止，不写任何一行。')
+        raise RuleError(f"{item.get('code')} · {item.get('object_key')}: field(s) {', '.join(outside)} "
+                        f'are not writable for {object_type} {list(allowed)} ⇒ the whole gate stops; '
+                        'no row is written.')
 
 
-def _verdict(item, state, detail, writable_fields=(), satisfied_fields=(), conflict_fields=()):
+def _verdict(item, state, detail, lang='en', writable_fields=(), satisfied_fields=(), conflict_fields=()):
     verdict = dict(item)
     verdict['gate'] = state
-    verdict['gate_label'] = GATE_LABEL[state]
+    verdict['gate_label'] = GATE_LABELS[lang][state]
     verdict['gate_detail'] = detail
     verdict['writable_fields'] = sorted(writable_fields)
     verdict['satisfied_fields'] = sorted(satisfied_fields)
@@ -852,20 +1465,22 @@ def writable_rows(verdicts):
 # write-back reconciliation
 # --------------------------------------------------------------------------
 
-def reconcile(verdicts, after_objects):
+def reconcile(verdicts, after_objects, lang='en'):
     """Compare the state read after writing against each declared target."""
+    check_lang(lang)
     report = []
     for verdict in verdicts:
         if verdict['gate'] != READY:
             report.append({'object_key': verdict['object_key'], 'code': verdict['code'],
-                           'checked': False, 'reason': f"闸门为 {verdict['gate_label']}，本轮未写入。"})
+                           'checked': False,
+                           'reason': say(lang, 'recon_not_written', label=verdict['gate_label'])})
             continue
         current = (after_objects or {}).get(verdict['object_key'])
         if not isinstance(current, dict):
             report.append({'object_key': verdict['object_key'], 'code': verdict['code'],
-                           'checked': False, 'reason': '写后回读里没有该对象。'})
+                           'checked': False, 'reason': say(lang, 'recon_not_in_after')})
             continue
-        missed = [f'{field}：期望 {wanted}，实读 {current.get(field)}'
+        missed = [say(lang, 'recon_miss_field', field=field, wanted=wanted, current=current.get(field))
                   for field, wanted in verdict['target'].items()
                   if not same_number(current.get(field), wanted)]
         report.append({
@@ -873,7 +1488,7 @@ def reconcile(verdicts, after_objects):
             'code': verdict['code'],
             'checked': True,
             'effective': not missed,
-            'detail': ('写后回读与目标一致。' if not missed
-                       else '写后回读与目标不一致 ⇒ 视为未真正生效，不要按已执行推进下一档：' + '；'.join(missed)),
+            'detail': (say(lang, 'recon_match') if not missed
+                       else say(lang, 'recon_mismatch', details=say(lang, 'recon_miss_sep').join(missed))),
         })
     return report

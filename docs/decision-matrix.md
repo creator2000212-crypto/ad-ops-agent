@@ -1,0 +1,62 @@
+# Decision matrix
+
+Generated from `examples/operating/methodology-reference.json` (`reference-1n1-ladder` v2026-10-07.2) by `scripts/render_decision_matrix.py`. Do not edit it by hand: change the methodology, run `python3 scripts/render_decision_matrix.py`, and confirm with `--check`.
+
+T is the highest acceptable cost per platform lead: T = value per lead × approval rate (0.90) ÷ target ROAS (1.25). A 10.00 lead gives T = 7.20. Thresholds below are the reference values; a copied methodology changes them. Severity is the level the methodology assigns (P0 highest).
+
+| Code | Severity | Trigger | Action | Response window | Acceptance | Stop condition | Engine or human |
+|---|---|---|---|---|---|---|---|
+| `LADDER_PROMOTE` | P1 | At least 3 leads over a full delivery day and the step's own CPA <= T | Double the original ad set's budget (T -> 2T -> 3T) | 2-3 full delivery days | Readback shows daily_budget at the target step and the change appears in the activity log (pull one day as since=D, until=D+1). If either is missing, treat it as not executed. | Readback shows bid_strategy / bid_amount reset to a default, or the step has not covered a full delivery day -> do not promote this round; fix the structure first. | Engine: proposes `daily_budget` ×2 through the write gate; advisory when the settlement does not reconcile |
+| `LADDER_HOLD` | P2 | Promotion numbers are met, but the ad set has a creative breaker, more than 8 creatives or a MAX name on a capped bid, or the account has a P0 finding | No promotion this round; budget unchanged. First fix the ad set's creative breaker, creative overflow or name/bid mismatch, or the account's P0 issue (one change per ad set per round) | Next round | The blocker is resolved and confirmed by readback; the next round re-evaluates promotion from scratch instead of reusing this round's result. | No budget increase while a blocker is open; never change creatives and budget in the same round. | Engine: detects; advisory, a person acts |
+| `TEST_STOP_NOCONV` | P0 | Zero leads, at least 300 impressions and spend >= 3T | Pause and review (check the destination and conversion tracking before giving up) | Immediately | status=PAUSED confirmed by readback, and the destination and tracking have been checked. | Below the impression floor, never conclude the creative failed; an insufficient sample is only marked under-tested. | Engine: proposes `status` → PAUSED through the write gate |
+| `TEST_STOP_OVERCOST` | P0 | Spend - T x leads >= 3T | Pause and review; if conversions are still arriving, stop new spend first | Immediately | status=PAUSED confirmed by readback; the pause only stops new spend. | While conversion reporting is still maturing, make no definitive ranking or stop verdict; keep only the reliable spend and impression fields. | Engine: proposes `status` → PAUSED through the write gate; advisory when the settlement does not reconcile |
+| `TEST_EARLY_STOP` | P1 | Zero leads, not yet at the stop rules, with CPC > 1.00 or CTR < 6% | Pause the ad set (stop new spend) and review the hook; no verdict that the creative failed | Next round | status=PAUSED confirmed by readback, and the cause of the high CPC or low CTR has been located (usually the hook). | Below the impression floor, never conclude the creative failed; a high CPC usually comes from a low CTR upstream, so fix the hook, not the bid. | Engine: proposes `status` → PAUSED through the write gate |
+| `TEST_UNDERTESTED` | P2 | Zero leads below 300 impressions; or fewer than 3 leads; or budget utilisation <= 50%; or CPA above T but below the stop line | Mark as under-tested, not failed; first solve whether the budget can be spent | Next round | The spend problem is traced to one cause: the bid cannot enter auctions / the budget is capped / the audience is too narrow / the creative is disapproved. | Adding budget before the cause is found -> stop. When expected leads are too few, mark the sample as too small and never judge the creative from it. | Engine: detects; advisory, a person acts |
+| `LINK_OR_TRACKING_BAD` | P0 | The declared destination check (linked) or tracking check (tracking_ok) failed | Pause and inspect now; no need to wait for the observation window | Immediately | The destination actually opens and matches the offer, and conversion parameters arrive complete. "URL loads but parameters are lost" does not pass. | Parameters stripped / macros landing unexpanded / wrong deep-link fallback -> pause the row; never fix it while it keeps spending. | Engine: proposes `status` → PAUSED through the write gate |
+| `AD_STATUS` | P0 | configured_status ACTIVE but effective_status DISAPPROVED | Read the disapproval reason; fix the substance in the creative, copy or landing page and resubmit, or appeal through the platform's official review channel (Request Review). Never re-upload unchanged or merely re-encoded media. | Within 2 hours | The disapproval reason is recorded; the edit or appeal is submitted; a re-read shows effective_status and the review result updated. | A second rejection for the same reason -> stop and hand over to a human policy review. | Engine: detects; advisory, a person acts |
+| `CREATIVE_BREAKER` | P1 | At least 2 creatives; one takes more than 40% of ad-set spend at CPA above 1.7 x T | Switch off that one creative; leave the ad set running | Next round | The creative no longer delivers in the ad set, and spend redistributes across the remaining creatives. | Never trip the breaker on a high spend share alone or a high CPA alone; both must hold. | Engine: detects; advisory, a person acts |
+| `CREATIVE_FATIGUE` | P2 | Frequency >= 2.5, with CTR and CVR both down at least 20% against the prior window | Add a new creative (add, do not replace); judge the new creative on CVR only | 2-3 full delivery days | The new creative has produced leads in the ad set, with CVR >= the link's baseline +20%. | Do not call fatigue unless frequency, CTR decline and CVR decline all meet their thresholds together. | Engine: detects; advisory, a person acts |
+| `CREATIVE_OVERFLOW` | P2 | More than 8 creatives in the ad set | Trim to the recommended number of creatives before scaling | Next round | The ad set is back within the recommended creative count. | Do not scale while over the cap: a bigger budget only concentrates delivery on fewer creatives. | Engine: detects; advisory, a person acts |
+| `ACC_NO_DELIVERY` | P0 | At least one ad set configured ACTIVE, but today's spend is 0 | Check disapprovals / learning limited / balance and payment / bids too low; restart only if a re-pull still shows 0 | Within 2 hours | Traced to one of the four causes; reactivate only if a re-pull still shows 0. | If the spend-cap field reads back null, draw no conclusion about the remaining headroom; state the capability gap. | Engine: detects; advisory, a person acts |
+| `ACC_STOPPED` | P0 | No ad set returned, or none configured ACTIVE | Tell a real delivery gap from the tail of a deliberate pause; recover through build paused -> verify -> activate | Within 2 hours | A real gap is told apart from a pause tail, and recovery is confirmed by readback. | On seeing PAUSED, check who paused it and why; never auto-resume it as an anomaly without confirmation. | Engine: detects; advisory, a person acts |
+| `ACC_BALANCE_LOW` | P0 | Balance <= 50 | Top up now (an exhausted balance or spend limit stops delivery abruptly) | Within 2 hours | The funds have arrived; a re-pull shows the balance and today's spend recovering. | The balance field is not the remaining spend-cap headroom; never infer the cap from it. | Engine: detects; advisory, a person acts |
+| `SCALE_ADD20` | P1 | A proven ad set past the ladder that keeps its CPA <= T | Raise the original ad set's budget by 20% | >= 2 full delivery days | Readback shows the new budget in effect over >= 2 full delivery days, and the step's own CPA <= T. | At the spend limit or full utilisation, confirm the account limit first. Scale by budget only, never by adding ad sets. | Human judgment (not evaluated by the engine) |
+| `SCALE_STOP` | P1 | CPA above T after a scale-up, on mature data | Stop scaling; step back one level or pause; keep the profitable original ad set running | Next round | The step-back or pause is in effect, and the profitable original ad set is still ACTIVE. | One day's swing is not enough to step back; wait for mature data, and never cut a profitable ad set over one bad day. | Human judgment (not evaluated by the engine) |
+| `OPT_111_TEST` | P2 | A proven MAX ad set where a controlled bid is worth testing | Keep the original MAX ad set; open one controlled-bid test with an initial budget close to the proven profitable budget | >= 2 full delivery days | The original ad set is untouched; the new ad set reads back bid_strategy / bid_amount / optimization_goal as planned, and its budget counts toward the total test budget. | A bid below the proven cost risks not spending, not saving money; without enough sample, do not conclude that a controlled bid cannot hold cost. | Human judgment (not evaluated by the engine) |
+| `LEGACY_CPA_BAD` | P2 | An older structure running above target CPA that the ladder replaces | Identify only, propose nothing; the new structure replaces it, except for hard anomalies | Not applicable | The new structure covers the offer; the old structure needs no action. | Do not touch the old structure in the name of optimisation (no rebuild, no patching). | Human judgment (not evaluated by the engine) |
+| `CAMP_GHOST_SPEND` | P2 | A campaign that was taken down still shows spend | Confirm it was taken down on purpose; if it was removed by mistake while still producing leads, rebuild it with the same creative | Next round | Confirmed as a deliberate takedown, and the campaign's spend for the day is zero. | Build before removing; never remove first and check later. | Human judgment (not evaluated by the engine) |
+
+## Engine or human
+
+- **Engine: proposes … through the write gate**: the engine detects the condition and proposes one field change. The five-state gate compares current state with the plan before the change can enter the reviewed batch; a person approves the batch. The engine never approves a write.
+- **Engine: detects; advisory**: the engine reports the finding with its evidence; the action is a person's decision.
+- **Human judgment**: part of the playbook, marked `"implemented": false`; the engine never evaluates it.
+
+Precedence: a promotion that meets its numbers becomes `LADDER_HOLD` while the same ad set has a creative breaker, creative overflow or a MAX name on a capped bid, or the account has a P0 finding.
+
+## Platform vs settlement codes
+
+Each account gets one status. After `RECON_OK`, the rows are listed in the order they are checked; the first that applies wins.
+
+| Code | Meaning | Effect on this round |
+|---|---|---|
+| `RECON_OK` | Spend within ±2.0% and settled leads within ±20.0% of platform leads × 0.90 | Decisions stand |
+| `RECON_SCOPE` | The account is on one side only; the missing side is shown as missing, never as zero | Reported; decisions stand (not in `downgrade_on`) |
+| `RECON_WINDOW` | The settlement has the account, but not for the observation date | `LADDER_PROMOTE` and `TEST_STOP_OVERCOST` become advisory ("measurement unreconciled") |
+| `RECON_TZ` | Account and settlement time zones differ or are not declared, so the day buckets differ | `LADDER_PROMOTE` and `TEST_STOP_OVERCOST` become advisory ("measurement unreconciled") |
+| `RECON_GAP` | Spend or settled leads outside tolerance, a different unit price, or incomplete totals on either side | `LADDER_PROMOTE` and `TEST_STOP_OVERCOST` become advisory ("measurement unreconciled") |
+
+## Not read by the engine
+
+Methodology keys marked `"implemented": false` are guidance for people. The engine does not read them:
+
+- `recommended_creatives_per_adset`
+- `utilisation.at_cap_above`
+- `learning`
+- `gate_states`
+- `reporting_rules`
+- action `SCALE_ADD20`
+- action `SCALE_STOP`
+- action `OPT_111_TEST`
+- action `LEGACY_CPA_BAD`
+- action `CAMP_GHOST_SPEND`

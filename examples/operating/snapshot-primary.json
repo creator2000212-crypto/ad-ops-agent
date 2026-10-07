@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "operating_snapshot",
-  "notice": "FICTIONAL FIXTURE — all accounts, ad sets, creatives, prices and amounts are fictional. The shape mirrors one pull of the 12-hour read-only check; no value comes from a real account. 账户、广告组、素材、价格与金额均为虚构。",
+  "notice": "FICTIONAL FIXTURE — all accounts, ad sets, creatives, prices and amounts are fictional. The shape mirrors one pull of the 12-hour read-only check (Meta ad sets and TikTok ad groups in one normalized shape); no value comes from a real account. 账户、广告组、素材、价格与金额均为虚构。",
   "as_of": "2026-09-24T11:50:00+08:00",
   "round_id": "demo-20260924-1150",
   "collector": "offline_fixture",
@@ -9,7 +9,10 @@
     "kind": "settled_day",
     "date": "2026-09-23",
     "complete_delivery_day": true,
-    "note": "自然日桶。小时级明细在本连接下不可用，所以判定窗口只能到自然日，近似性在此声明。"
+    "note": {
+      "en": "Calendar-day buckets. Hourly detail is not available through this connection, so the decision window is one calendar day; the approximation is stated here.",
+      "zh-CN": "自然日桶。小时级明细在本连接下不可用，所以判定窗口只能到自然日，近似性在此声明。"
+    }
   },
   "accounts": [
     {
@@ -47,13 +50,14 @@
           "frequency": "1.18",
           "linked": true,
           "tracking_ok": true,
-          "expected": "Promote: CPA 6.60 <= T 7.20 over a full delivery day -> budget 20 -> 40; the after snapshot confirms it.",
+          "prior_window": {"date": "2026-09-22", "cpm": "4.20", "ctr": "0.0610", "cvr": "0.0098", "cpa": "7.03"},
+          "expected": "Promote: CPA 6.60 <= T 7.20 over a full delivery day -> budget 20 -> 40; the after snapshot confirms it. CPA fell from 7.03 mostly through CTR.",
           "creatives": [
             {"creative_key": "a1-c1", "spend": "11.80", "impressions": 2700, "clicks": 178,
-             "results": 2, "frequency": "1.15", "ctr": "0.0659", "prior_ctr": "0.0665",
+             "results": 2, "frequency": "1.15", "ctr": "0.0659", "prior_ctr": "0.0615",
              "cvr": "0.0112", "prior_cvr": "0.0110"},
             {"creative_key": "a1-c2", "spend": "8.00", "impressions": 1900, "clicks": 122,
-             "results": 1, "frequency": "1.21", "ctr": "0.0642", "prior_ctr": "0.0650",
+             "results": 1, "frequency": "1.21", "ctr": "0.0642", "prior_ctr": "0.0602",
              "cvr": "0.0082", "prior_cvr": "0.0080"}
           ]
         },
@@ -128,11 +132,12 @@
           "frequency": "1.42",
           "linked": true,
           "tracking_ok": true,
-          "expected": "Over-cost stop: spend - T x leads = 40.00 - 14.40 = 25.60 >= 3T 21.60 -> pause.",
+          "prior_window": {"date": "2026-09-22", "cpm": "3.90", "ctr": "0.0655", "cvr": "0.0110", "cpa": "5.41"},
+          "expected": "Over-cost stop: spend - T x leads = 40.00 - 14.40 = 25.60 >= 3T 21.60 -> pause. CPA rose from 5.41 almost entirely through CVR: a post-click problem, not the bid.",
           "creatives": [
             {"creative_key": "a4-c1", "spend": "40.00", "impressions": 9300, "clicks": 590,
-             "results": 2, "frequency": "1.42", "ctr": "0.0634", "prior_ctr": "0.0640",
-             "cvr": "0.0034", "prior_cvr": "0.0036"}
+             "results": 2, "frequency": "1.42", "ctr": "0.0634", "prior_ctr": "0.0655",
+             "cvr": "0.0034", "prior_cvr": "0.0110"}
           ]
         },
         {
@@ -286,7 +291,8 @@
           "frequency": "1.16",
           "linked": true,
           "tracking_ok": true,
-          "expected": "Promote (CPA 5.15) and the gate is ready, but the after snapshot still reads 20 -> a write that did not take; stays open.",
+          "prior_window": {"date": "2026-09-22", "cpm": "4.25", "ctr": "0.0648", "cvr": null, "cpa": "5.38"},
+          "expected": "Promote (CPA 5.15) and the gate is ready, but the after snapshot still reads 20 -> a write that did not take; stays open. The prior window has no CVR, so its CPA change is not decomposed.",
           "creatives": [
             {"creative_key": "a10-c1", "spend": "11.60", "impressions": 2600, "clicks": 170,
              "results": 2, "frequency": "1.14", "ctr": "0.0654", "prior_ctr": "0.0650",
@@ -398,8 +404,83 @@
         "landing_type": "lead_form"
       },
       "observation": {"complete_delivery_day": false},
-      "account_note": "Spend in the last 3 days but no deliverable ad set now: a delivery gap. First tell a real gap from the tail of a deliberate pause.",
+      "account_note": "Spend in the last 3 days but no deliverable ad set now: a delivery gap. First tell a real gap from the tail of a deliberate pause. The settlement export does not cover this account (RECON_SCOPE).",
       "adsets": []
+    },
+    {
+      "account_key": "fictional-tiktok-account-d",
+      "platform": "tiktok",
+      "account_timezone": "Etc/GMT",
+      "report_timezone": "Etc/GMT",
+      "spend_cap": "3000.00",
+      "balance": "640.00",
+      "today_spend": "17.80",
+      "offer": {
+        "offer_key": "fictional-offer-delta",
+        "unit_price": "12.00",
+        "landing_type": "lead_form",
+        "note": "unit_price is the fictional value of one lead. T = 12.00 x 0.90 / 1.25 = 8.64."
+      },
+      "observation": {"complete_delivery_day": true},
+      "account_note": "On the platform the leads look cheap; the settlement approves far fewer of them than the declared rate, so the numbers do not reconcile (RECON_GAP).",
+      "adsets": [
+        {
+          "adset_key": "fictional-adgroup-d1",
+          "name": "1n1 | D1 | MAX | $20",
+          "campaign_key": "fictional-campaign-d1",
+          "configured_status": "ACTIVE",
+          "effective_status": "ACTIVE",
+          "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+          "bid_amount": null,
+          "optimization_goal": "LEAD_GENERATION",
+          "daily_budget": "20.00",
+          "ladder_stage": "T",
+          "spend": "19.60",
+          "impressions": 5800,
+          "clicks": 232,
+          "results": 5,
+          "value": "60.00",
+          "frequency": "1.21",
+          "linked": true,
+          "tracking_ok": true,
+          "prior_window": {"date": "2026-09-22", "cpm": "3.25", "ctr": "0.0410", "cvr": "0.0110", "cpa": "7.21"},
+          "expected": "Platform CPA 3.92 <= T 8.64 would promote, and the CPA fell from 7.21 almost entirely through CVR. The settlement approves 3 of the account's 7 leads, so the promotion is advisory: measurement unreconciled.",
+          "creatives": [
+            {"creative_key": "d1-c1", "spend": "10.40", "impressions": 3100, "clicks": 126,
+             "results": 3, "frequency": "1.19", "ctr": "0.0406", "prior_ctr": "0.0412",
+             "cvr": "0.0238", "prior_cvr": "0.0115"},
+            {"creative_key": "d1-c2", "spend": "9.20", "impressions": 2700, "clicks": 106,
+             "results": 2, "frequency": "1.23", "ctr": "0.0393", "prior_ctr": "0.0408",
+             "cvr": "0.0189", "prior_cvr": "0.0104"}
+          ]
+        },
+        {
+          "adset_key": "fictional-adgroup-d2",
+          "name": "1n1 | D2 | MAX | $20",
+          "campaign_key": "fictional-campaign-d2",
+          "configured_status": "ACTIVE",
+          "effective_status": "ACTIVE",
+          "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+          "bid_amount": null,
+          "optimization_goal": "LEAD_GENERATION",
+          "daily_budget": "20.00",
+          "ladder_stage": "T",
+          "spend": "9.80",
+          "impressions": 2600,
+          "clicks": 101,
+          "results": 2,
+          "value": "24.00",
+          "frequency": "1.08",
+          "linked": true,
+          "tracking_ok": true,
+          "expected": "Under-tested: 2 leads < the minimum of 3; record only.",
+          "creatives": [
+            {"creative_key": "d2-c1", "spend": "9.80", "impressions": 2600, "clicks": 101,
+             "results": 2, "frequency": "1.08", "ctr": "0.0388", "prior_ctr": "0.0390",
+             "cvr": "0.0198", "prior_cvr": "0.0195"}
+          ]
+        }
+      ]
     }
   ]
 }
