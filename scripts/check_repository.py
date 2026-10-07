@@ -15,10 +15,13 @@ SKIP = {'.git', '__pycache__', '.venv', 'venv', 'runs', '.direct-work'}
 # than a single component. It is gitignored; this keeps the source check honest
 # about not reading it in the meantime.
 SKIP_PREFIXES = {('demo', 'out')}
-SHOWCASE_KINDS = ('hero', 'meta', 'tiktok', 'workflow')
-SHOWCASE_LANGUAGES = ('zh-CN', 'en')
-SHOWCASE_THEMES = ('light', 'dark')
-SHOWCASE_WIDTHS = ('wide', 'narrow')
+# Binary files are allowed only here: the README images that
+# scripts/render_visuals.py generates from demo output (PNG, plus optional SVG
+# charts). Anything else that is not UTF-8 text fails the check.
+ASSET_DIRS = {('docs', 'assets', name) for name in ('hero', 'proof', 'social', 'charts')}
+ASSET_SUFFIXES = {'.png', '.svg'}
+ASSET_MAX_BYTES = 600 * 1024
+SOCIAL_PREVIEW = ('docs', 'assets', 'social', 'social-preview.png')
 REQUIRED = [
     'README.md', 'README.zh-CN.md', 'AGENTS.md', 'LICENSE', 'NOTICE.md', 'CONTRIBUTING.md', 'SECURITY.md',
     'adops.py', 'onboarding.py', 'guidance.py', 'knowledge.py', 'knowledge/catalog.json',
@@ -34,8 +37,13 @@ REQUIRED = [
     'docs/method-planning.md', 'docs/method-planning.zh-CN.md',
     'scripts/demo.py', 'tests/test_adops.py', 'tests/test_onboarding.py',
     'docs/index.md', 'docs/index.en.md', 'docs/method-comparison.md', 'docs/method-comparison.zh-CN.md',
-    'docs/assets/showcase/social-preview.svg', 'docs/assets/showcase/social-preview.png',
-    'docs/assets/showcase/content.json', 'scripts/showcase_content.py', 'tests/test_showcase_content.py',
+    'scripts/render_visuals.py',
+    'docs/assets/src/manifest.json', 'docs/assets/src/hero.en.html', 'docs/assets/src/hero.zh-CN.html',
+    'docs/assets/src/receipt.en.html', 'docs/assets/src/receipt.zh-CN.html',
+    'docs/assets/src/social-preview.html',
+    'docs/assets/hero/hero.en.png', 'docs/assets/hero/hero.zh-CN.png',
+    'docs/assets/proof/receipt.en.png', 'docs/assets/proof/receipt.zh-CN.png',
+    'docs/assets/social/social-preview.png',
     'docs/product.md', 'docs/architecture.md', 'docs/onboarding.md',
     'docs/operations.md', 'docs/disapproval-triage.md', 'docs/disapproval-triage.zh-CN.md', 'docs/roadmap.md',
     'contracts/README.md', 'contracts/connector-contract.json', 'contracts/creative-recovery.json',
@@ -64,8 +72,6 @@ SENSITIVE = [
 def main():
     errors, files = [], []
     sys.path.insert(0, str(ROOT))
-    from scripts.showcase_content import check_showcase
-    errors.extend(check_showcase(ROOT))
     try:
         import knowledge
         knowledge.load_catalog()
@@ -74,15 +80,6 @@ def main():
     for name in REQUIRED:
         if not (ROOT / name).is_file():
             errors.append(f'missing required file: {name}')
-    showcase = ROOT / 'docs/assets/showcase'
-    for kind in SHOWCASE_KINDS:
-        for language in SHOWCASE_LANGUAGES:
-            for theme in SHOWCASE_THEMES:
-                for width in SHOWCASE_WIDTHS:
-                    for extension in ('png', 'svg'):
-                        filename = f'{kind}.{language}.{theme}.{width}.{extension}'
-                        if not (showcase / filename).is_file():
-                            errors.append(f'missing showcase image: {filename}')
     for path in sorted(ROOT.rglob('*')):
         relative = path.relative_to(ROOT)
         if any(part in SKIP for part in relative.parts) or not path.is_file():
@@ -94,16 +91,25 @@ def main():
         if path.name == '.env' or (path.name.startswith('.env.') and path.name != '.env.example') or path.suffix in {'.sqlite3', '.db', '.pem', '.key'}:
             errors.append(f'private/runtime file in public source: {relative}')
             continue
-        if path.suffix == '.png' and relative.parts[:3] == ('docs', 'assets', 'showcase'):
+        in_assets = tuple(relative.parts[:3]) in ASSET_DIRS and len(relative.parts) == 4
+        if path.suffix in ASSET_SUFFIXES and not in_assets:
+            errors.append(f'image outside docs/assets/{{hero,proof,social,charts}}/: {relative}')
+            continue
+        if in_assets and path.suffix not in ASSET_SUFFIXES:
+            errors.append(f'only PNG and SVG files belong in {"/".join(relative.parts[:3])}/: {relative}')
+            continue
+        if in_assets and path.stat().st_size > ASSET_MAX_BYTES:
+            errors.append(f'image larger than {ASSET_MAX_BYTES // 1024} KB: {relative}')
+        if path.suffix == '.png':
             data = path.read_bytes()
             if len(data) < 24 or data[:8] != b'\x89PNG\r\n\x1a\n':
-                errors.append(f'invalid showcase PNG: {relative}')
+                errors.append(f'invalid PNG: {relative}')
                 continue
             width, height = struct.unpack('>II', data[16:24])
             if not (300 <= width <= 2048 and 120 <= height <= 2048):
-                errors.append(f'unexpected showcase image dimensions: {relative}')
-            if path.name == 'social-preview.png' and ((width, height) != (1280, 640) or len(data) >= 1_000_000):
-                errors.append(f'invalid social preview size or dimensions: {relative}')
+                errors.append(f'unexpected image dimensions: {relative}')
+            if tuple(relative.parts) == SOCIAL_PREVIEW and (width, height) != (1280, 640):
+                errors.append(f'social preview must be 1280x640: {relative}')
             continue
         files.append(path)
         try:
@@ -115,17 +121,17 @@ def main():
             if pattern.search(text):
                 # Never echo a potentially sensitive matched value.
                 errors.append(f'{label}: {relative}')
-        if path.suffix == '.svg' and relative.parts[:3] == ('docs', 'assets', 'showcase'):
+        if path.suffix == '.svg':
             try:
-                root = ET.fromstring(text)
-                if root.tag != '{http://www.w3.org/2000/svg}svg':
-                    errors.append(f'invalid showcase SVG root: {relative}')
-                if any(node.tag.rsplit('}', 1)[-1] in {'script', 'foreignObject'} for node in root.iter()):
-                    errors.append(f'unsafe showcase SVG element: {relative}')
-                if any(key.rsplit('}', 1)[-1] == 'href' for node in root.iter() for key in node.attrib):
-                    errors.append(f'external-capable showcase SVG reference: {relative}')
+                svg = ET.fromstring(text)
+                if svg.tag != '{http://www.w3.org/2000/svg}svg':
+                    errors.append(f'invalid SVG root: {relative}')
+                if any(node.tag.rsplit('}', 1)[-1] in {'script', 'foreignObject'} for node in svg.iter()):
+                    errors.append(f'unsafe SVG element: {relative}')
+                if any(key.rsplit('}', 1)[-1] == 'href' for node in svg.iter() for key in node.attrib):
+                    errors.append(f'external-capable SVG reference: {relative}')
             except ET.ParseError:
-                errors.append(f'invalid showcase SVG XML: {relative}')
+                errors.append(f'invalid SVG XML: {relative}')
         if path.suffix == '.py':
             try:
                 ast.parse(text, filename=str(relative))
@@ -148,7 +154,7 @@ def main():
                 if not destination.is_relative_to(ROOT) or not destination.exists():
                     errors.append(f'broken local link: {relative} -> {target}')
     result = {'status': 'failed' if errors else 'passed', 'public_text_files': len(files),
-              'checks': ['required files', 'showcase PNG and SVG assets', 'showcase SVG and bilingual README text consistency', 'Python syntax', 'JSON contracts', 'runtime knowledge catalog', 'local Markdown links', 'common disclosure patterns'],
+              'checks': ['required files', 'README images: PNG/SVG only under docs/assets/{hero,proof,social,charts}/, at most 600 KB each', 'Python syntax', 'JSON contracts', 'runtime knowledge catalog', 'local Markdown links', 'common disclosure patterns'],
               'limitations': 'Heuristic source check; not a comprehensive secret scanner or runtime/platform validation.',
               'errors': errors}
     print(json.dumps(result, ensure_ascii=False, indent=2))
