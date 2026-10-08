@@ -51,7 +51,7 @@ PNG_METADATA_CHUNKS = (b'tEXt', b'iTXt', b'zTXt', b'eXIf', b'tIME')
 # fails when a module, test, doc, fixture or script exists but is not listed here.
 REQUIRED = [
     # Project, contribution and CI files
-    'README.md', 'README.zh-CN.md', 'AGENTS.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md',
+    'README.md', 'README.zh-CN.md', 'AGENTS.md', 'CLAUDE.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md',
     'LICENSE', 'NOTICE.md', '.gitignore', '.gitattributes', '.githooks/pre-commit', '.githooks/commit-msg',
     '.github/workflows/ci.yml', '.github/dependabot.yml', '.github/pull_request_template.md',
     '.github/rulesets/main.json',

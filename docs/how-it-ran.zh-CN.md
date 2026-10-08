@@ -17,6 +17,18 @@
 | 交互建单 | 全部对象暂停创建 → 逐字段读回 → 激活（9 月 22 日之后只在我明确批准时）→ 再读状态 | [`readback.py`](../readback.py)、[`preflight.py`](../preflight.py)、[任务记录模板](../templates/task-record.zh-CN.md)；见[建单质检](build-qa.zh-CN.md) |
 | 连接器 | Meta 走托管 MCP 连接器，由一个小型 JSON-RPC 封装脚本调用；TikTok 走 Agent 按我的要求自建的 TikTok API for Business 客户端 | [平台接入](platform-connectivity.zh-CN.md)（供应商中立的路线说明） |
 
+## 为什么用 WorkBuddy
+
+选择 WorkBuddy，是因为这份工作需要一个能在我自己电脑上从头做到尾的 Agent：
+
+- **本地文件。** 素材库在我的电脑上；抽帧检查用 ffmpeg，数据处理用 Python 脚本，交付物是 CSV、Excel 和 HTML 文件。
+- **同一会话里访问平台。** Meta 走托管 MCP 连接器，TikTok 走 API 客户端，与读文件、跑脚本在同一个对话里完成。
+- **不需要服务器的定时任务。** 每日取数和 12 小时巡检都作为应用内的自动化任务运行。
+- **跨会话记忆。** 项目记忆和沉淀下来的技能，让方法与建单协议在会话之间延续。
+- **中文。** 我操盘和汇报都用中文。
+
+同一套设置也带来了[不足之处](#不足之处)里列出的限制：定时任务依赖笔记本开机，只读靠指令约束而不是权限约束。本仓库不依赖 WorkBuddy；能读取 `AGENTS.md`、能执行命令的 Agent 应用都能使用（[项目加载](use-in-agent.zh-CN.md)）。
+
 ## 两个周期任务
 
 两者都是 WorkBuddy 自动化任务，使用应用的本地调度器：只在笔记本唤醒、应用打开时运行；结果只在应用内交付（没有推送通知）；自 9 月 26 日起暂停。

@@ -21,6 +21,8 @@ The repository supplies working instructions and reference material, the agent t
 Hosts load instructions differently:
 
 - **Codex:** use the repository directory as the task project; CLI users can start there. Project paths, overrides and instruction-size limits may affect loading. After instruction changes, check sources in a new run. See the official [project instructions](https://learn.chatgpt.com/docs/agent-configuration/agents-md) and [project directory guidance](https://learn.chatgpt.com/docs/projects).
+- **Claude Code:** open the repository directory as the project. Claude Code reads the root `CLAUDE.md`, which imports `AGENTS.md`, so both apps share one set of rules.
+- **WorkBuddy and other desktop agents:** open the repository folder as the workspace and ask the agent to read the root `AGENTS.md` before the first task, or add it to the workspace's project rules if the app supports them.
 - **Other agent tools:** use their documented project-rule mechanism. Without automatic loading, explicitly ask the host to read the root `AGENTS.md` and supply referenced files through supported file tools. Do not assume all clients load that filename automatically.
 
 **Ask the agent to diagnose:**

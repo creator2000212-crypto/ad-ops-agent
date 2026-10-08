@@ -17,6 +17,18 @@ This page is the operating record behind that sentence: what ran in WorkBuddy, w
 | Interactive builds | Create every object paused → read every field back → activate (after Sep 22, only on my explicit approval) → read status again | [`readback.py`](../readback.py), [`preflight.py`](../preflight.py), the [task record](../templates/task-record.md); see [Build QA](build-qa.md) |
 | Connectors | Meta through a hosted MCP connector, called by a small JSON-RPC wrapper script; TikTok through a TikTok API for Business client the agent built for me | [Platform connectivity](platform-connectivity.md) (vendor-neutral routes) |
 
+## Why WorkBuddy
+
+I chose WorkBuddy because the job needed one agent that could work end to end on my own machine:
+
+- **Local files.** The creative library lived on my laptop. Frame checks ran through ffmpeg, data handling through Python scripts, and deliverables were CSV, Excel and HTML files.
+- **Platform access in the same session.** Meta through a hosted MCP connector and TikTok through an API client, called from the same conversation that read the files and ran the scripts.
+- **Scheduled jobs without a server.** The daily pull and the 12-hour check ran as app automations.
+- **Memory across sessions.** Project memory and captured skills kept the method and the build protocol from one session to the next.
+- **Chinese.** I operate and report in Chinese.
+
+The same setup also set the limits listed under [Honest limits](#honest-limits): a laptop-bound scheduler and read-only by instruction rather than by permission. Nothing in this repository depends on WorkBuddy; any agent app that reads `AGENTS.md` and can run shell commands can use it ([project loading](use-in-agent.md)).
+
 ## The two recurring jobs
 
 Both were WorkBuddy automations on the app's local scheduler. They ran only while the laptop was awake and the app open, delivered results inside the app (no push notification), and have been paused since Sep 26.

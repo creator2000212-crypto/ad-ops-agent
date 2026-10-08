@@ -21,6 +21,8 @@
 不同宿主的加载方式有所不同：
 
 - **Codex：**将仓库目录作为任务项目；CLI 可在该目录启动。项目路径、覆盖文件和指令长度限制可能影响加载。修改指令后，在新的运行中检查来源。见官方[项目指令说明](https://learn.chatgpt.com/docs/agent-configuration/agents-md)与[项目目录说明](https://learn.chatgpt.com/docs/projects)。
+- **Claude Code：**将仓库目录作为项目打开。Claude Code 读取根目录 `CLAUDE.md`，它会导入 `AGENTS.md`，两类应用共用同一套规则。
+- **WorkBuddy 等桌面 Agent：**将仓库目录作为工作区打开，在第一个任务前让 Agent 读取根目录 `AGENTS.md`；如果应用支持项目规则，也可以把它加入工作区的项目规则。
 - **其他 Agent 工具：**使用其文档提供的项目规则机制；没有自动机制时，显式要求读取根目录 `AGENTS.md`，并通过支持的文件工具提供引用文件。不能假设所有客户端自动加载同名文件。
 
 **让 Agent 排查：**

@@ -102,6 +102,16 @@ flowchart TD
 
 这些规则移植自我在 WorkBuddy 里设置的只读 12 小时巡检定时任务，它在 Meta 与 TikTok 线索投放实盘账户上运行（2026 年 9 月 22—26 日）。建单在交互会话中完成：暂停创建 → 逐字段读回 → 激活。本仓库是它的离线、带测试版本。
 
+**为什么用 WorkBuddy。** 我需要一个能在自己电脑上把整套工作做完的 Agent：
+
+- 直接处理本地文件：素材库、用 ffmpeg 抽帧检查、Python 脚本，以及 CSV、Excel、HTML 产出；
+- 在同一个会话里通过 MCP 连接器和 API 客户端调用 Meta 与 TikTok；
+- 不另搭服务器就能跑定时任务（每日取数和 12 小时巡检）；
+- 跨会话保留项目记忆和可复用技能，规则延续下来，不用每次重讲；
+- 中文工作环境，和我操盘、汇报用的语言一致。
+
+本仓库不依赖 WorkBuddy，见[在你的 Agent 应用里使用](#在你的-agent-应用里使用)。
+
 ```mermaid
 flowchart LR
     conn[("Meta：托管 MCP 连接器<br/>TikTok：API for Business 客户端")] --- live
@@ -133,6 +143,18 @@ flowchart LR
 
 <p align="center"><img src="docs/assets/proof/receipt.zh-CN.png" width="880" alt="readback.py 对虚构 Meta 建单生成的回执：对象均以暂停状态创建，每个字段读回并与计划比较；因一条广告缺少必需的链接参数，整批保持暂停。"></p>
 <p align="center"><sub><code>readback.py</code> 的 Meta 示例 · 完整回执：<a href="examples/readback/expected/meta-receipt.zh-CN.md">meta-receipt.zh-CN.md</a> · <a href="docs/build-qa.zh-CN.md">建单质检</a></sub></p>
+
+## 在你的 Agent 应用里使用
+
+本项目不绑定某一个 Agent 应用。[`AGENTS.md`](AGENTS.md) 是写给任何 Agent 的操作规则；引擎是纯 Python（只用标准库，JSON 输入输出，每一步一个命令）；[连接路线](docs/platform-connectivity.zh-CN.md)不偏向任何供应商。能读文件、能执行命令的 Agent 应用都能使用。
+
+| Agent 应用 | 规则如何加载 |
+|---|---|
+| Codex 等原生读取 `AGENTS.md` 的工具 | 把仓库目录作为项目打开 |
+| Claude Code | [`CLAUDE.md`](CLAUDE.md) 会导入 `AGENTS.md` |
+| WorkBuddy 等桌面 Agent | 把目录作为项目打开，先让 Agent 读 `AGENTS.md`，或把它加入项目规则 |
+
+确认规则是否真正加载：[项目加载](docs/use-in-agent.zh-CN.md)。
 
 ## 案例
 
@@ -166,7 +188,7 @@ flowchart LR
 | [`readback.py`](readback.py) · [`preflight.py`](preflight.py) | 建单读回回执（HOLD / ACTIVATE）与预检 |
 | [`demo/`](demo/README.zh-CN.md) · `examples/` | 回放演示及已提交的预期输出（中英文）；`operating/`、`readback/`、`preflight/` 的虚构示例数据 |
 | [`docs/`](docs/index.md) | 实际运行记录、案例、建单质检、决策矩阵、方法演变 |
-| [`AGENTS.md`](AGENTS.md) | 给在真实账户上使用本项目的 Agent 的指令 |
+| [`AGENTS.md`](AGENTS.md) · [`CLAUDE.md`](CLAUDE.md) | 给在真实账户上使用本项目的 Agent 的指令；`CLAUDE.md` 让 Claude Code 加载它们 |
 | `scripts/` · `tests/` | 决策矩阵与图片生成脚本、仓库检查；unittest 测试（`python3 -m unittest discover -s tests`） |
 
 ## 许可

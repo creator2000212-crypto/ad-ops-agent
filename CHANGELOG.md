@@ -28,6 +28,7 @@ Reworks the repository around launch QA, change control and reconciliation, and 
 - Repository guards: the checker now flags ad account IDs, Google Ads customer IDs, standalone 15–19-digit IDs, Meta access tokens, email addresses, links to hosts outside a documentation allowlist, tokens in URLs, referral fragments, PNG text or EXIF metadata, and ad-review circumvention, traffic-mixing or incentive-vertical wording in public docs, fixtures and top-level modules (`tests/test_check_repository.py`); owner-only patterns load from an untracked `.private-patterns` file; a pre-commit hook (`.githooks/pre-commit`) that requires a noreply author email and runs the checker, and a commit-msg hook that scans the message; a CI step that checks a pull request's commit emails; a pull-request template; a ruleset for `main`; Dependabot for GitHub Actions; this changelog.
 - CI runs on pushes to `main`, pull requests and manual dispatch with a 10-minute timeout and cancels superseded runs; it now also replays the readback and pre-flight goldens, the decision matrix, the demo in both languages and the README image check.
 - `AGENTS.md` hard rules R1–R5 for an agent working on real accounts, each tied to the incident that produced it.
+- `CLAUDE.md`, which imports `AGENTS.md` so Claude Code loads the same rules; README and [project loading](docs/use-in-agent.md) explain how other agent apps pick them up, and [How it ran](docs/how-it-ran.md#why-workbuddy) explains why WorkBuddy was used.
 
 ### Changed
 

@@ -102,6 +102,16 @@ From the [decision matrix](docs/decision-matrix.md), which is generated from the
 
 The rules are ported from the read-only 12-hour check I ran as a scheduled job in WorkBuddy on live Meta and TikTok lead-gen accounts (Sep 22–26, 2026). Builds ran interactively: create paused → field-by-field readback → activate. This repo is the offline, tested version.
 
+**Why WorkBuddy.** I needed one agent that could do the whole job on my own machine:
+
+- work on local files: the creative library, ffmpeg frame checks, Python scripts, and CSV, Excel and HTML outputs;
+- call Meta and TikTok from the same session, through an MCP connector and an API client;
+- run the scheduled jobs (the daily pull and the 12-hour check) without a separate server;
+- keep project memory and reusable skills between sessions, so the rules carried over instead of being re-explained;
+- work in Chinese, the language I operate and report in.
+
+Nothing in this repository depends on WorkBuddy; see [Use it with your agent app](#use-it-with-your-agent-app).
+
 ```mermaid
 flowchart LR
     conn[("Meta: hosted MCP connector<br/>TikTok: API for Business client")] --- live
@@ -133,6 +143,18 @@ Both recurring jobs ran on the app's local scheduler, only while the laptop was 
 
 <p align="center"><img src="docs/assets/proof/receipt.en.png" width="880" alt="Build receipt from readback.py on the fictional Meta build: objects created paused, every field read back and compared with the plan, and the batch held because one ad is missing a required URL parameter."></p>
 <p align="center"><sub><code>readback.py</code> on the Meta fixture · full receipt: <a href="examples/readback/expected/meta-receipt.md">meta-receipt.md</a> · <a href="docs/build-qa.md">Build QA</a></sub></p>
+
+## Use it with your agent app
+
+The project is not tied to one agent app. [`AGENTS.md`](AGENTS.md) holds the operating rules for any agent, the engine is plain Python (standard library, JSON in and out, one command per step), and the [connection routes](docs/platform-connectivity.md) are vendor-neutral. Any agent app that can read files and run shell commands can use it.
+
+| Agent app | How it picks up the rules |
+|---|---|
+| Codex and other tools that read `AGENTS.md` | Open the repository folder as the project |
+| Claude Code | [`CLAUDE.md`](CLAUDE.md) imports `AGENTS.md` |
+| WorkBuddy and other desktop agents | Open the folder as the project and ask the agent to read `AGENTS.md` first, or add it to the project rules |
+
+To confirm the rules actually loaded: [project loading](docs/use-in-agent.md).
 
 ## Case studies
 
@@ -166,7 +188,7 @@ I defined the operating rules, thresholds and write-gate behavior from campaigns
 | [`readback.py`](readback.py) · [`preflight.py`](preflight.py) | Build readback receipt (HOLD / ACTIVATE) and pre-flight lint |
 | [`demo/`](demo/README.md) · `examples/` | The replay with committed expected output (English and Chinese); fictional fixtures for `operating/`, `readback/`, `preflight/` |
 | [`docs/`](docs/index.en.md) | How it ran, case studies, build QA, decision matrix, methodology history |
-| [`AGENTS.md`](AGENTS.md) | Instructions for an agent that uses this project on real accounts |
+| [`AGENTS.md`](AGENTS.md) · [`CLAUDE.md`](CLAUDE.md) | Instructions for an agent that uses this project on real accounts; `CLAUDE.md` loads them in Claude Code |
 | `scripts/` · `tests/` | Decision-matrix and image renderers, repository checks; unittest suites (`python3 -m unittest discover -s tests`) |
 
 ## License
