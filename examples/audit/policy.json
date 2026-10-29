@@ -1,0 +1,52 @@
+{
+  "kind": "account_audit_policy",
+  "version": "2026-10-29",
+  "notice": "Example account-audit policy. The lines, ratios and writer names are this project's own conventions, not platform rules; change them to your own. The field lists under 'fields' are observations from live accounts, each with the date it was observed; platforms change, so re-check them against the platform documentation before relying on this file. 阈值、倍数与写入方名称是本项目的约定，不是平台规则。",
+  "currency_exponent": {
+    "USD": 2
+  },
+  "budget_canary": {
+    "p0_daily_budget": "1000.00",
+    "p1_daily_budget": "100.00",
+    "full_days": 3,
+    "p1_multiple_of_average": "10",
+    "note": "P0: any active or paused ad set at or above the P0 line. P1: a live ad set above the P1 line that spent nothing over the last full days, or whose budget is more than the multiple of its average spend over them. A day with no reading skips the P1 check instead of counting as zero."
+  },
+  "budget_writes": {
+    "fields": ["daily_budget"],
+    "ceiling_daily_budget": "100.00",
+    "max_raise_ratio": "2.0",
+    "note": "A raise to a daily budget at or above the ceiling is refused with no override. A raise above the ratio is refused unless the request states a reason; the ratio 2.0 lets one ladder step (T to 2T) through. A cut is never refused: a cut from a budget at or above the ceiling or the P0 line goes through at once, other cuts to or below today's spend wait for the account's next day. Only the fields listed here get these checks; other money fields get the unit check."
+  },
+  "name_budget_pattern": "\\$(?P<amount>\\d[\\d,]*(?:\\.\\d+)?)",
+  "offer_link": {
+    "destination_pattern": "/r/(?P<offer>o-\\d+)",
+    "name_pattern": "(?P<offer>o-\\d+)",
+    "note": "The offer code sits in the redirect path of every fictional destination link (https://go.example.com/r/o-101). Replace both patterns with the shape of your own tracking links and naming convention."
+  },
+  "writers": {
+    "own": {
+      "owner-console": "human",
+      "ops-agent": "agent"
+    },
+    "window_hours": 48,
+    "note": "Writers are matched on the application name the change log reports. Anything not listed here is outside the owner list."
+  },
+  "fields": {
+    "meta": {
+      "money": ["daily_budget", "lifetime_budget", "bid_amount", "spend_cap"],
+      "locked_after_create": {
+        "adset": ["promoted_object", "optimization_goal"],
+        "campaign": ["special_ad_categories"]
+      },
+      "replace_whole": {
+        "adset": ["targeting"]
+      },
+      "observed": {
+        "promoted_object": "2026-10-07: a pixel change on an existing ad set was refused because conversion settings are locked after ad set creation.",
+        "special_ad_categories": "2026-10-12: a category added to an existing campaign left its ads in an error state that could not be cleared; the campaign was rebuilt with the category declared at creation.",
+        "targeting": "2026-10-21: an update that sent only the operating-system field would have replaced the rest of the targeting; the full current targeting was sent back with the one change."
+      }
+    }
+  }
+}

@@ -25,10 +25,16 @@ Checks (each cell of the matrix is pass, warn or fail):
                     setting, so their costs are comparable.
 * duplicate creative -- the same file (by SHA-256) is not used twice inside one
                     ad set.
+* moved budget   -- an ad set copied from another account starts at or below
+                    the policy's moved-ad-set budget, not at the budget of its
+                    source.
+* pixel          -- the ad set's pixel is in the account's pixel read, shared
+                    with the account, not marked unavailable, and fired recently.
 
 A pass here is not a platform review result and not permission to create.
 """
 import argparse
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 import difflib
 import json
@@ -47,6 +53,8 @@ CHECKS = (
     ('name_bid', 'adset'),
     ('name_budget', 'adset'),
     ('duplicate_creative', 'adset'),
+    ('moved_budget', 'adset'),
+    ('pixel', 'adset'),
     ('url_https', 'ad'),
     ('url_params', 'ad'),
 )
@@ -65,8 +73,8 @@ TEXT = {
         'check_labels': {
             'special_category': 'Special category', 'attribution': 'Attribution',
             'name_bid': 'Name ↔ bid', 'name_budget': 'Name ↔ budget',
-            'duplicate_creative': 'Duplicate creative', 'url_https': 'HTTPS',
-            'url_params': 'URL parameters',
+            'duplicate_creative': 'Duplicate creative', 'moved_budget': 'Moved budget',
+            'pixel': 'Pixel', 'url_https': 'HTTPS', 'url_params': 'URL parameters',
         },
         'cells': {'pass': '✓', 'warn': 'warn', 'fail': '**FAIL**', None: '—'},
         'levels': {'campaign': 'campaign', 'adset': 'ad set', 'ad': 'ad'},
@@ -99,6 +107,17 @@ TEXT = {
             'attribution_mixed': 'ad sets use different attribution settings: {settings}',
             'hash_missing': 'creative without a SHA-256 file hash: {names}',
             'duplicate_hash': 'same creative file in one ad set: {names}',
+            'moved_budget_copied': ('moved from {source}: starts at {default} or less, but daily_budget is '
+                                    '{actual}'),
+            'moved_budget_reason': ('moved from {source} with daily_budget {actual} instead of {default}; a '
+                                    'person reviews the stated reason: {reason}'),
+            'no_moved_policy': 'moved from {source}, but the policy has no moved_adset budget; confirm by hand',
+            'pixel_not_read': 'pixel {pixel} named, but the checklist has no read of the account\'s pixels',
+            'pixel_unknown': 'pixel {pixel} is not among the pixels read from the account',
+            'pixel_not_shared': 'pixel {pixel} is not shared with this ad account; ads under it would be refused',
+            'pixel_unavailable': 'pixel {pixel} is marked unavailable; new or reactivated ads under it would be refused',
+            'pixel_never_fired': 'pixel {pixel} has never fired',
+            'pixel_stale': 'pixel {pixel} last fired {days} days before the read (limit {limit})',
         },
     },
     'zh-CN': {
@@ -111,7 +130,8 @@ TEXT = {
         'check_labels': {
             'special_category': '特殊广告类别', 'attribution': '归因一致',
             'name_bid': '名称 ↔ 出价', 'name_budget': '名称 ↔ 预算',
-            'duplicate_creative': '重复素材', 'url_https': 'HTTPS', 'url_params': '链接参数',
+            'duplicate_creative': '重复素材', 'moved_budget': '迁移预算', 'pixel': 'Pixel',
+            'url_https': 'HTTPS', 'url_params': '链接参数',
         },
         'cells': {'pass': '✓', 'warn': '警告', 'fail': '**不通过**', None: '—'},
         'levels': {'campaign': '广告系列', 'adset': '广告组', 'ad': '广告'},
@@ -141,6 +161,15 @@ TEXT = {
             'attribution_mixed': '同一广告系列内的广告组归因设置不一致：{settings}',
             'hash_missing': '以下素材缺少 SHA-256 文件哈希：{names}',
             'duplicate_hash': '同一广告组内重复使用同一素材文件：{names}',
+            'moved_budget_copied': '从 {source} 迁移：起步应不高于 {default}，实际 daily_budget 为 {actual}',
+            'moved_budget_reason': '从 {source} 迁移，daily_budget 为 {actual} 而不是 {default}；由人复核写明的理由：{reason}',
+            'no_moved_policy': '从 {source} 迁移，但规则里没有 moved_adset 预算；需要人工确认',
+            'pixel_not_read': '指定了 pixel {pixel}，但清单里没有账户 pixel 的读取结果',
+            'pixel_unknown': 'pixel {pixel} 不在从账户读到的 pixel 中',
+            'pixel_not_shared': 'pixel {pixel} 没有共享给这个广告账户；其下的广告会被拒绝创建',
+            'pixel_unavailable': 'pixel {pixel} 被标记为不可用；新建或重新激活的广告会被拒绝',
+            'pixel_never_fired': 'pixel {pixel} 从未触发',
+            'pixel_stale': 'pixel {pixel} 最后一次触发在读取前 {days} 天（上限 {limit} 天）',
         },
     },
 }
@@ -232,6 +261,9 @@ def validate_checklist(checklist):
                 raise PreflightError(f'ad set {key!r} needs daily_budget')
             if not isinstance(adset.get('ads'), list) or not adset['ads']:
                 raise PreflightError(f'ad set {key!r} needs ads')
+            for field in ('moved_from', 'pixel_key', 'budget_reason'):
+                if field in adset and not isinstance(adset[field], str):
+                    raise PreflightError(f'ad set {key!r}: {field} must be a string')
             for ad in adset['ads']:
                 ad_key = key_of(ad, 'ad_key', 'ad')
                 if not isinstance(ad.get('destination_url'), str):
@@ -239,7 +271,39 @@ def validate_checklist(checklist):
                 if not isinstance(ad.get('url_parameters', ''), (str, type(None))):
                     raise PreflightError(f'ad {ad_key!r}: url_parameters must be a query string '
                                          '(for example "utm_source=meta&utm_medium=paid")')
+    assets = checklist.get('account_assets')
+    if assets is not None:
+        if not isinstance(assets, dict) or not isinstance(assets.get('pixels'), list):
+            raise PreflightError('account_assets needs a pixels list')
+        read_time(assets.get('read_at'), 'account_assets.read_at')
+        for pixel in assets['pixels']:
+            if not isinstance(pixel, dict) or not isinstance(pixel.get('pixel_key'), str):
+                raise PreflightError('every pixel in account_assets needs pixel_key')
+            if pixel.get('last_fired') is not None:
+                read_time(pixel['last_fired'], f"pixel {pixel['pixel_key']!r} last_fired")
     return checklist
+
+
+OFFSET_WITHOUT_COLON = re.compile(r'([+-]\d{2})(\d{2})$')
+FRACTION = re.compile(r'\.(\d+)(?=[+-]\d{2}:\d{2}$|$)')
+
+
+def read_time(raw, label):
+    """Parse ISO 8601 with an offset; platform shapes (+0000, Z, long fractions) parse alike on 3.9+."""
+    if not isinstance(raw, str):
+        raise PreflightError(f'{label} must be an ISO 8601 time with an offset')
+    text = raw.strip()
+    if text.endswith('Z'):
+        text = text[:-1] + '+00:00'
+    text = OFFSET_WITHOUT_COLON.sub(r'\1:\2', text)
+    text = FRACTION.sub(lambda match: '.' + (match.group(1) + '000000')[:6], text)
+    try:
+        value = datetime.fromisoformat(text)
+    except ValueError as exc:
+        raise PreflightError(f'{label} is not an ISO 8601 time: {raw!r}') from exc
+    if value.tzinfo is None:
+        raise PreflightError(f'{label} needs a UTC offset: {raw!r}')
+    return value
 
 
 # --------------------------------------------------------------------------
@@ -340,6 +404,50 @@ def check_duplicate_creative(adset):
     return found
 
 
+def check_moved_budget(adset, policy):
+    """A moved ad set starts at the moved-ad-set budget; copying the source budget fails."""
+    source = adset.get('moved_from')
+    if not source:
+        return None
+    default = amount((policy.get('moved_adset') or {}).get('daily_budget'))
+    if default is None:
+        return [('warn', 'no_moved_policy', {'source': source})]
+    actual = amount(adset['daily_budget'])
+    if actual is not None and actual <= default:
+        return []
+    detail = {'source': source, 'default': str(default), 'actual': adset['daily_budget']}
+    reason = (adset.get('budget_reason') or '').strip()
+    if reason:
+        return [('warn', 'moved_budget_reason', dict(detail, reason=reason))]
+    return [('fail', 'moved_budget_copied', detail)]
+
+
+def check_pixel(adset, assets, policy):
+    """The ad set's pixel must be readable, shared, available and recently fired."""
+    key = adset.get('pixel_key')
+    if not key:
+        return None
+    if assets is None:
+        return [('warn', 'pixel_not_read', {'pixel': key})]
+    pixel = next((item for item in assets['pixels'] if item['pixel_key'] == key), None)
+    if pixel is None:
+        return [('fail', 'pixel_unknown', {'pixel': key})]
+    found = []
+    if pixel.get('shared_with_account') is not True:
+        found.append(('fail', 'pixel_not_shared', {'pixel': key}))
+    if pixel.get('unavailable') is True:
+        found.append(('fail', 'pixel_unavailable', {'pixel': key}))
+    limit = (policy.get('pixel') or {}).get('max_days_since_fired')
+    if pixel.get('last_fired') is None:
+        found.append(('warn', 'pixel_never_fired', {'pixel': key}))
+    elif limit is not None:
+        age = read_time(assets['read_at'], 'account_assets.read_at') - read_time(pixel['last_fired'], 'last_fired')
+        days = age.days
+        if days > int(limit):
+            found.append(('warn', 'pixel_stale', {'pixel': key, 'days': days, 'limit': int(limit)}))
+    return found
+
+
 def check_url_https(ad):
     parts = urlsplit(ad['destination_url'])
     if not parts.scheme or not parts.netloc:
@@ -396,6 +504,8 @@ def lint(checklist, policy):
     def record(level, key, name, results):
         cells = {check: None for check, _ in CHECKS}
         for check, found in results:
+            if found is None:  # the check does not apply to this object
+                continue
             cells[check] = worst(found)
             for status, code, detail in found:
                 findings.append({'status': status, 'level': level, 'object_key': key,
@@ -413,6 +523,8 @@ def lint(checklist, policy):
                 ('name_bid', check_name_bid(adset, tokens, naming, platform)),
                 ('name_budget', check_name_budget(adset, tokens, naming)),
                 ('duplicate_creative', check_duplicate_creative(adset)),
+                ('moved_budget', check_moved_budget(adset, policy)),
+                ('pixel', check_pixel(adset, checklist.get('account_assets'), policy)),
             ])
             for ad in adset['ads']:
                 record('ad', ad['ad_key'], ad.get('name', ''), [
@@ -469,7 +581,7 @@ def render_report(result, lang='en', checklist_name='checklist.json', policy_nam
         lines += ['', f"## {text['findings']}", '']
         order = {'fail': 0, 'warn': 1}
         for item in sorted(result['findings'], key=lambda entry: order[entry['status']]):
-            detail = {key: value if key == 'settings' else code(value)
+            detail = {key: value if key in ('settings', 'reason', 'days', 'limit') else code(value)
                       for key, value in item['detail'].items()}
             message = text['codes'][item['code']].format(**detail)
             lines.append(f"- {text['severity'][item['status']]} · {cell(item['object_key'])} · "

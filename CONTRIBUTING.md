@@ -26,6 +26,10 @@ python3 preflight.py --checklist examples/preflight/checklist.json --policy exam
   --check examples/preflight/expected/checklist.md
 python3 preflight.py --checklist examples/preflight/checklist.json --policy examples/preflight/policy.json \
   --lang zh-CN --check examples/preflight/expected/checklist.zh-CN.md
+python3 account_audit.py --snapshot examples/audit/snapshot.json --policy examples/audit/policy.json \
+  --check examples/audit/expected/audit.md
+python3 account_audit.py --snapshot examples/audit/snapshot.json --policy examples/audit/policy.json \
+  --lang zh-CN --check examples/audit/expected/audit.zh-CN.md
 
 # Demonstrations
 python3 demo/run_demo.py --steps > /dev/null
@@ -38,7 +42,7 @@ python3 scripts/demo_methods.py
 python3 scripts/check_repository.py
 ```
 
-After an intended behavior change, regenerate instead of hand-editing: `python3 demo/run_demo.py --refresh`, `python3 scripts/render_decision_matrix.py`, `readback.py ... --receipt <expected file>`, `preflight.py ... --report <expected file>`, and `python3 scripts/render_visuals.py` (needs Google Chrome). Read the diff, then run `--check`.
+After an intended behavior change, regenerate instead of hand-editing: `python3 demo/run_demo.py --refresh`, `python3 scripts/render_decision_matrix.py`, `readback.py ... --receipt <expected file>`, `preflight.py ... --report <expected file>`, `account_audit.py ... --report <expected file>`, and `python3 scripts/render_visuals.py` (needs Google Chrome). Read the diff, then run `--check`.
 
 `scripts/check_repository.py` fails on, among other things, a local home-directory path, a token or key, a Meta ad account ID or access token, a Google Ads customer ID, a standalone 15–19-digit ID, an email address other than `example.com` or GitHub noreply, a link to a host outside its documentation allowlist, a token in a URL, a referral fragment, PNG text or EXIF metadata, or wording about getting unchanged media past ad review in docs, fixtures and top-level modules. When you add a module, test, doc, fixture or script, add it to `REQUIRED` in that file; `tests/test_check_repository.py` fails until you do. Patterns that would identify your own private material belong in an untracked `.private-patterns` file (one regular expression per line, ignored by Git), not in the checker.
 

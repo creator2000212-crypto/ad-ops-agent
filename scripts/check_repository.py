@@ -70,6 +70,9 @@ REQUIRED = [
     'examples/readback/expected/tiktok-receipt.md', 'examples/readback/expected/tiktok-receipt.zh-CN.md',
     'examples/preflight/checklist.json', 'examples/preflight/policy.json',
     'examples/preflight/expected/checklist.md', 'examples/preflight/expected/checklist.zh-CN.md',
+    # Account audit: running accounts and write requests before a round decides
+    'account_audit.py', 'examples/audit/snapshot.json', 'examples/audit/policy.json',
+    'examples/audit/expected/audit.md', 'examples/audit/expected/audit.zh-CN.md',
     # Pre-launch planning and onboarding prototype
     'adops.py', 'onboarding.py', 'guidance.py', 'knowledge.py', 'memory_store.py', 'personalization.py',
     'methodology.py', 'planning.py', 'task.py',
@@ -92,6 +95,7 @@ REQUIRED = [
     'tests/test_methodology.py', 'tests/test_onboarding.py', 'tests/test_operating_loop.py',
     'tests/test_planning.py', 'tests/test_preflight.py', 'tests/test_private_memory_integration.py',
     'tests/test_readback.py', 'tests/test_reconciliation.py', 'tests/test_setup_flow.py',
+    'tests/test_account_audit.py',
     # Docs: provenance, decisions and build QA
     'docs/index.md', 'docs/index.en.md',
     'docs/how-it-ran.md', 'docs/how-it-ran.zh-CN.md',
@@ -99,7 +103,7 @@ REQUIRED = [
     'docs/methodology-history.md', 'docs/methodology-history.zh-CN.md',
     'docs/capability-status.md', 'docs/capability-status.zh-CN.md',
     'docs/decision-matrix.md', 'docs/operating-loop.md', 'docs/operating-loop.zh-CN.md',
-    'docs/build-qa.md', 'docs/build-qa.zh-CN.md',
+    'docs/build-qa.md', 'docs/build-qa.zh-CN.md', 'docs/account-audit.md', 'docs/account-audit.zh-CN.md',
     'docs/disapproval-triage.md', 'docs/disapproval-triage.zh-CN.md', 'docs/operations.md',
     # Docs: host workflow, setup and the planning prototype
     'docs/workflow.md', 'docs/workflow.zh-CN.md',

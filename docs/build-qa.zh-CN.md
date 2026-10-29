@@ -13,13 +13,13 @@
 
 | 阶段 | 实盘账户上（2026 年 9 月） | 本仓库 |
 |---|---|---|
-| 1. 预检 | — | `preflight.py`：对清单做命名、链接、类别声明、归因和重复文件检查 |
+| 1. 预检 | —（10 月起：建单前检查迁移广告组的预算与账户 pixel） | `preflight.py`：对清单做命名、链接、类别声明、归因、重复文件、迁移预算和 pixel 检查 |
 | 2. 暂停创建 | 按常设规则，广告系列、广告组、广告以 `PAUSED` 创建 | 计划中要求其他状态会被拒绝 |
 | 3. 逐字段读回 | 对象读回后与计划比对 | `readback.py`：每个字段一行，任何不一致即 HOLD |
 | 4. 分阶段激活 | 分阶段激活（9 月 22 日之后须经我明确批准），之后再次读回状态 | 不回放。ACTIVATE 回执表示“具备激活条件”，不表示“已批准” |
 | 5. 跟进审核 | 激活后轮询平台审核状态 | 不回放。回执记录 `effective_status`，但不参与判定 |
 
-预检是本仓库新增的：把后面阶段才会发现的矛盾，提前到创建之前检查。
+预检大部分是本仓库新增的：把后面阶段才会发现的矛盾，提前到创建之前检查。其中 10 月的两项检查先作为规则在实盘执行过。针对已经在跑的账户以及发往它们的写入，检查在[账户审计](account-audit.zh-CN.md)里。
 
 ## 这些检查从哪里来
 
@@ -31,6 +31,8 @@
 | 09-22 | Agent 创建的自动规则把阈值写成了美元，而接口要求美分，阈值小了 100 倍，导致广告组被暂停 | 金额按平台对该账户读回币种规定的货币偏移换算，没有默认 x100 |
 | 09-22 | 我只回答了一个像素问题，Agent 就激活了一批广告组 | 回执写明：激活仍需负责人批准这一批次 |
 | 09-25 | 回执生成器把状态硬编码为 `ACTIVE`，而保存的读回结果是 `PAUSED` / `IN_PROCESS` | 「读回值」全部来自读回文件；缺失字段记为“未返回” |
+| 10-03、10-16 | 新广告先因 pixel 没有共享给广告账户而建不出来，后来又因 pixel 被标为不可用而停掉（[WB-19](case-studies.zh-CN.md#wb-19)） | 广告组的 pixel 不在账户读取结果中、没有共享或不可用时预检不通过；近期没有触发时给出警告 |
+| 10-15 | 在另一个账户重建的广告组照抄了原组预算，几分钟内花光一天预算（[WB-18](case-studies.zh-CN.md#wb-18)） | 迁移的广告组预算高于规则中的迁移起步预算时预检不通过；写明理由时改为警告 |
 
 ## `readback.py` 检查什么
 
@@ -72,6 +74,8 @@
 | 特殊广告类别 | 广告系列 | 产品类别需要声明（例如 `job_listings` → `EMPLOYMENT`）而广告系列没有声明 | 没有写产品类别，或规则文件没有该平台带来源的对照表 |
 | 归因一致 | 广告系列 | 同一广告系列内各广告组归因设置不同 | 某个广告组没有归因设置 |
 | 重复素材 | 广告组 | 同一广告组内两条广告使用同一个文件（按 SHA-256） | 某条广告没有文件哈希 |
+| 迁移预算 | 广告组 | 标记了 `moved_from` 的广告组起步预算高于规则中的 `moved_adset.daily_budget` | 预算不同但清单写明了 `budget_reason`；或规则里没有迁移起步预算 |
+| Pixel | 广告组 | 广告组的 `pixel_key` 不在清单 `account_assets` 的读取结果中、没有共享给账户或被标为不可用 | 清单里没有账户 pixel 的读取结果；pixel 从未触发，或最后触发早于读取时间 `pixel.max_days_since_fired` 天以上 |
 
 特殊广告类别检查只确认声明是否存在，不判断某个产品是否属于该类别；那仍然由人决定。
 
@@ -121,7 +125,7 @@ python3 -m unittest tests.test_readback tests.test_preflight -v
 | 广告 | `ad-h3` | 链接参数 | `utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}` | `utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}` | ✗ |
 | 广告 | `ad-h3` | 状态 | `PAUSED` | `PAUSED` | ✓ |
 
-示例清单的预检报告见 [`examples/preflight/expected/checklist.zh-CN.md`](../examples/preflight/expected/checklist.zh-CN.md)：不通过 7、警告 3、通过 21。
+示例清单的预检报告见 [`examples/preflight/expected/checklist.zh-CN.md`](../examples/preflight/expected/checklist.zh-CN.md)：不通过 9、警告 4、通过 22。
 
 ## 局限
 

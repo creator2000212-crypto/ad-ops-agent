@@ -6,7 +6,7 @@
 
 ## 看作品 / 了解项目
 
-从[实际是怎么跑的](how-it-ran.zh-CN.md)开始：2026 年 9 月在 WorkBuddy 中对 Meta 与 TikTok 实盘账户跑了什么、定时任务的运行记录，以及每一部分在仓库里对应什么。接着看[十个案例](case-studies.zh-CN.md)、[方法演变](methodology-history.zh-CN.md)和[实盘与演示对照](capability-status.zh-CN.md)。想看检查实际运行，试试[离线示例](../demo/README.zh-CN.md)、[建单质检](build-qa.zh-CN.md)和[决策矩阵](decision-matrix.md)（英文）。原始私有资料不公开。
+从[实际是怎么跑的](how-it-ran.zh-CN.md)开始：2026 年 9—10 月在 WorkBuddy 中对 Meta 与 TikTok 实盘账户跑了什么、定时任务的运行记录，以及每一部分在仓库里对应什么。接着看[二十二个案例](case-studies.zh-CN.md)、[方法演变](methodology-history.zh-CN.md)和[实盘与演示对照](capability-status.zh-CN.md)。想看检查实际运行，试试[离线示例](../demo/README.zh-CN.md)、[建单质检](build-qa.zh-CN.md)、[账户审计](account-audit.zh-CN.md)和[决策矩阵](decision-matrix.md)（英文）。原始私有资料不公开。
 
 ## 开始用 / 完成一项任务
 
@@ -54,6 +54,7 @@
 | 检查素材、帖子、链接、预算及状态 | [16 张实操卡](operations.md) |
 | 处理拒审或素材上传失败 | [拒审分诊：修正或申诉](disapproval-triage.zh-CN.md) · [English](disapproval-triage.md) |
 | 建单前预检；激活前核对读回 | [建单质检](build-qa.zh-CN.md) · [English](build-qa.md) |
+| 每轮判定前审计在跑账户；发送写入前检查单位、上限与锁定字段 | [账户审计](account-audit.zh-CN.md) · [English](account-audit.md) |
 | 查看每个动作的响应窗口、验收标准与停止条件 | [决策矩阵（英文）](decision-matrix.md) |
 | 查看离线巡检的字段、公式和命令 | [技术参考](operating-loop.zh-CN.md) · [English](operating-loop.md) |
 
