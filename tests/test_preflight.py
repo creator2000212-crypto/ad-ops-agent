@@ -37,11 +37,13 @@ def ad(key='ad-1', url='https://example.com/quote', tags=GOOD_TAGS, digest=HASH_
 
 
 def adset(key='as-1', name='1n1 | C1 | MAX | $20', strategy='LOWEST_COST_WITHOUT_CAP',
-          bid=None, budget='20.00', attribution=None, ads=None):
-    return {'adset_key': key, 'name': name, 'bid_strategy': strategy, 'bid_amount': bid,
+          bid=None, budget='20.00', attribution=None, ads=None, **extra):
+    item = {'adset_key': key, 'name': name, 'bid_strategy': strategy, 'bid_amount': bid,
             'daily_budget': budget,
             'attribution': attribution if attribution is not None else {'click_days': 7, 'view_days': 1},
             'ads': ads if ads is not None else [ad(key='ad-' + key)]}
+    item.update(extra)
+    return item
 
 
 def checklist(adsets=None, platform='meta', **campaign):
@@ -75,8 +77,8 @@ class CleanTests(unittest.TestCase):
         self.assertEqual(result['result'], 'fail')
         self.assertEqual(cells(result, 'as-h1'),
                          {'special_category': None, 'attribution': None, 'name_bid': 'pass',
-                          'name_budget': 'pass', 'duplicate_creative': 'pass', 'url_https': None,
-                          'url_params': None})
+                          'name_budget': 'pass', 'duplicate_creative': 'pass', 'moved_budget': None,
+                          'pixel': 'pass', 'url_https': None, 'url_params': None})
         self.assertEqual(cells(result, 'as-h2')['name_bid'], 'fail')
         self.assertEqual(cells(result, 'as-h3')['name_budget'], 'fail')
         self.assertEqual(cells(result, 'ad-h2')['url_params'], 'warn')
@@ -85,6 +87,9 @@ class CleanTests(unittest.TestCase):
         self.assertEqual(cells(result, 'cmp-hire-01')['attribution'], 'fail')
         self.assertEqual(cells(result, 'as-j2')['duplicate_creative'], 'fail')
         self.assertEqual(cells(result, 'as-j2')['name_bid'], 'warn')
+        self.assertEqual(cells(result, 'as-h2')['pixel'], 'fail')
+        self.assertEqual(cells(result, 'as-j1')['moved_budget'], 'fail')
+        self.assertEqual(cells(result, 'as-j2')['pixel'], 'warn')
 
 
 class NamingTests(unittest.TestCase):
@@ -205,6 +210,86 @@ class CreativeTests(unittest.TestCase):
         self.assertEqual(result['result'], 'pass')
         result = preflight.lint(checklist([adset(ads=[ad('ad-1', digest='')])]), policy())
         self.assertEqual(codes(result), ['hash_missing'])
+
+
+class MovedBudgetTests(unittest.TestCase):
+    """Oct 15: ad sets copied into another account carried their source budgets and spent them in minutes."""
+
+    def test_moved_adset_with_copied_budget_fails(self):
+        moved = adset(name='1n1 | C1 | MAX | $50', budget='50.00', moved_from='old-acct')
+        result = preflight.lint(checklist([moved]), policy())
+        self.assertEqual(cells(result, 'as-1')['moved_budget'], 'fail')
+        self.assertEqual(codes(result), ['moved_budget_copied'])
+
+    def test_moved_adset_at_the_default_passes(self):
+        moved = adset(name='1n1 | C1 | MAX | $5', budget='5.00', moved_from='old-acct')
+        result = preflight.lint(checklist([moved]), policy())
+        self.assertEqual(result['result'], 'pass')
+        self.assertEqual(cells(result, 'as-1')['moved_budget'], 'pass')
+
+    def test_stated_reason_turns_the_fail_into_a_warning(self):
+        moved = adset(name='1n1 | C1 | MAX | $50', budget='50.00', moved_from='old-acct',
+                      budget_reason='proven ad set, owner approved')
+        self.assertEqual(codes(preflight.lint(checklist([moved]), policy())), ['moved_budget_reason'])
+
+    def test_moved_adset_below_the_default_passes(self):
+        moved = adset(name='1n1 | C1 | MAX | $3', budget='3.00', moved_from='old-acct')
+        self.assertEqual(cells(preflight.lint(checklist([moved]), policy()), 'as-1')['moved_budget'], 'pass')
+
+    def test_new_adset_is_not_judged(self):
+        self.assertIsNone(cells(preflight.lint(checklist(), policy()), 'as-1')['moved_budget'])
+
+    def test_policy_without_moved_budget_warns(self):
+        rules = policy()
+        del rules['moved_adset']
+        moved = adset(moved_from='old-acct')
+        self.assertEqual(codes(preflight.lint(checklist([moved]), rules)), ['no_moved_policy'])
+
+
+class PixelTests(unittest.TestCase):
+    """Oct 3 and Oct 16: a pixel not shared with the account, then one marked unavailable."""
+
+    def assets(self, **pixel):
+        base = {'pixel_key': 'px-1', 'shared_with_account': True, 'unavailable': False,
+                'last_fired': '2026-10-07T08:00:00Z'}
+        base.update(pixel)
+        return {'read_at': '2026-10-07T09:00:00Z', 'pixels': [base]}
+
+    def lint(self, assets, key='px-1'):
+        document = checklist([adset(pixel_key=key)])
+        if assets is not None:
+            document['account_assets'] = assets
+        return preflight.lint(document, policy())
+
+    def test_healthy_pixel_passes(self):
+        self.assertEqual(cells(self.lint(self.assets()), 'as-1')['pixel'], 'pass')
+
+    def test_pixel_not_shared_fails(self):
+        self.assertEqual(codes(self.lint(self.assets(shared_with_account=False))), ['pixel_not_shared'])
+
+    def test_unavailable_pixel_fails(self):
+        self.assertEqual(codes(self.lint(self.assets(unavailable=True))), ['pixel_unavailable'])
+
+    def test_pixel_missing_from_the_read_fails(self):
+        self.assertEqual(codes(self.lint(self.assets(), key='px-9')), ['pixel_unknown'])
+
+    def test_no_read_of_the_account_warns(self):
+        self.assertEqual(codes(self.lint(None)), ['pixel_not_read'])
+
+    def test_stale_and_never_fired_pixels_warn(self):
+        self.assertEqual(codes(self.lint(self.assets(last_fired='2026-09-30T08:00:00Z'))), ['pixel_stale'])
+        self.assertEqual(codes(self.lint(self.assets(last_fired=None))), ['pixel_never_fired'])
+
+    def test_platform_time_format_is_read(self):
+        assets = self.assets(last_fired='2026-10-07T08:00:00+0000')
+        assets['read_at'] = '2026-10-07T09:00:00.5Z'
+        self.assertEqual(cells(self.lint(assets), 'as-1')['pixel'], 'pass')
+
+    def test_read_time_without_offset_is_refused(self):
+        assets = self.assets()
+        assets['read_at'] = '2026-10-07T09:00:00'
+        with self.assertRaises(preflight.PreflightError):
+            self.lint(assets)
 
 
 class InputTests(unittest.TestCase):

@@ -1,0 +1,255 @@
+{
+  "kind": "account_audit_snapshot",
+  "notice": "FICTIONAL FIXTURE — every account, campaign, ad set, ad, creative fingerprint, offer code, writer, amount and URL is invented; example.com is a reserved domain. The shape mirrors one read taken at the start of a round: account state, ad sets with budgets in minor units, the change log and the write requests the round wants to send. 账户、广告、素材指纹、offer 代码、写入方、金额与链接均为虚构。",
+  "as_of": "2026-10-27T12:00:00Z",
+  "platform": "meta",
+  "currency": "USD",
+  "accounts": [
+    {
+      "account_key": "acct-a",
+      "status": "ACTIVE",
+      "timezone_name": "Atlantic/Azores",
+      "activity_since": "2026-10-20T12:00:00Z",
+      "campaigns": [
+        {
+          "campaign_key": "cmp-a1",
+          "name": "LG | o-101",
+          "status": "ACTIVE",
+          "special_ad_categories": [],
+          "adsets": [
+            {
+              "adset_key": "as-a1",
+              "name": "1n1 | o-101 | H1 | $5",
+              "status": "ACTIVE",
+              "created_at": "2026-10-19T09:00:00Z",
+              "daily_budget_minor": 500,
+              "spend_minor_by_day": {"2026-10-24": 290, "2026-10-25": 300, "2026-10-26": 495},
+              "spend_minor_today": 210,
+              "ads": [
+                {"ad_key": "ad-a1", "status": "ACTIVE", "creative_fingerprint": "fp-h1",
+                 "destination_url": "https://go.example.com/r/o-101?sub1={{ad.id}}"}
+              ]
+            },
+            {
+              "adset_key": "as-a2",
+              "name": "1n1 | o-101 | S1 | $10",
+              "status": "ACTIVE",
+              "created_at": "2026-10-21T10:00:00Z",
+              "daily_budget_minor": 1000,
+              "spend_minor_by_day": {"2026-10-24": 480, "2026-10-25": 505, "2026-10-26": 820},
+              "spend_minor_today": 400,
+              "targeting": {
+                "geo_locations": {"countries": ["US"]},
+                "age_min": 18,
+                "age_max": 65
+              },
+              "ads": [
+                {"ad_key": "ad-a2", "status": "ACTIVE", "creative_fingerprint": "fp-s1",
+                 "destination_url": "https://go.example.com/r/o-117?sub1={{ad.id}}"}
+              ]
+            },
+            {
+              "adset_key": "as-a3",
+              "name": "1n1 | o-101 | H3 | $20",
+              "status": "ACTIVE",
+              "created_at": "2026-10-01T09:00:00Z",
+              "daily_budget_minor": 2000,
+              "spend_minor_by_day": {"2026-10-24": 0, "2026-10-25": 0, "2026-10-26": 0},
+              "spend_minor_today": 0,
+              "ads": [
+                {"ad_key": "ad-a3", "status": "PAUSED", "creative_fingerprint": "fp-h3",
+                 "destination_url": "https://go.example.com/r/o-101?sub1={{ad.id}}"}
+              ]
+            }
+          ]
+        },
+        {
+          "campaign_key": "cmp-a2",
+          "name": "LG | o-101 | batch 2",
+          "status": "ACTIVE",
+          "special_ad_categories": [],
+          "adsets": [
+            {
+              "adset_key": "as-a4",
+              "name": "1n1 | o-101 | H1 | $50",
+              "status": "PAUSED",
+              "created_at": "2026-10-27T07:30:00Z",
+              "daily_budget_minor": 5000,
+              "spend_minor_by_day": {},
+              "spend_minor_today": 0,
+              "ads": [
+                {"ad_key": "ad-a4", "status": "ACTIVE", "creative_fingerprint": "fp-h1",
+                 "destination_url": "https://go.example.com/r/o-101?sub1={{ad.id}}"}
+              ]
+            },
+            {
+              "adset_key": "as-a5",
+              "name": "1n1 | o-101 | H2 | $50",
+              "status": "PAUSED",
+              "created_at": "2026-10-27T07:30:00Z",
+              "daily_budget_minor": 5000,
+              "spend_minor_by_day": {},
+              "spend_minor_today": 0,
+              "ads": [
+                {"ad_key": "ad-a5", "status": "ACTIVE", "creative_fingerprint": "fp-h2",
+                 "destination_url": "https://go.example.com/r/o-101?sub1={{ad.id}}"}
+              ]
+            }
+          ]
+        },
+        {
+          "campaign_key": "cmp-a3",
+          "name": "LG | o-101 | scale",
+          "status": "ACTIVE",
+          "special_ad_categories": [],
+          "adsets": [
+            {
+              "adset_key": "as-a6",
+              "name": "1n1 | o-101 | H2 | $5",
+              "status": "ACTIVE",
+              "created_at": "2026-10-15T09:00:00Z",
+              "daily_budget_minor": 500,
+              "spend_minor_by_day": {"2026-10-24": 9200, "2026-10-25": 9650, "2026-10-26": 2050},
+              "spend_minor_today": 180,
+              "ads": [
+                {"ad_key": "ad-a6", "status": "ACTIVE", "creative_fingerprint": "fp-h2",
+                 "destination_url": "https://go.example.com/r/o-101?sub1={{ad.id}}"}
+              ]
+            },
+            {
+              "adset_key": "as-a7",
+              "name": "1n1 | o-101 | H4 | $5",
+              "status": "ACTIVE",
+              "created_at": "2026-10-16T09:00:00Z",
+              "daily_budget_minor": 5000,
+              "spend_minor_by_day": {"2026-10-24": 470, "2026-10-25": 490, "2026-10-26": 480},
+              "spend_minor_today": 1500,
+              "ads": [
+                {"ad_key": "ad-a7", "status": "ACTIVE", "creative_fingerprint": "fp-h4",
+                 "destination_url": "https://go.example.com/r/o-101?sub1={{ad.id}}"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "account_key": "acct-b",
+      "status": "ACTIVE",
+      "timezone_name": "Etc/GMT",
+      "activity_since": "2026-10-27T06:00:00Z",
+      "campaigns": [
+        {
+          "campaign_key": "cmp-b1",
+          "name": "LG | o-201",
+          "status": "ACTIVE",
+          "special_ad_categories": [],
+          "adsets": [
+            {
+              "adset_key": "as-b1",
+              "name": "1n1 | o-201 | K1 | $5",
+              "status": "ACTIVE",
+              "created_at": "2026-10-10T09:00:00Z",
+              "daily_budget_minor": 100000,
+              "spend_minor_by_day": {"2026-10-24": 480, "2026-10-25": 470, "2026-10-26": 495},
+              "spend_minor_today": 2200,
+              "ads": [
+                {"ad_key": "ad-b1", "status": "ACTIVE", "creative_fingerprint": "fp-k1",
+                 "destination_url": "https://go.example.com/r/o-201?sub1={{ad.id}}"}
+              ]
+            },
+            {
+              "adset_key": "as-b2",
+              "name": "1n1 | o-201 | K2 | $150",
+              "status": "ACTIVE",
+              "created_at": "2026-10-11T09:00:00Z",
+              "daily_budget_minor": 15000,
+              "spend_minor_by_day": {"2026-10-24": 0, "2026-10-25": 0, "2026-10-26": 0},
+              "spend_minor_today": 0,
+              "ads": [
+                {"ad_key": "ad-b2", "status": "ACTIVE", "creative_fingerprint": "fp-k2",
+                 "destination_url": "https://go.example.com/r/o-201?sub1={{ad.id}}"}
+              ]
+            },
+            {
+              "adset_key": "as-b3",
+              "name": "1n1 | o-201 | K3 | $120",
+              "status": "ACTIVE",
+              "created_at": "2026-10-11T09:00:00Z",
+              "daily_budget_minor": 12000,
+              "spend_minor_by_day": {"2026-10-24": 760, "2026-10-25": 810, "2026-10-26": 830},
+              "spend_minor_today": 300,
+              "ads": [
+                {"ad_key": "ad-b3", "status": "ACTIVE", "creative_fingerprint": "fp-k3",
+                 "destination_url": "https://go.example.com/r/o-201?sub1={{ad.id}}"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "account_key": "acct-c",
+      "status": "DISABLED",
+      "timezone_name": "America/New_York",
+      "activity_since": "2026-10-20T12:00:00Z",
+      "campaigns": [
+        {
+          "campaign_key": "cmp-c1",
+          "name": "LG | o-301",
+          "status": "ACTIVE",
+          "special_ad_categories": [],
+          "adsets": [
+            {
+              "adset_key": "as-c1",
+              "name": "1n1 | o-301 | M1 | $20",
+              "status": "ACTIVE",
+              "created_at": "2026-10-12T09:00:00Z",
+              "daily_budget_minor": 2000,
+              "spend_minor_by_day": {"2026-10-24": 1900, "2026-10-25": 0, "2026-10-26": 0},
+              "spend_minor_today": 0,
+              "ads": [
+                {"ad_key": "ad-c1", "status": "ACTIVE", "creative_fingerprint": "fp-m1",
+                 "destination_url": "https://go.example.com/r/o-301?sub1={{ad.id}}"}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "activity": [
+    {"at": "2026-10-26T00:30:00Z", "account_key": "acct-a", "object_key": "as-a1", "writer": "owner-console",
+     "event": "budget_change", "old_minor": 300, "new_minor": 500},
+    {"at": "2026-10-26T05:12:00Z", "account_key": "acct-a", "object_key": "as-a6", "writer": "bulk-editor-x",
+     "event": "budget_change", "old_minor": 10000, "new_minor": 5000},
+    {"at": "2026-10-26T05:40:00Z", "account_key": "acct-a", "object_key": "as-a6", "writer": "bulk-editor-x",
+     "event": "budget_change", "old_minor": 5000, "new_minor": 3000},
+    {"at": "2026-10-26T06:30:00Z", "account_key": "acct-a", "object_key": "as-a6", "writer": "bulk-editor-x",
+     "event": "budget_change", "old_minor": 3000, "new_minor": 2100},
+    {"at": "2026-10-26T15:00:00Z", "account_key": "acct-a", "object_key": "as-a2", "writer": "ops-agent",
+     "event": "budget_change", "old_minor": 500, "new_minor": 1000},
+    {"at": "2026-10-27T08:00:00Z", "account_key": "acct-a", "object_key": "as-a4", "writer": "owner-console",
+     "event": "status_change", "old_status": "ACTIVE", "new_status": "PAUSED"},
+    {"at": "2026-10-27T08:11:00Z", "account_key": "acct-a", "object_key": "as-a6", "writer": "bulk-editor-x",
+     "event": "budget_change", "old_minor": 2100, "new_minor": 500},
+    {"at": "2026-10-27T09:30:00Z", "account_key": "acct-a", "object_key": "as-a7", "writer": "bulk-editor-x",
+     "event": "budget_change", "old_minor": 500, "new_minor": 5000}
+  ],
+  "write_requests": [
+    {"request_key": "w01", "account_key": "acct-b", "object_key": "as-b1", "field": "daily_budget", "value": "1000"},
+    {"request_key": "w02", "account_key": "acct-a", "object_key": "as-a1", "field": "daily_budget", "value": "1000", "unit": "major"},
+    {"request_key": "w03", "account_key": "acct-a", "object_key": "as-a1", "field": "daily_budget", "value": "10.00", "unit": "major"},
+    {"request_key": "w04", "account_key": "acct-a", "object_key": "as-a2", "field": "daily_budget", "value": "50.00", "unit": "major"},
+    {"request_key": "w05", "account_key": "acct-a", "object_key": "as-a6", "field": "daily_budget", "value": "20.00", "unit": "major",
+     "override_reason": "owner restores the budget an outside tool cut"},
+    {"request_key": "w06", "account_key": "acct-a", "object_key": "as-a7", "field": "daily_budget", "value": "500", "unit": "minor"},
+    {"request_key": "w07", "account_key": "acct-a", "object_key": "as-a2", "field": "targeting", "value": {"user_os": ["Android"]}},
+    {"request_key": "w08", "account_key": "acct-a", "object_key": "as-a2", "field": "targeting",
+     "value": {"geo_locations": {"countries": ["US"]}, "age_min": 18, "age_max": 65, "user_os": ["Android"]}},
+    {"request_key": "w09", "account_key": "acct-a", "object_key": "as-a2", "field": "promoted_object", "value": {"pixel_key": "pixel-new"}},
+    {"request_key": "w10", "account_key": "acct-a", "object_key": "as-a4", "field": "status", "value": "ACTIVE"},
+    {"request_key": "w11", "account_key": "acct-c", "object_key": "as-c1", "field": "status", "value": "PAUSED"},
+    {"request_key": "w12", "account_key": "acct-b", "object_key": "as-b1", "field": "daily_budget", "value": "5.00", "unit": "major"}
+  ]
+}

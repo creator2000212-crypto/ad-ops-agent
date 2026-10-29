@@ -1,6 +1,6 @@
 {
   "kind": "preflight_policy",
-  "version": "2026-10-07",
+  "version": "2026-10-29",
   "notice": "Example pre-flight policy. The naming convention and expected parameter values are this project's own conventions. The macro lists and special-ad-category values are copied from the platform pages named in each 'source' on the 'checked' date; platforms change these lists, so re-check them before relying on this file.",
   "naming": {
     "adset": {
@@ -71,5 +71,13 @@
       },
       "note": "The offer categories on the left are this project's own labels. The check confirms only that the campaign declares the category; it does not decide whether an offer belongs to one."
     }
+  },
+  "moved_adset": {
+    "daily_budget": "5.00",
+    "note": "This project's own rule (2026-10-15): an ad set copied into another account starts at or below this daily budget, whatever its source spent, unless the checklist states a reason a person reviews. Copied budgets on cold ad sets spent a day's money within minutes."
+  },
+  "pixel": {
+    "max_days_since_fired": 3,
+    "note": "This project's own convention. The pixel facts (shared with the account, marked unavailable, last fired) come from a read of the account taken before the build, stored in the checklist's account_assets with its read time."
   }
 }

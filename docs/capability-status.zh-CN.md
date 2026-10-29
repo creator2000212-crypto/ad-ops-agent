@@ -2,7 +2,7 @@
 
 [English](capability-status.md) · [项目首页](../README.zh-CN.md) · [实际是怎么跑的](how-it-ran.zh-CN.md) · [案例](case-studies.zh-CN.md)
 
-哪些在实盘账户上跑过、本仓库实现了什么、怎么运行。实盘工作是 2026 年 9 月通过 WorkBuddy（腾讯的桌面 AI Agent；本项目与其无关联）进行的 Meta 与 TikTok 线索投放；日期和运行记录见[运行记录](how-it-ran.zh-CN.md)。
+哪些在实盘账户上跑过、本仓库实现了什么、怎么运行。实盘工作是 2026 年 9 月 10 日至 10 月 29 日通过 WorkBuddy（腾讯的桌面 AI Agent；本项目与其无关联）进行的 Meta 与 TikTok 线索投放；日期和运行记录见[运行记录](how-it-ran.zh-CN.md)。
 
 **范围。** 本仓库按设计离线运行：所有模块只读取本地文件（JSON；原型的模拟与私有记忆库使用 SQLite），发起的平台调用为 0。实盘读写通过 WorkBuddy 的连接器完成，上线和预算调整由我批准（[WB-08](case-studies.zh-CN.md#wb-08) 是这一点被打破的一次，也是批准成为显式关卡的原因）。在 Agent 中打开本项目不会连接任何广告账户。
 
@@ -10,16 +10,17 @@
 
 | 能力 | 实盘运行（2026） | 公开代码 | 在这里运行 |
 |---|---|---|---|
-| 激活前逐字段读回 | 9 月 10—27 日的交互建单遵循暂停创建 → 读回 → 激活（[WB-06](case-studies.zh-CN.md#wb-06)：有一批缺少保存的最终读回；[WB-08](case-studies.zh-CN.md#wb-08)：有一次未经批准的激活） | [`readback.py`](../readback.py)：`verify_build()`，HOLD/ACTIVATE 回执 | `python3 readback.py --plan examples/readback/meta-plan.json --readback examples/readback/meta-readback.json` |
-| 建单清单预检 | 本仓库新增；实盘建单依赖读回 | [`preflight.py`](../preflight.py)：命名与配置、URL 参数、特殊类别声明、归因、重复文件 | `python3 preflight.py --checklist examples/preflight/checklist.json --policy examples/preflight/policy.json` |
+| 激活前逐字段读回 | 9 月 10 日—10 月 29 日的交互建单遵循暂停创建 → 读回 → 激活（[WB-06](case-studies.zh-CN.md#wb-06)：有一批缺少保存的最终读回；[WB-08](case-studies.zh-CN.md#wb-08)：有一次未经批准的激活） | [`readback.py`](../readback.py)：`verify_build()`，HOLD/ACTIVATE 回执 | `python3 readback.py --plan examples/readback/meta-plan.json --readback examples/readback/meta-readback.json` |
+| 建单清单预检 | 大部分为本仓库新增；实盘建单依赖读回。其中两项作为规则在实盘执行过：迁移的广告组按固定预算起步（10 月 15 日起，[WB-18](case-studies.zh-CN.md#wb-18)），建单前读取账户 pixel（10 月 3 日起，[WB-19](case-studies.zh-CN.md#wb-19)） | [`preflight.py`](../preflight.py)：命名与配置、URL 参数、特殊类别声明、归因、重复文件、迁移预算、pixel 可用性 | `python3 preflight.py --checklist examples/preflight/checklist.json --policy examples/preflight/policy.json` |
+| 每轮判定前、写入前的账户审计 | 10 月 25—27 日加进 12 小时巡检：预算哨兵与带护栏的预算写入通道（10 月 25 日，[WB-11](case-studies.zh-CN.md#wb-11)）、严格满日（10 月 25 日，[WB-14](case-studies.zh-CN.md#wb-14)）、从链接读 offer 代码（10 月 26 日，[WB-12](case-studies.zh-CN.md#wb-12)）、写入方归因（10 月 27 日，[WB-13](case-studies.zh-CN.md#wb-13)）；10 月 24—29 日共 9 轮 | [`account_audit.py`](../account_audit.py)：P0–P2 发现、写入方、预算档、每个写入请求的放行 / 拒绝 / 等待 | `python3 account_audit.py --snapshot examples/audit/snapshot.json --policy examples/audit/policy.json --lang zh-CN` |
 | 按结算表 20 列格式每日取数 | 每日任务，9 月 21—26 日；9 月 20 日与结算导出做过一次比对并修正范围（[WB-09](case-studies.zh-CN.md#wb-09)） | [`operating_rules.py`](../operating_rules.py) 中的结算对账：花费、结果数、CPA 差异；范围缺口绝不补零 | `python3 demo/run_demo.py --lang zh-CN`（“平台与结算对账”一节） |
-| 按 T 阶梯给广告组分类 | 12 小时任务，9 月 22—26 日 | [`operating_rules.py`](../operating_rules.py) 的 `decide_account()`，阈值来自 [`methodology-reference.json`](../examples/operating/methodology-reference.json) | `python3 demo/run_demo.py` |
-| 先回验上一轮 | 每轮 12 小时巡检，9 月 22—26 日 | [`operating_loop.py`](../operating_loop.py) 的只追加台账：`apply`、`verify`、`open` | `python3 scripts/demo_operating_loop.py` |
+| 按 T 阶梯给广告组分类 | 12 小时任务，9 月 22—26 日、10 月 24—29 日 | [`operating_rules.py`](../operating_rules.py) 的 `decide_account()`，阈值来自 [`methodology-reference.json`](../examples/operating/methodology-reference.json) | `python3 demo/run_demo.py` |
+| 先回验上一轮 | 每轮 12 小时巡检，9 月 22—26 日、10 月 24—29 日 | [`operating_loop.py`](../operating_loop.py) 的只追加台账：`apply`、`verify`、`open` | `python3 scripts/demo_operating_loop.py` |
 | 五态写入关卡与写后核对 | 9 月 24 日移植进私有实盘巡检 | [`operating_rules.py`](../operating_rules.py) 的 `gate()` 与 `reconcile()` | `python3 demo/run_demo.py --steps` |
 | 每个动作的验收标准与停止条件 | 9 月 24 日起覆盖每个动作 | 方法文件中的动作目录，由 `scripts/render_decision_matrix.py` 渲染 | [决策矩阵](decision-matrix.md)（英文） |
 | CPA 为什么变化（CPM、CTR、CVR） | 本仓库新增 | [`operating_rules.py`](../operating_rules.py) 的 `cpa_driver_decomposition()` | `python3 demo/run_demo.py --lang zh-CN`（“CPA 为什么变了”一节） |
-| 读写广告账户 | 通过 WorkBuddy 的连接器：Meta 走托管 MCP 连接器，TikTok 走 Agent 按我的要求编写的 TikTok API for Business 客户端 | 无：平台调用为 0 | — |
-| 定时调度 | WorkBuddy 本地调度器，9 月 20—26 日；9 月 26 日起暂停 | 无 | — |
+| 读写广告账户 | 通过 WorkBuddy 的连接器：Meta 走托管 MCP 连接器（10 月 21 日起换成第二个），TikTok 走 Agent 按我的要求编写的 TikTok API for Business 客户端 | 无：平台调用为 0 | — |
+| 定时调度 | WorkBuddy 本地调度器，9 月 20—26 日、10 月 24—29 日（仅 12 小时巡检） | 无 | — |
 
 Google Ads 只出现在接入说明和模拟适配器中；实盘工作只涉及 Meta 与 TikTok。
 
@@ -53,6 +54,8 @@ python3 readback.py --plan examples/readback/meta-plan.json --readback examples/
     --check examples/readback/expected/meta-receipt.md
 python3 preflight.py --checklist examples/preflight/checklist.json --policy examples/preflight/policy.json \
     --check examples/preflight/expected/checklist.md
+python3 account_audit.py --snapshot examples/audit/snapshot.json --policy examples/audit/policy.json \
+    --check examples/audit/expected/audit.md
 python3 scripts/check_repository.py
 ```
 

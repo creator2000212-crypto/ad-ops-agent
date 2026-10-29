@@ -13,13 +13,13 @@ Both read JSON files and make no platform call. The fixtures use fictional IDs, 
 
 | Stage | On live accounts (Sep 2026) | In this repository |
 |---|---|---|
-| 1. Pre-flight | — | `preflight.py`: naming, URL, declaration, attribution and duplicate-file checks on the checklist |
+| 1. Pre-flight | — (October: moved-ad-set budgets and the account's pixels checked before builds) | `preflight.py`: naming, URL, declaration, attribution, duplicate-file, moved-budget and pixel checks on the checklist |
 | 2. Create paused | Campaigns, ad sets and ads created `PAUSED` as the standing rule | A plan that asks for any other status is refused |
 | 3. Field-by-field readback | Objects read back and compared with the plan | `readback.py`: one row per field, HOLD on any mismatch |
 | 4. Staged activation | Activated in stages (after 09-22, only on my explicit approval), then status read back again | Not replayed. An ACTIVATE receipt means "eligible", not "approved" |
 | 5. Review polling | Platform review status polled after activation | Not replayed. `effective_status` is recorded in the receipt, never gated |
 
-Pre-flight is new in this repository; it moves contradictions that the later stages would find into a check that runs before creation.
+Pre-flight is mostly new in this repository; it moves contradictions that the later stages would find into a check that runs before creation. Its two October checks were rules on live accounts first. Checks on accounts that are already running, and on the writes sent to them, are in the [account audit](account-audit.md).
 
 ## Why these checks exist
 
@@ -31,6 +31,8 @@ Pre-flight is new in this repository; it moves contradictions that the later sta
 | 09-22 | Agent-created automated rules had thresholds written in dollars where the API expects cents, so they were 100x too small and paused ad sets | Money converts by the platform's currency offset for the currency the account reports; there is no x100 default |
 | 09-22 | The agent activated a batch after a reply that only answered a pixel question | The receipt says activation still needs the owner's approval of the batch |
 | 09-25 | A receipt generator hard-coded `ACTIVE` while the saved readbacks said `PAUSED` / `IN_PROCESS` | Every "Read back" value comes from the readback file; a missing field is "not returned" |
+| 10-03, 10-16 | New ads failed because the pixel was not shared with the ad account, then because a pixel was marked unavailable ([WB-19](case-studies.md#wb-19)) | Pre-flight fails an ad set whose pixel is missing from the account read, not shared or unavailable, and warns when it has not fired recently |
+| 10-15 | Ad sets rebuilt in another account copied their source budgets and spent a day's budget within minutes ([WB-18](case-studies.md#wb-18)) | Pre-flight fails a moved ad set whose budget is above the policy's moved-ad-set budget, unless a stated reason turns it into a warning |
 
 ## What `readback.py` checks
 
@@ -72,6 +74,8 @@ The checklist is JSON: campaigns with their ad sets, ad sets with their ads. Pla
 | Special category | campaign | The offer category needs a declaration (for example `job_listings` → `EMPLOYMENT`) and the campaign does not declare it | No offer category is stated, or the policy has no sourced map for the platform |
 | Attribution | campaign | Ad sets in one campaign use different attribution settings | An ad set has no attribution setting |
 | Duplicate creative | ad set | Two ads in the same ad set use the same file (by SHA-256) | An ad has no file hash |
+| Moved budget | ad set | An ad set marked `moved_from` starts above the policy's `moved_adset.daily_budget` | The budget differs but the checklist states a `budget_reason`; or the policy has no moved budget |
+| Pixel | ad set | The ad set's `pixel_key` is not in the checklist's `account_assets` read, is not shared with the account or is marked unavailable | The checklist has no read of the account's pixels; the pixel never fired or last fired more than `pixel.max_days_since_fired` days before the read |
 
 The special-category check only confirms that a declaration is present. It does not decide whether an offer belongs to a category; that stays a human decision.
 
@@ -121,7 +125,7 @@ Excerpt from [`examples/readback/expected/meta-receipt.md`](../examples/readback
 | ad | `ad-h3` | URL parameters | `utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}` | `utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}` | ✗ |
 | ad | `ad-h3` | Status | `PAUSED` | `PAUSED` | ✓ |
 
-The pre-flight report for the sample checklist is in [`examples/preflight/expected/checklist.md`](../examples/preflight/expected/checklist.md): 7 fail, 3 warn, 21 pass.
+The pre-flight report for the sample checklist is in [`examples/preflight/expected/checklist.md`](../examples/preflight/expected/checklist.md): 9 fail, 4 warn, 22 pass.
 
 ## Limits
 

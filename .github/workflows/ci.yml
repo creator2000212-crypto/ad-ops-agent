@@ -69,6 +69,14 @@ jobs:
           python preflight.py --checklist examples/preflight/checklist.json \
             --policy examples/preflight/policy.json --lang zh-CN \
             --check examples/preflight/expected/checklist.zh-CN.md
+      - name: Account audit matches the golden report (English and Chinese)
+        run: |
+          python account_audit.py --snapshot examples/audit/snapshot.json \
+            --policy examples/audit/policy.json \
+            --check examples/audit/expected/audit.md
+          python account_audit.py --snapshot examples/audit/snapshot.json \
+            --policy examples/audit/policy.json --lang zh-CN \
+            --check examples/audit/expected/audit.zh-CN.md
       - name: Decision matrix matches the methodology
         run: python scripts/render_decision_matrix.py --check
       - name: Demo round matches the committed sample (English and Chinese)

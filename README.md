@@ -5,12 +5,13 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
-**Ad-ops guardrails I ran with WorkBuddy (Tencent's desktop AI agent) on live Meta & TikTok lead-gen accounts in Sep 2026, rebuilt as a tested offline decision engine.**
+**Ad-ops guardrails I ran with WorkBuddy (Tencent's desktop AI agent) on live Meta & TikTok lead-gen accounts in Sep–Oct 2026, rebuilt as a tested offline decision engine.**
 
 An Ads Operations portfolio project: launch QA, change control and platform-vs-settlement reconciliation for Meta & TikTok lead-gen, with guardrails that let an AI agent do the repetitive work safely.
 
 - **Launch QA by readback.** Every build is created paused and read back field by field. One mismatch holds the batch, and the receipt shows only what the platform returned.
 - **No write without a gate.** Each proposed change is compared with the state read just before writing: `ready`, `satisfied`, `conflict`, `unknown` or `advisory`. `ready` means checked, not approved.
+- **Running accounts audited before each round.** A budget canary, writer attribution from the change log, the offer read from each destination link rather than the name, a full day counted from local midnight in the account's time zone, and allow / refuse / wait on every write request: money without a unit, a raise past the ceiling, a partial whole-object update or a resumed human pause is refused.
 - **Rules from unit economics, checked against settlement.** T is the target CPA: value per lead × approval rate ÷ target ROAS. An ad set moves up one ladder stage (T → 2T → 3T, i.e. 1, 2 and 3 times the base budget) only after a full day at CPA ≤ T, and stop lines are counted in T. Every threshold is read from a methodology file, with no code defaults. Cost decisions turn advisory when platform numbers don't reconcile with the settlement export.
 
 ```bash
@@ -18,7 +19,7 @@ git clone https://github.com/creator2000212-crypto/ad-ops-agent.git && cd ad-ops
 python3 demo/run_demo.py   # Python 3.9+, standard library only; no account, no API key
 ```
 
-Operated Sep 10–27, 2026 · open-sourced Sep 24–25 · scheduled jobs paused since Sep 26 → [How it ran](docs/how-it-ran.md) · what ran live vs what is new: [Real vs demo](docs/capability-status.md)
+Operated Sep 10–Oct 29, 2026 · open-sourced Sep 24–25 · 12-hour check ran Sep 22–26 and Oct 24–29 → [How it ran](docs/how-it-ran.md) · what ran live vs what is new: [Real vs demo](docs/capability-status.md)
 
 <p align="center"><img src="docs/assets/hero/hero.en.png" width="880" alt="Launch QA, change control, reconciliation: Ad Ops Agent turns yesterday's ad data into a gated change list and checks that every change actually landed. Right: one row per decision and gate result in the demo round (promote, pause, hold, under-tested, fix or appeal)."></p>
 <p align="center"><sub>Generated from the demo round by <code>scripts/render_visuals.py</code>; no number is typed by hand.</sub></p>
@@ -38,6 +39,12 @@ Each row is something that went wrong while I operated the accounts or built thi
 | **Sep 22** · The agent activated a batch after a reply that answered a different question | `ready` and ACTIVATE mean "checked", never "approved"; approval names the batch ([AGENTS.md](AGENTS.md) R1).<br><sub>[`test_only_ready_rows_enter_the_write_plan`](tests/test_operating_loop.py)</sub> |
 | **Sep 25** · A receipt generator hard-coded `ACTIVE` while the readbacks said `PAUSED` | Receipt values come only from the readback file; a missing field is "not returned".<br><sub>[`test_receipt_status_comes_from_readback_not_plan`](tests/test_readback.py)</sub> |
 | **Sep 25** · My own bug in this repo, fixed the same day: a missing or null baseline passed the gate as `ready` | A missing or null baseline is `unknown`, never `ready`.<br><sub>[`test_null_baseline_is_unknown_even_when_current_is_null`](tests/test_operating_loop.py)</sub> |
+| **Oct 15** · Ad sets rebuilt in another account copied their source budgets and spent a day's budget within minutes | Pre-flight fails a moved ad set that starts above the moved-ad-set budget.<br><sub>[`test_moved_adset_with_copied_budget_fails`](tests/test_preflight.py)</sub> |
+| **Oct 25** · A workflow wrote a budget meant in cents into a field that takes dollars; three ad sets ran at 20–200× for about 1.6 hours | Money without an explicit unit is refused, a raise to the ceiling or above is refused, a large raise needs a reason, a rollback is never held, and a P0 canary runs every round.<br><sub>[`test_money_without_unit_is_refused_not_guessed`](tests/test_account_audit.py) · [`test_budget_at_p0_line_is_p0_even_when_paused`](tests/test_account_audit.py)</sub> |
+| **Oct 25** · A budget set yesterday afternoon counted as a full day, at a fixed UTC offset after the account's zone changed | A full day starts at local midnight in the account's named time zone; a short change log gives "unknown".<br><sub>[`test_named_time_zone_follows_the_daylight_saving_change`](tests/test_account_audit.py) · [`test_short_change_log_gives_unknown_not_yes`](tests/test_account_audit.py)</sub> |
+| **Oct 27** · 91% of one account's spend went to an offer no ad set name mentioned | The offer comes from each ad's destination link; the name is only checked against it.<br><sub>[`test_name_and_link_disagree`](tests/test_account_audit.py)</sub> |
+| **Oct 27** · An outside application made 22 budget changes in 48 hours; no ad set kept one budget for a full day | Every change in the log is attributed to its writer; an outside writer's values are not the baseline.<br><sub>[`test_outside_writer_is_named_with_its_net_changes`](tests/test_account_audit.py)</sub> |
+| **Oct 28** · A paused batch would have run eight live ad sets twice and raised one account's budget about 2.5× | A paused ad set with the same offer and creative as a live one is flagged with the budget jump.<br><sub>[`test_paused_copy_of_a_live_ad_set_is_flagged_with_the_budget_jump`](tests/test_account_audit.py)</sub> |
 
 ## How it decides
 
@@ -56,6 +63,8 @@ One round has five steps: **diagnose** each ad set against the methodology → *
 | Why CPA moved: CPM, CTR and CVR terms (new here) | `cpa_driver_decomposition()`<br><sub>`test_known_inputs_split_exactly`</sub> |
 | Build readback before activation | `verify_build()`<br><sub>`test_missing_url_parameter_holds_activation`</sub> |
 | Pre-flight lint before anything is created (new here) | `lint()`<br><sub>`test_max_name_with_cost_cap_fails`</sub> |
+| Account audit before the round decides: canary, live definition, offer links, writers, full day | `audit()` in `account_audit.py`<br><sub>`test_active_ad_set_without_active_ad_is_a_shell` · `test_budget_set_yesterday_afternoon_has_no_full_day`</sub> |
+| Every write request checked for unit, ceiling, raise, locked and whole-object fields | `judge_request()`<br><sub>`test_partial_targeting_is_refused_with_the_keys_it_would_clear` · `test_resuming_a_human_pause_is_refused`</sub> |
 
 <details>
 <summary><strong>Decision tree for one ad set</strong></summary>
@@ -100,7 +109,7 @@ From the [decision matrix](docs/decision-matrix.md), which is generated from the
 
 ## How it ran in WorkBuddy
 
-The rules are ported from the read-only 12-hour check I ran as a scheduled job in WorkBuddy on live Meta and TikTok lead-gen accounts (Sep 22–26, 2026). Builds ran interactively: create paused → field-by-field readback → activate. This repo is the offline, tested version.
+The rules are ported from the read-only 12-hour check I ran as a scheduled job in WorkBuddy on live Meta and TikTok lead-gen accounts (Sep 22–26 and Oct 24–29, 2026). Builds ran interactively: create paused → field-by-field readback → activate. This repo is the offline, tested version.
 
 **Why WorkBuddy.** I needed one agent that could do the whole job on my own machine:
 
@@ -115,22 +124,25 @@ Nothing in this repository depends on WorkBuddy; see [Use it with your agent app
 ```mermaid
 flowchart LR
     conn[("Meta: hosted MCP connector<br/>TikTok: API for Business client")] --- live
-    subgraph live["Live and private: WorkBuddy, Sep 10–27, 2026"]
+    subgraph live["Live and private: WorkBuddy, Sep 10 – Oct 29, 2026"]
         mem["Project memory: the method file"]
         check["12-hour read-only check (scheduled)"]
         pull["Daily 10:00 data pull (scheduled)"]
         build["Interactive builds: create paused →<br/>readback → activate"]
+        oct["October round steps: budget canary,<br/>writers, offer links, strict full day"]
     end
     subgraph repo["This repository: offline, 0 platform calls"]
         meth["methodology-reference.json"]
         round["operating_loop.py round:<br/>diagnose → gate → record → compare"]
         recon["Settlement reconciliation"]
         qa["preflight.py → readback.py"]
+        audit["account_audit.py"]
     end
     mem -- thresholds as data --> meth
     check -- rules ported --> round
     pull -- became --> recon
     build -- protocol ported --> qa
+    oct -- checks ported --> audit
 ```
 
 | WorkBuddy job | What it did | Runs | Outcome |
@@ -138,8 +150,9 @@ flowchart LR
 | Daily 10:00 data pull (created Sep 20) | Pulled yesterday's Meta and TikTok data into a fixed 20-column sheet; named a missing source instead of zero-filling it; never merged a stale file | 7 (Sep 21–26) | 5 delivered, 1 failed, 1 interrupted manual test |
 | 12-hour read-only check (created Sep 22) | Re-verified the last round's actions in an append-only ledger → pulled → classified each ad set on the T ladder → action list → report | 7 (Sep 22–26) | 6 delivered, 1 failed |
 | 2-hour watch (Sep 20, deleted the same day) | Its only run got 0 accounts because the ad-platform connection had dropped | 1 | Reported "no data, no conclusions" |
+| 12-hour check, resumed (Oct 24) | Same round on a second connector, with four steps first: budget canary, writer attribution, offer codes from links, strict full day | 9 (Oct 24–29) | 9 delivered; 4 with 2 of 5 accounts unreachable, stated |
 
-Both recurring jobs ran on the app's local scheduler, only while the laptop was awake, and have been paused since Sep 26. The 12-hour check was read-only by instruction, not by permission. Run log, timeline and limits: [How it ran](docs/how-it-ran.md).
+Both recurring jobs ran on the app's local scheduler, only while the laptop was awake. Both were paused on Sep 26; the 12-hour check was resumed on Oct 24 for the October rounds. The 12-hour check was read-only by instruction, not by permission. Run log, timeline and limits: [How it ran](docs/how-it-ran.md).
 
 <p align="center"><img src="docs/assets/proof/receipt.en.png" width="880" alt="Build receipt from readback.py on the fictional Meta build: objects created paused, every field read back and compared with the plan, and the batch held because one ad is missing a required URL parameter."></p>
 <p align="center"><sub><code>readback.py</code> on the Meta fixture · full receipt: <a href="examples/readback/expected/meta-receipt.md">meta-receipt.md</a> · <a href="docs/build-qa.md">Build QA</a></sub></p>
@@ -158,7 +171,7 @@ To confirm the rules actually loaded: [project loading](docs/use-in-agent.md).
 
 ## Case studies
 
-Ten cases from the live accounts, each ending in a guardrail here ([all cases](docs/case-studies.md); how the method changed: [methodology history](docs/methodology-history.md)):
+Twenty-two cases from the live accounts, each ending in a guardrail here ([all cases](docs/case-studies.md); how the method changed: [methodology history](docs/methodology-history.md)). September's happened while builds were made:
 
 - [WB-01](docs/case-studies.md#wb-01): 20 proposed ads held for review before creation → duplicate-file check in pre-flight
 - [WB-02](docs/case-studies.md#wb-02): a TikTok build for three business lines, handed off object by object → field-by-field readback receipt
@@ -170,6 +183,14 @@ Ten cases from the live accounts, each ending in a guardrail here ([all cases](d
 - [WB-08](docs/case-studies.md#wb-08): activation after an ambiguous reply → an explicit approval gate
 - [WB-09](docs/case-studies.md#wb-09): daily sheet vs settlement gap closed from about 20% to about 0.1% → settlement reconciliation
 - [WB-10](docs/case-studies.md#wb-10): build scripts that contradicted a standing rule fixed and audited → settings as data, not code
+
+October's happened on accounts that were already running ([account audit](docs/account-audit.md)):
+
+- [WB-11](docs/case-studies.md#wb-11): a budget written in the wrong unit → money needs a unit, a ceiling and a canary
+- [WB-12](docs/case-studies.md#wb-12): names that said one offer while links carried another → the offer comes from the link
+- [WB-13](docs/case-studies.md#wb-13): an outside application changing budgets between rounds → writer attribution first
+- [WB-14](docs/case-studies.md#wb-14): a full day counted from the wrong midnight → local midnight in the named time zone
+- [WB-15](docs/case-studies.md#wb-15) to [WB-22](docs/case-studies.md#wb-22): shells counted as live, locked and whole-object fields, a duplicate paused batch, moved budgets, pixel availability, an evening budget cut, a resumed human pause, disabled accounts
 
 ## Who did what
 
@@ -186,8 +207,9 @@ I defined the operating rules, thresholds and write-gate behavior from campaigns
 | [`operating_rules.py`](operating_rules.py) | Rules, settlement reconciliation, CPA drivers and the five-state write gate |
 | [`operating_loop.py`](operating_loop.py) | One round (diagnose → gate → record → compare) and the append-only ledger |
 | [`readback.py`](readback.py) · [`preflight.py`](preflight.py) | Build readback receipt (HOLD / ACTIVATE) and pre-flight lint |
-| [`demo/`](demo/README.md) · `examples/` | The replay with committed expected output (English and Chinese); fictional fixtures for `operating/`, `readback/`, `preflight/` |
-| [`docs/`](docs/index.en.md) | How it ran, case studies, build QA, decision matrix, methodology history |
+| [`account_audit.py`](account_audit.py) | Audit of running accounts and write requests before a round decides ([Account audit](docs/account-audit.md)) |
+| [`demo/`](demo/README.md) · `examples/` | The replay with committed expected output (English and Chinese); fictional fixtures for `operating/`, `readback/`, `preflight/`, `audit/` |
+| [`docs/`](docs/index.en.md) | How it ran, case studies, build QA, account audit, decision matrix, methodology history |
 | [`AGENTS.md`](AGENTS.md) · [`CLAUDE.md`](CLAUDE.md) | Instructions for an agent that uses this project on real accounts; `CLAUDE.md` loads them in Claude Code |
 | `scripts/` · `tests/` | Decision-matrix and image renderers, repository checks; unittest suites (`python3 -m unittest discover -s tests`) |
 

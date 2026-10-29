@@ -6,7 +6,7 @@
 
 ## See the work
 
-Start with [How it ran](how-it-ran.md): what ran in WorkBuddy on live Meta and TikTok accounts in Sep 2026, the run log of the scheduled jobs, and what each piece became here. Then read the [ten case studies](case-studies.md), the [methodology history](methodology-history.md) and [Real vs demo](capability-status.md). To see the checks run, try the [offline demo](../demo/README.md), [Build QA](build-qa.md) and the [decision matrix](decision-matrix.md). The original private records are not public.
+Start with [How it ran](how-it-ran.md): what ran in WorkBuddy on live Meta and TikTok accounts in Sep–Oct 2026, the run log of the scheduled jobs, and what each piece became here. Then read the [twenty-two case studies](case-studies.md), the [methodology history](methodology-history.md) and [Real vs demo](capability-status.md). To see the checks run, try the [offline demo](../demo/README.md), [Build QA](build-qa.md), the [account audit](account-audit.md) and the [decision matrix](decision-matrix.md). The original private records are not public.
 
 ## Start a task
 
@@ -54,6 +54,7 @@ Open a reference only when needed:
 | Check assets, posts, links, budgets and states | [Operations cards (Chinese)](operations.md) |
 | Handle a disapproval or a failed media upload | [Disapproval triage: fix or appeal](disapproval-triage.md) |
 | Lint a build before creating it; check readback before activating | [Build QA: pre-flight and readback](build-qa.md) |
+| Audit running accounts before a round decides; check each write's unit, ceiling and locked fields | [Account audit](account-audit.md) |
 | See every action with its window, acceptance and stop condition | [Decision matrix](decision-matrix.md) |
 | Inspect offline monitoring fields, formulas and commands | [Technical reference](operating-loop.md) |
 

@@ -2,16 +2,39 @@
 
 Notable changes to this repository. Dates are 2026, local time (UTC+8).
 
+## Alongside this repository (2026-09-27 to 10-29)
+
+Not code in this repository: the October live operation, sanitized. Details in [How it ran](docs/how-it-ran.md#october-the-same-loop-on-running-accounts).
+
+- Kept operating Meta and TikTok lead-gen accounts with WorkBuddy. Meta moved to a second hosted connector on Oct 21; work moved to a new set of ad accounts on Oct 14–18; one task was handed to Claude on Oct 22, and from mid-October Claude also ran my click tracker, a separate private system.
+- Resumed the 12-hour read-only check on Oct 24: 9 rounds to Oct 29, all delivered, 4 with partial coverage stated. Added four steps in front of the classification: a budget canary, writer attribution from the change log, offer codes read from destination links and a strict full day in the account's named time zone.
+- Turned October incidents into rules: money has a unit and budget writes go through one guarded path (Oct 25), names are not evidence (Oct 26), an outside writer's values are not the baseline (Oct 27), moved ad sets start at a fixed budget (Oct 15), budget cuts wait for the account's next day (Oct 21) ([case studies WB-11 to WB-22](docs/case-studies.md#wb-11)).
+
 ## Before and alongside this repository (2026-09-10 to 09-27)
 
 Not code in this repository: the live operation it was ported from, sanitized. Details in [How it ran](docs/how-it-ran.md).
 
 - Operated Meta and TikTok lead-gen (CPL) accounts with WorkBuddy (Tencent's desktop AI agent; not affiliated) in interactive sessions from Sep 10 to Sep 27; builds followed create paused → field-by-field readback → activate; after the agent activated a batch on an ambiguous reply (Sep 22, [WB-08](docs/case-studies.md#wb-08)), launch approval became an explicit gate.
-- Ran two scheduled WorkBuddy jobs: a daily 10:00 data pull (from Sep 20) and a read-only 12-hour check (from Sep 22) that re-verified the previous round's actions before classifying any ad set. Both have been paused since Sep 26.
+- Ran two scheduled WorkBuddy jobs: a daily 10:00 data pull (from Sep 20) and a read-only 12-hour check (from Sep 22) that re-verified the previous round's actions before classifying any ad set. Both were paused on Sep 26; the 12-hour check resumed on Oct 24.
 - Changed the method on dated triggers: a stricter ROAS floor, one attribution setting, one ad set per creative on a T → 2T → 3T ladder, T per offer, and automated rules made notify-only ([methodology history](docs/methodology-history.md)).
 - Turned incidents into rules: reconcile before retrying a timed-out batch, read back after activation, approval names the batch, receipts come only from timed readback, and 0 accounts means the pull failed ([case studies](docs/case-studies.md)).
 
-## [0.2.0] — Unreleased
+## [0.3.0] — Unreleased
+
+Ports the October checks on running accounts and updates the record to Oct 29.
+
+### Added
+
+- `account_audit.py`: audits a saved read of running accounts, their change log and a round's write requests, offline. Findings P0–P2 (disabled account, budget canary, budget with no spend or far above spend, shell ad set, name vs budget, offer link vs name, outside writer, duplicate activation), a writers table with net budget change per object, budget tiers judged from local midnight in the account's named time zone (`yes` / `no` / `unknown`), and allow / refuse / wait per write request (unit required, ceiling and raise ratio on raises, a rollback of a runaway budget never held, intraday cut, a cut without today's spend waits, locked fields, whole-object fields, resuming a human pause, a pause the log does not explain, disabled account; a malformed request is refused without stopping the audit). Fictional snapshot and policy in `examples/audit/`, English and Chinese golden reports, `tests/test_account_audit.py`, and a CI step.
+- `preflight.py`: a moved-budget check (an ad set marked `moved_from` starts at or below the policy's `moved_adset.daily_budget`, or states a reason a person reviews) and a pixel check against the account's pixel read in `account_assets` (unknown, not shared or unavailable fails; never fired or stale warns). The sample checklist now shows both; its report is 9 fail, 4 warn, 22 pass.
+- Docs: [Account audit](docs/account-audit.md) in English and Chinese; case studies WB-11 to WB-22; an October section in [How it ran](docs/how-it-ran.md) with the resumed run log and timeline; October entries in the [methodology history](docs/methodology-history.md); route C in the [roadmap](docs/roadmap.md) (account audit inside the round, tracker reporting rules, creative production checks, audience automation in readback).
+- `AGENTS.md` hard rules R6 (money has a unit, and a budget has a ceiling) and R7 (names are labels; read the fields and the log).
+
+### Changed
+
+- README, docs index, capability status and build QA describe the operation as Sep 10 to Oct 29 and list the new checks; the pre-flight policy version is 2026-10-29.
+
+## [0.2.0] — 2026-10-08 (untagged)
 
 Reworks the repository around launch QA, change control and reconciliation, and documents how the workflow ran.
 

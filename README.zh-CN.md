@@ -5,12 +5,13 @@
 
 [English](README.md) · **简体中文**
 
-**2026 年 9 月，我用 WorkBuddy（腾讯的桌面 AI Agent）在真实的 Meta 与 TikTok 线索投放账户上运行了一套广告运营护栏；本仓库把它重建为一个经过测试的离线决策引擎。**
+**2026 年 9—10 月，我用 WorkBuddy（腾讯的桌面 AI Agent）在真实的 Meta 与 TikTok 线索投放账户上运行了一套广告运营护栏；本仓库把它重建为一个经过测试的离线决策引擎。**
 
 这是一个广告运营（Ads Operations）作品集项目：面向 Meta 与 TikTok 线索投放的上线质检、变更管控以及平台与结算对账，并用护栏让 AI Agent 安全地承担重复性工作。
 
 - **上线质检靠读回。** 每次建单都先暂停创建，再逐字段读回。只要一处不一致，整批就保持暂停；回执只展示平台实际返回的值。
 - **没有闸门就不写入。** 每条拟改动都与写入前刚读到的状态比较，结果为 `ready`、`satisfied`、`conflict`、`unknown` 或 `advisory` 之一。`ready` 表示核对通过，不表示已批准。
+- **每轮开始前审计在跑的账户。** 预算哨兵；按变更流水归因写入方；offer 从每条落地链接读取，而不是看名称；“满一天”按账户时区的当地午夜计算；每个写入请求给出放行 / 拒绝 / 等待：没有单位的金额、加过硬上限的预算、只传部分内容的整体替换字段、恢复人工暂停，一律拒绝。
 - **规则来自单位经济，并与结算核对。** T 是目标 CPA：每条线索价值 × 线索通过率 ÷ 目标 ROAS。广告组只有在完整投放日内 CPA ≤ T 时才升一档（T → 2T → 3T，即基础预算的 1、2、3 倍），止损线以 T 计。全部阈值读自方法论文件，代码里没有默认值。平台数与结算导出对不上时，成本类决定降为仅建议。
 
 ```bash
@@ -18,7 +19,7 @@ git clone https://github.com/creator2000212-crypto/ad-ops-agent.git && cd ad-ops
 python3 demo/run_demo.py --lang zh-CN   # Python 3.9+，只用标准库；不需要账户或 API key
 ```
 
-实盘操作 2026 年 9 月 10—27 日 · 9 月 24—25 日开源 · 定时任务自 9 月 26 日起暂停 → [实际是怎么跑的](docs/how-it-ran.zh-CN.md) · 哪些在实盘跑过、哪些是新增：[实盘与演示对照](docs/capability-status.zh-CN.md)
+实盘操作 2026 年 9 月 10 日—10 月 29 日 · 9 月 24—25 日开源 · 12 小时巡检运行于 9 月 22—26 日、10 月 24—29 日 → [实际是怎么跑的](docs/how-it-ran.zh-CN.md) · 哪些在实盘跑过、哪些是新增：[实盘与演示对照](docs/capability-status.zh-CN.md)
 
 <p align="center"><img src="docs/assets/hero/hero.zh-CN.png" width="880" alt="上线质检、变更管控、对账：Ad Ops Agent 把昨天的投放数据变成经过闸门核对的变更清单，并逐条确认变更真正生效。右侧是演示轮次中每种判定与闸门结果各一行（晋级、暂停、保持、测试不足、修改或申诉）。"></p>
 <p align="center"><sub>由 <code>scripts/render_visuals.py</code> 从演示轮次生成；没有任何数字是手填的。</sub></p>
@@ -38,6 +39,12 @@ python3 demo/run_demo.py --lang zh-CN   # Python 3.9+，只用标准库；不需
 | **9 月 22 日** · Agent 把一条回答别的问题的回复当成了激活许可 | `ready` 与 ACTIVATE 只表示“核对通过”，从不表示“已批准”；批准必须指明批次（[AGENTS.md](AGENTS.md) R1）。<br><sub>[`test_only_ready_rows_enter_the_write_plan`](tests/test_operating_loop.py)</sub> |
 | **9 月 25 日** · 回执生成器把 `ACTIVE` 写死，而读回实际是 `PAUSED` | 回执的值只来自读回文件；缺失的字段记为“未返回”。<br><sub>[`test_receipt_status_comes_from_readback_not_plan`](tests/test_readback.py)</sub> |
 | **9 月 25 日** · 本仓库里我自己的 bug，当天修复：缺失或为 null 的基线被闸门判成 `ready` | 缺失或为 null 的基线一律是 `unknown`，不会是 `ready`。<br><sub>[`test_null_baseline_is_unknown_even_when_current_is_null`](tests/test_operating_loop.py)</sub> |
+| **10 月 15 日** · 在另一个账户重建的广告组照抄原预算，几分钟内花光一天预算 | 迁移的广告组起步预算高于迁移起步预算时，预检判为不通过。<br><sub>[`test_moved_adset_with_copied_budget_fails`](tests/test_preflight.py)</sub> |
+| **10 月 25 日** · 一条工作流把按美分算的预算写进了以美元计的字段，三个广告组以 20–200 倍预算跑了约 1.6 小时 | 没有显式单位的金额拒绝，加到硬上限及以上拒绝，大幅加价必须写明理由，回滚从不等待，每轮都跑 P0 哨兵。<br><sub>[`test_money_without_unit_is_refused_not_guessed`](tests/test_account_audit.py) · [`test_budget_at_p0_line_is_p0_even_when_paused`](tests/test_account_audit.py)</sub> |
+| **10 月 25 日** · 昨天下午设的预算被算作满一天；账户时区变化后仍按固定 UTC 偏移计算 | 满一天从账户时区名称对应的当地午夜算起；流水不够长时给出“未知”。<br><sub>[`test_named_time_zone_follows_the_daylight_saving_change`](tests/test_account_audit.py) · [`test_short_change_log_gives_unknown_not_yes`](tests/test_account_audit.py)</sub> |
+| **10 月 27 日** · 一个账户 91% 的花费落在没有任何广告组名称提到的 offer 上 | offer 从每条广告的落地链接读取，名称只拿来对照。<br><sub>[`test_name_and_link_disagree`](tests/test_account_audit.py)</sub> |
+| **10 月 27 日** · 一个外部应用 48 小时改了 22 次预算，没有广告组能在同一档预算上满一天 | 流水里每次变更都归到写入方；外部写入方的值不作为基线。<br><sub>[`test_outside_writer_is_named_with_its_net_changes`](tests/test_account_audit.py)</sub> |
+| **10 月 28 日** · 一个暂停批次激活后会让八个在投广告组双投，一个账户的预算变成约 2.5 倍 | 暂停广告组与在投广告组同 offer、同素材时报警，并给出预算变化。<br><sub>[`test_paused_copy_of_a_live_ad_set_is_flagged_with_the_budget_jump`](tests/test_account_audit.py)</sub> |
 
 ## 它怎样判定
 
@@ -56,6 +63,8 @@ python3 demo/run_demo.py --lang zh-CN   # Python 3.9+，只用标准库；不需
 | CPA 为什么变了：拆成 CPM、CTR、CVR 三项（本仓库新增） | `cpa_driver_decomposition()`<br><sub>`test_known_inputs_split_exactly`</sub> |
 | 激活前的建单读回 | `verify_build()`<br><sub>`test_missing_url_parameter_holds_activation`</sub> |
 | 创建任何对象之前的预检（本仓库新增） | `lint()`<br><sub>`test_max_name_with_cost_cap_fails`</sub> |
+| 本轮判定前的账户审计：哨兵、在投定义、offer 链接、写入方、满一天 | `account_audit.py` 的 `audit()`<br><sub>`test_active_ad_set_without_active_ad_is_a_shell` · `test_budget_set_yesterday_afternoon_has_no_full_day`</sub> |
+| 每个写入请求检查单位、硬上限、加价、锁定字段与整体替换字段 | `judge_request()`<br><sub>`test_partial_targeting_is_refused_with_the_keys_it_would_clear` · `test_resuming_a_human_pause_is_refused`</sub> |
 
 <details>
 <summary><strong>单个广告组的判定树</strong></summary>
@@ -100,7 +109,7 @@ flowchart TD
 
 ## 它在 WorkBuddy 里是怎么跑的
 
-这些规则移植自我在 WorkBuddy 里设置的只读 12 小时巡检定时任务，它在 Meta 与 TikTok 线索投放实盘账户上运行（2026 年 9 月 22—26 日）。建单在交互会话中完成：暂停创建 → 逐字段读回 → 激活。本仓库是它的离线、带测试版本。
+这些规则移植自我在 WorkBuddy 里设置的只读 12 小时巡检定时任务，它在 Meta 与 TikTok 线索投放实盘账户上运行（2026 年 9 月 22—26 日、10 月 24—29 日）。建单在交互会话中完成：暂停创建 → 逐字段读回 → 激活。本仓库是它的离线、带测试版本。
 
 **为什么用 WorkBuddy。** 我需要一个能在自己电脑上把整套工作做完的 Agent：
 
@@ -115,22 +124,25 @@ flowchart TD
 ```mermaid
 flowchart LR
     conn[("Meta：托管 MCP 连接器<br/>TikTok：API for Business 客户端")] --- live
-    subgraph live["实盘、私有：WorkBuddy，2026 年 9 月 10—27 日"]
+    subgraph live["实盘、私有：WorkBuddy，2026 年 9 月 10 日—10 月 29 日"]
         mem["项目记忆：方法文件"]
         check["12 小时只读巡检（定时）"]
         pull["每日 10:00 取数（定时）"]
         build["交互建单：暂停创建 →<br/>读回 → 激活"]
+        oct["10 月新增的巡检步骤：预算哨兵、<br/>写入方、offer 链接、严格满日"]
     end
     subgraph repo["本仓库：离线，平台调用 0 次"]
         meth["methodology-reference.json"]
         round["operating_loop.py round：<br/>诊断 → 闸门 → 登记 → 对照"]
         recon["结算对账"]
         qa["preflight.py → readback.py"]
+        audit["account_audit.py"]
     end
     mem -- 阈值写成数据 --> meth
     check -- 规则移植 --> round
     pull -- 演变为 --> recon
     build -- 流程移植 --> qa
+    oct -- 检查移植 --> audit
 ```
 
 | WorkBuddy 任务 | 做什么 | 运行次数 | 结果 |
@@ -138,8 +150,9 @@ flowchart LR
 | 每日 10:00 取数（9 月 20 日创建） | 把昨天的 Meta 与 TikTok 数据写进固定 20 列的日表；缺源时写明缺哪一路，不补零；从不合并过期文件 | 7（9 月 21—26 日） | 5 次交付，1 次失败，1 次手动测试被中断 |
 | 12 小时只读巡检（9 月 22 日创建） | 先在只追加台账里回验上一轮动作 → 取数 → 按 T 阶梯给每个广告组分类 → 动作清单 → 报告 | 7（9 月 22—26 日） | 6 次交付，1 次失败 |
 | 2 小时巡检（9 月 20 日创建，当天删除） | 唯一一次运行时广告平台连接已断开，拿到 0 个账户 | 1 | 报告“无数据，不下结论” |
+| 12 小时巡检恢复（10 月 24 日） | 同一套流程改走第二个连接器，并先做四步：预算哨兵、写入方归因、从链接读 offer 代码、严格满日 | 9（10 月 24—29 日） | 9 次交付；其中 4 次有 2/5 个账户无法访问，均已写明 |
 
-两个周期任务都跑在应用的本地调度器上，只在笔记本唤醒时运行，自 9 月 26 日起暂停。12 小时巡检的只读是靠指令约束，不是靠权限限制。运行记录、时间线与不足：[实际是怎么跑的](docs/how-it-ran.zh-CN.md)。
+两个周期任务都跑在应用的本地调度器上，只在笔记本唤醒时运行。两者在 9 月 26 日暂停；12 小时巡检在 10 月 24 日恢复，跑了 10 月的几轮。12 小时巡检的只读是靠指令约束，不是靠权限限制。运行记录、时间线与不足：[实际是怎么跑的](docs/how-it-ran.zh-CN.md)。
 
 <p align="center"><img src="docs/assets/proof/receipt.zh-CN.png" width="880" alt="readback.py 对虚构 Meta 建单生成的回执：对象均以暂停状态创建，每个字段读回并与计划比较；因一条广告缺少必需的链接参数，整批保持暂停。"></p>
 <p align="center"><sub><code>readback.py</code> 的 Meta 示例 · 完整回执：<a href="examples/readback/expected/meta-receipt.zh-CN.md">meta-receipt.zh-CN.md</a> · <a href="docs/build-qa.zh-CN.md">建单质检</a></sub></p>
@@ -158,7 +171,7 @@ flowchart LR
 
 ## 案例
 
-十个来自实盘账户的案例，每个都落到本仓库的一条护栏（[全部案例](docs/case-studies.zh-CN.md)；方法怎样演变：[方法演变](docs/methodology-history.zh-CN.md)）：
+二十二个来自实盘账户的案例，每个都落到本仓库的一条护栏（[全部案例](docs/case-studies.zh-CN.md)；方法怎样演变：[方法演变](docs/methodology-history.zh-CN.md)）。9 月的发生在建单过程中：
 
 - [WB-01](docs/case-studies.zh-CN.md#wb-01)：20 条待建广告在创建前留待审阅 → 预检中的重复文件检查
 - [WB-02](docs/case-studies.zh-CN.md#wb-02)：三条业务线的 TikTok 建单逐对象交接 → 逐字段读回回执
@@ -170,6 +183,14 @@ flowchart LR
 - [WB-08](docs/case-studies.zh-CN.md#wb-08)：含糊回复后批次被激活 → 显式的批准关卡
 - [WB-09](docs/case-studies.zh-CN.md#wb-09)：日表与结算的差异从约 20% 缩小到约 0.1% → 结算对账
 - [WB-10](docs/case-studies.zh-CN.md#wb-10)：与常设规则矛盾的建单脚本被修复并加上审计 → 设置写在数据里，不写在代码里
+
+10 月的发生在已经在跑的账户上（[账户审计](docs/account-audit.zh-CN.md)）：
+
+- [WB-11](docs/case-studies.zh-CN.md#wb-11)：预算写错单位 → 金额必须带单位，另有硬上限与哨兵
+- [WB-12](docs/case-studies.zh-CN.md#wb-12)：名称写一个 offer，链接却是另一个 → offer 以链接为准
+- [WB-13](docs/case-studies.zh-CN.md#wb-13)：外部应用在两轮之间改预算 → 写入方归因放在第一步
+- [WB-14](docs/case-studies.zh-CN.md#wb-14)：满一天按错了午夜 → 按账户时区名称的当地午夜
+- [WB-15](docs/case-studies.zh-CN.md#wb-15) 至 [WB-22](docs/case-studies.zh-CN.md#wb-22)：空壳被算作在投、锁定与整体替换字段、重复的暂停批次、迁移预算、pixel 可用性、傍晚降预算、恢复人工暂停、停用账户
 
 ## 分工
 
@@ -186,8 +207,9 @@ flowchart LR
 | [`operating_rules.py`](operating_rules.py) | 判定规则、结算对账、CPA 拆解与五态写入闸门 |
 | [`operating_loop.py`](operating_loop.py) | 一轮巡检（诊断 → 闸门 → 登记 → 对照）与只追加台账 |
 | [`readback.py`](readback.py) · [`preflight.py`](preflight.py) | 建单读回回执（HOLD / ACTIVATE）与预检 |
-| [`demo/`](demo/README.zh-CN.md) · `examples/` | 回放演示及已提交的预期输出（中英文）；`operating/`、`readback/`、`preflight/` 的虚构示例数据 |
-| [`docs/`](docs/index.md) | 实际运行记录、案例、建单质检、决策矩阵、方法演变 |
+| [`account_audit.py`](account_audit.py) | 本轮判定前对在跑账户与写入请求的审计（[账户审计](docs/account-audit.zh-CN.md)） |
+| [`demo/`](demo/README.zh-CN.md) · `examples/` | 回放演示及已提交的预期输出（中英文）；`operating/`、`readback/`、`preflight/`、`audit/` 的虚构示例数据 |
+| [`docs/`](docs/index.md) | 实际运行记录、案例、建单质检、账户审计、决策矩阵、方法演变 |
 | [`AGENTS.md`](AGENTS.md) · [`CLAUDE.md`](CLAUDE.md) | 给在真实账户上使用本项目的 Agent 的指令；`CLAUDE.md` 让 Claude Code 加载它们 |
 | `scripts/` · `tests/` | 决策矩阵与图片生成脚本、仓库检查；unittest 测试（`python3 -m unittest discover -s tests`） |
 
